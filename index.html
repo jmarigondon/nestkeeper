@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nestkeeper 🏡</title>
 <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root {
     --bg: #0f1117;
@@ -436,6 +437,47 @@
   .eye-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 13px; padding: 2px 4px; transition: color 0.2s; flex-shrink: 0; }
   .eye-btn:hover { color: var(--pink); }
   @media (max-width: 768px) { .pw-grid { grid-template-columns: 1fr; } }
+
+  /* Login overlay */
+  .login-overlay {
+    display: none; position: fixed; inset: 0; z-index: 500;
+    background: var(--bg);
+    align-items: center; justify-content: center;
+  }
+  .login-overlay.show { display: flex; }
+  .login-overlay::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(240,165,192,0.13) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(125,211,200,0.10) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 60% 30%, rgba(184,169,240,0.08) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .login-card {
+    position: relative; z-index: 1;
+    background: var(--glass); border: 1px solid var(--glass-border);
+    border-radius: 24px; padding: 40px 36px;
+    width: 100%; max-width: 420px;
+    text-align: center; box-shadow: var(--shadow);
+    backdrop-filter: blur(20px);
+    animation: slideUp 0.3s ease;
+  }
+  .login-app-logo { font-size: 44px; margin-bottom: 10px; }
+  .login-app-title { font-family: 'Josefin Sans', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: linear-gradient(135deg, var(--pink), var(--lavender)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 4px; }
+  .login-app-sub { font-size: 13px; color: var(--text3); margin-bottom: 32px; }
+  .login-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+  .login-divider::before, .login-divider::after { content: ''; flex: 1; height: 1px; background: var(--glass-border); }
+  .login-divider span { font-size: 11px; color: var(--text3); }
+
+  /* User profile in topbar */
+  .user-profile { display: flex; align-items: center; gap: 10px; }
+  .user-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(240,165,192,0.5); }
+  .user-name { font-size: 13px; color: var(--text2); font-weight: 500; }
+  @media (max-width: 500px) { .user-name { display: none; } }
+  .logout-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 12px; padding: 4px 8px; border-radius: 6px; transition: all 0.2s; font-family: 'Raleway', sans-serif; }
+  .logout-btn:hover { color: var(--red); background: rgba(240,120,120,0.1); }
+  @media (max-width: 768px) { .login-card { margin: 16px; padding: 28px 22px; } }
 </style>
 </head>
 <body>
@@ -453,7 +495,14 @@
         </div>
       </div>
     </div>
-    <span id="syncStatus" style="font-size:11px; color:var(--text3)">☁️ Loading…</span>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <span id="syncStatus" style="font-size:11px; color:var(--text3)">☁️ Loading…</span>
+      <div class="user-profile" id="userProfile" style="display:none;">
+        <img class="user-avatar" id="userAvatar" src="" alt="" style="display:none;">
+        <span class="user-name" id="userName"></span>
+        <button class="logout-btn" onclick="logout()">Sign out</button>
+      </div>
+    </div>
   </div>
 
   <div class="body-wrap">
@@ -488,6 +537,7 @@
       <div class="sidenav-section sidenav-setup">
         <div class="sidenav-label">Settings</div>
         <button class="nav-btn" onclick="openModal('setupModal')"><span class="nb-icon">⚙️</span>Google Sheets Setup</button>
+        <button class="nav-btn" onclick="openModal('googleLoginModal')"><span class="nb-icon">🔑</span>Google Login Setup</button>
       </div>
 
     </nav>
@@ -716,7 +766,91 @@
   </div><!-- end body-wrap -->
 </div>
 
+<!-- ========== LOGIN OVERLAY ========== -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <div class="login-app-logo">🏡</div>
+    <div class="login-app-title">Nestkeeper</div>
+    <div class="login-app-sub">your home, organized</div>
+
+    <div id="googleSignInBtn" style="display:flex; justify-content:center; min-height:44px;"></div>
+
+    <div id="loginNoClientId" style="display:none; margin-bottom:4px;">
+      <div style="background:rgba(245,199,126,0.08); border:1px solid rgba(245,199,126,0.2); border-radius:12px; padding:14px; font-size:12px; color:var(--gold); line-height:1.7; text-align:left;">
+        ⚙️ <strong>Google Login not configured yet.</strong><br>
+        <button onclick="showLoginSetup()" style="margin-top:8px; background:var(--glass); border:1px solid var(--glass-border); color:var(--teal); border-radius:8px; padding:6px 14px; font-size:12px; cursor:pointer; font-family:'Raleway',sans-serif; font-weight:600;">Set up Google Login →</button>
+      </div>
+    </div>
+
+    <div class="login-divider"><span>or</span></div>
+
+    <button class="btn btn-ghost" style="width:100%; justify-content:center;" onclick="continueAsGuest()">
+      👤 Continue without signing in
+    </button>
+    <div style="font-size:11px; color:var(--text3); margin-top:10px; line-height:1.6;">
+      Guest mode saves data locally on this device only.
+    </div>
+  </div>
+</div>
+
 <!-- ========== MODALS ========== -->
+
+<!-- Google Login Setup -->
+<div class="modal-overlay" id="googleLoginModal">
+  <div class="modal" style="max-width:580px;">
+    <div class="modal-header">
+      <div class="modal-title">🔑 Set Up Google Login</div>
+      <button class="close-btn" onclick="closeModal('googleLoginModal')">×</button>
+    </div>
+
+    <div style="background:rgba(125,211,200,0.08); border:1px solid rgba(125,211,200,0.2); border-radius:12px; padding:16px; margin-bottom:20px;">
+      <div style="font-size:13px; font-weight:600; color:var(--teal); margin-bottom:6px;">✨ One-time setup — about 5 minutes!</div>
+      <div style="font-size:12px; color:var(--text2); line-height:1.7;">Sign in with your Google account to protect your Nestkeeper data. Works with any Google account — completely free.</div>
+    </div>
+
+    <div style="font-size:13px; line-height:2; color:var(--text2);">
+      <div style="font-weight:700; color:var(--text); font-size:14px; margin-bottom:10px; font-family:'Josefin Sans',sans-serif; letter-spacing:0.04em;">STEP-BY-STEP GUIDE</div>
+
+      <div style="display:flex; gap:10px; margin-bottom:12px; align-items:flex-start;">
+        <span style="min-width:24px; height:24px; background:var(--pink2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; margin-top:2px; flex-shrink:0;">1</span>
+        <div>Go to <strong>console.cloud.google.com</strong>, create a new project (or pick an existing one). You can name it <em>Nestkeeper</em>.</div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-bottom:12px; align-items:flex-start;">
+        <span style="min-width:24px; height:24px; background:var(--pink2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; margin-top:2px; flex-shrink:0;">2</span>
+        <div>In the sidebar go to <strong>APIs & Services → OAuth consent screen</strong>. Choose <strong>External</strong>, fill in the App Name (<em>Nestkeeper</em>), and save.</div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-bottom:12px; align-items:flex-start;">
+        <span style="min-width:24px; height:24px; background:var(--pink2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; margin-top:2px; flex-shrink:0;">3</span>
+        <div>Go to <strong>APIs & Services → Credentials</strong>. Click <strong>Create Credentials → OAuth 2.0 Client ID</strong>. Set Application type to <strong>Web application</strong>.</div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-bottom:12px; align-items:flex-start;">
+        <span style="min-width:24px; height:24px; background:var(--pink2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; margin-top:2px; flex-shrink:0;">4</span>
+        <div>Under <strong>Authorized JavaScript origins</strong>, add your app URL (e.g. <code style="background:rgba(255,255,255,0.08); padding:1px 6px; border-radius:4px; font-size:11px;">https://yourname.github.io</code>). For local testing also add <code style="background:rgba(255,255,255,0.08); padding:1px 6px; border-radius:4px; font-size:11px;">http://localhost</code>.</div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-bottom:16px; align-items:flex-start;">
+        <span style="min-width:24px; height:24px; background:var(--pink2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; margin-top:2px; flex-shrink:0;">5</span>
+        <div>Click <strong>Create</strong>. Copy the <strong>Client ID</strong> (ends in <em>.apps.googleusercontent.com</em>) and paste it below. Done! 🎉</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <label>Your Google OAuth Client ID</label>
+      <input class="input" id="clientIdInput" placeholder="123456789-abcdef.apps.googleusercontent.com">
+    </div>
+
+    <div style="display:flex; gap:10px; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="removeGoogleLogin()" style="color:var(--red);">Remove Login</button>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-ghost" onclick="closeModal('googleLoginModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveClientId()">Save & Enable ✓</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Add Bill -->
 <div class="modal-overlay" id="addBillModal">
@@ -2742,17 +2876,138 @@ function copyScript() {
   });
 }
 
-// ========== INIT ==========
-window.addEventListener('DOMContentLoaded', async () => {
+// ========== GOOGLE AUTH ==========
+let GOOGLE_CLIENT_ID = localStorage.getItem('nestkeeper_google_client_id') || '';
+let currentUser = null;
+
+function initGoogleAuth() {
+  const stored = localStorage.getItem('nestkeeper_user');
+  if (stored) {
+    try {
+      currentUser = JSON.parse(stored);
+      showApp();
+      return;
+    } catch(e) {}
+  }
+  if (!GOOGLE_CLIENT_ID) {
+    showLoginScreen(false);
+    return;
+  }
+  showLoginScreen(true);
+}
+
+function showLoginScreen(hasClientId) {
+  document.getElementById('loginOverlay').classList.add('show');
+  if (hasClientId) {
+    document.getElementById('loginNoClientId').style.display = 'none';
+    document.getElementById('googleSignInBtn').style.display = 'flex';
+    // Wait for GSI to load, then initialize
+    const tryInit = (attempts) => {
+      if (typeof google !== 'undefined' && google.accounts) {
+        try {
+          google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse });
+          google.accounts.id.renderButton(document.getElementById('googleSignInBtn'), {
+            theme: 'filled_black', size: 'large', width: 300, text: 'signin_with'
+          });
+        } catch(e) {
+          document.getElementById('loginNoClientId').style.display = 'block';
+          document.getElementById('googleSignInBtn').style.display = 'none';
+        }
+      } else if (attempts > 0) {
+        setTimeout(() => tryInit(attempts - 1), 300);
+      } else {
+        document.getElementById('loginNoClientId').style.display = 'block';
+        document.getElementById('googleSignInBtn').style.display = 'none';
+      }
+    };
+    tryInit(10);
+  } else {
+    document.getElementById('loginNoClientId').style.display = 'block';
+    document.getElementById('googleSignInBtn').style.display = 'none';
+  }
+}
+
+function handleCredentialResponse(response) {
+  const user = decodeJwt(response.credential);
+  if (!user) { toast('⚠️ Sign-in failed — please try again'); return; }
+  currentUser = { name: user.name, email: user.email, picture: user.picture || '', sub: user.sub };
+  localStorage.setItem('nestkeeper_user', JSON.stringify(currentUser));
+  showApp();
+}
+
+function decodeJwt(token) {
+  try {
+    const payload = token.split('.')[1];
+    return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+  } catch(e) { return null; }
+}
+
+function showApp() {
+  document.getElementById('loginOverlay').classList.remove('show');
+  if (currentUser) {
+    const profile = document.getElementById('userProfile');
+    const avatar = document.getElementById('userAvatar');
+    const nameEl = document.getElementById('userName');
+    if (profile) profile.style.display = 'flex';
+    if (avatar && currentUser.picture) { avatar.src = currentUser.picture; avatar.style.display = ''; }
+    if (nameEl) nameEl.textContent = currentUser.name ? currentUser.name.split(' ')[0] : currentUser.email;
+  }
+  loadAppData();
+}
+
+function continueAsGuest() {
+  currentUser = null;
+  document.getElementById('loginOverlay').classList.remove('show');
+  loadAppData();
+}
+
+function logout() {
+  if (!confirm('Sign out of Nestkeeper?')) return;
+  localStorage.removeItem('nestkeeper_user');
+  currentUser = null;
+  if (GOOGLE_CLIENT_ID && typeof google !== 'undefined') {
+    try { google.accounts.id.disableAutoSelect(); } catch(e) {}
+  }
+  const profile = document.getElementById('userProfile');
+  if (profile) profile.style.display = 'none';
+  document.getElementById('googleSignInBtn').innerHTML = '';
+  showLoginScreen(!!GOOGLE_CLIENT_ID);
+}
+
+function showLoginSetup() {
+  closeModal('googleLoginModal');
+  document.getElementById('clientIdInput').value = GOOGLE_CLIENT_ID;
+  document.getElementById('googleLoginModal').classList.add('open');
+}
+
+function saveClientId() {
+  const id = document.getElementById('clientIdInput').value.trim();
+  if (!id || !id.includes('.apps.googleusercontent.com')) {
+    alert('That doesn\'t look like a valid Client ID. It should end with .apps.googleusercontent.com');
+    return;
+  }
+  GOOGLE_CLIENT_ID = id;
+  localStorage.setItem('nestkeeper_google_client_id', id);
+  closeModal('googleLoginModal');
+  toast('✅ Google Login enabled! Please sign in.');
+  document.getElementById('googleSignInBtn').innerHTML = '';
+  showLoginScreen(true);
+}
+
+function removeGoogleLogin() {
+  if (!confirm('Remove Google Login? You can re-add it anytime.')) return;
+  GOOGLE_CLIENT_ID = '';
+  localStorage.removeItem('nestkeeper_google_client_id');
+  closeModal('googleLoginModal');
+  toast('Google Login removed');
+}
+
+async function loadAppData() {
   initYearSelect();
-  // Pre-fill script URL if already saved
   const saved = localStorage.getItem('nestkeeper_script_url');
   if (saved) document.getElementById('scriptUrlInput').value = saved;
-
   await load();
   renderBills();
-
-  // Sample data only if completely empty and not connected
   if (!SCRIPT_URL && !db.bills.length && !db.expenses.length && !db.events.length) {
     db.bills = [
       { id:uid(), name:'Meralco', icon:'⚡', color:'#f5c77e', typical:3500, dueDay:20, notes:'', payments:{} },
@@ -2770,6 +3025,13 @@ window.addEventListener('DOMContentLoaded', async () => {
     try { localStorage.setItem('nestkeeper_v2', JSON.stringify(db)); } catch(e) {}
     renderBills();
   }
+}
+
+// ========== INIT ==========
+window.addEventListener('DOMContentLoaded', () => {
+  // Pre-fill client ID input if already saved
+  if (GOOGLE_CLIENT_ID) document.getElementById('clientIdInput').value = GOOGLE_CLIENT_ID;
+  initGoogleAuth();
 });
 </script>
 </body>
