@@ -1,0 +1,2776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nestkeeper 🏡</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #161820;
+    --glass: rgba(255,255,255,0.06);
+    --glass-border: rgba(255,255,255,0.12);
+    --glass-hover: rgba(255,255,255,0.10);
+    --pink: #f0a5c0;
+    --pink2: #e879a0;
+    --teal: #7dd3c8;
+    --gold: #f5c77e;
+    --lavender: #b8a9f0;
+    --green: #7dd9a0;
+    --red: #f07878;
+    --text: #f0eefc;
+    --text2: rgba(240,238,252,0.6);
+    --text3: rgba(240,238,252,0.35);
+    --radius: 18px;
+    --radius-sm: 10px;
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Raleway', sans-serif; overflow-x: hidden; }
+
+  /* Background */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(240,165,192,0.13) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(125,211,200,0.10) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 60% 30%, rgba(184,169,240,0.08) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { font-size: 24px; }
+  .logo-text { font-family: 'Josefin Sans', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: linear-gradient(135deg, var(--pink), var(--lavender)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .logo-sub { font-size: 10px; color: var(--text3); margin-top: -2px; }
+
+  /* Layout */
+  .app { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* Top bar */
+  .topbar {
+    padding: 16px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(15,17,23,0.9);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--glass-border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .sync-bar {
+    padding: 5px 24px; background: rgba(15,17,23,0.7);
+    border-bottom: 1px solid var(--glass-border);
+    font-size: 11px; text-align: right;
+  }
+
+  /* Body layout */
+  .body-wrap { display: flex; flex: 1; }
+
+  /* Side Nav */
+  .sidenav {
+    width: 220px; flex-shrink: 0;
+    background: rgba(15,17,23,0.6);
+    backdrop-filter: blur(20px);
+    border-right: 1px solid var(--glass-border);
+    padding: 24px 14px;
+    position: sticky; top: 54px;
+    height: calc(100vh - 54px);
+    overflow-y: auto;
+  }
+  .sidenav-section { margin-bottom: 22px; }
+  .sidenav-label {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+    color: var(--text3); text-transform: uppercase;
+    padding: 0 10px; margin-bottom: 6px;
+  }
+  .nav-btn {
+    display: flex; align-items: flex-start; gap: 10px;
+    width: 100%; padding: 10px 12px; border-radius: 12px; border: none;
+    cursor: pointer; font-family: 'Raleway', sans-serif;
+    font-size: 13px; font-weight: 500;
+    background: transparent; color: var(--text2);
+    transition: all 0.18s; text-align: left; white-space: normal; line-height: 1.4;
+  }
+  .nav-btn:hover { background: var(--glass); color: var(--text); }
+  .nav-btn.active {
+    background: rgba(240,165,192,0.12);
+    color: var(--pink);
+    border: 1px solid rgba(240,165,192,0.2);
+    font-weight: 600;
+  }
+  .nav-btn .nb-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .sidenav-setup {
+    margin-top: auto; padding-top: 16px;
+    border-top: 1px solid var(--glass-border);
+  }
+
+  /* Main content */
+  .main { padding: 28px 32px; flex: 1; min-width: 0; }
+
+  /* Mobile hamburger */
+  .hamburger { display: none; background: none; border: none; color: var(--text); font-size: 22px; cursor: pointer; padding: 4px 8px; }
+  .sidenav-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 149; }
+  .sidenav-overlay.open { display: block; }
+
+  @media (max-width: 768px) {
+    .sidenav {
+      position: fixed; top: 0; left: -240px; width: 240px; height: 100vh;
+      z-index: 150; transition: left 0.3s ease;
+      padding-top: 60px;
+    }
+    .sidenav.open { left: 0; }
+    .hamburger { display: block; }
+    .main { padding: 16px; }
+  }
+
+  /* Tabs */
+  .tab { display: none; }
+  .tab.active { display: block; }
+
+  /* Glass Card */
+  .card {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(16px);
+    padding: 22px;
+    box-shadow: var(--shadow);
+  }
+  .card-sm { padding: 16px; }
+  .card-title {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 17px; font-weight: 600;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title .icon { font-size: 18px; }
+
+  /* Grid */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .grid-bills { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  .section-title { font-family: 'Josefin Sans', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 6px; }
+  .section-sub { color: var(--text2); font-size: 14px; margin-bottom: 24px; }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 18px; border-radius: 50px; border: none;
+    font-family: 'Raleway', sans-serif; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; text-decoration: none;
+  }
+  .btn-primary { background: linear-gradient(135deg, var(--pink2), var(--lavender)); color: #fff; }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(232,121,160,0.3); }
+  .btn-ghost { background: var(--glass); color: var(--text2); border: 1px solid var(--glass-border); }
+  .btn-ghost:hover { background: var(--glass-hover); color: var(--text); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-icon { padding: 8px; border-radius: 50%; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; }
+
+  /* Inputs */
+  .input, .select, .textarea {
+    width: 100%; padding: 10px 14px;
+    background: rgba(255,255,255,0.07); border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-family: 'Raleway', sans-serif; font-size: 14px;
+    outline: none; transition: border-color 0.2s;
+  }
+  .input:focus, .select:focus, .textarea:focus { border-color: var(--pink); }
+  .select option { background: #1e2030; }
+  .textarea { resize: vertical; min-height: 80px; }
+  label { font-size: 12px; color: var(--text2); margin-bottom: 5px; display: block; font-weight: 500; }
+  .form-row { display: grid; gap: 14px; margin-bottom: 14px; }
+  .form-row.cols2 { grid-template-columns: 1fr 1fr; }
+  .form-row.cols3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(6px);
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #181a24; border: 1px solid var(--glass-border);
+    border-radius: 22px; padding: 28px; width: 100%; max-width: 500px;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
+  .modal-title { font-family: 'Josefin Sans', sans-serif; font-size: 20px; font-weight: 600; }
+  .close-btn { background: none; border: none; color: var(--text2); font-size: 22px; cursor: pointer; padding: 4px; }
+
+  /* Bills */
+  .bill-item {
+    background: var(--glass); border: 1px solid var(--glass-border);
+    border-radius: 14px; padding: 16px 18px;
+    display: flex; align-items: center; gap: 14px;
+    transition: all 0.2s;
+  }
+  .bill-item:hover { background: var(--glass-hover); }
+  .bill-icon { font-size: 24px; width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.07); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .bill-info { flex: 1; }
+  .bill-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+  .bill-due { font-size: 12px; color: var(--text2); }
+  .bill-amount { font-family: 'Josefin Sans', sans-serif; font-size: 16px; font-weight: 700; color: var(--gold); min-width: 100px; text-align: right; }
+  .bill-actions { display: flex; align-items: center; gap: 8px; }
+  .paid-toggle {
+    width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--glass-border);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; background: transparent; transition: all 0.2s; color: transparent;
+  }
+  .paid-toggle.paid { background: var(--green); border-color: var(--green); color: #fff; }
+  .bill-months { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; }
+  .month-chip {
+    padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 600;
+    cursor: pointer; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text2);
+    transition: all 0.2s;
+  }
+  .month-chip.paid { background: var(--green); color: #0f1117; border-color: var(--green); }
+  .month-chip.partial { background: var(--gold); color: #0f1117; border-color: var(--gold); }
+  .avg-tag { font-size: 11px; color: var(--teal); background: rgba(125,211,200,0.1); padding: 2px 8px; border-radius: 20px; }
+
+  /* Expenses */
+  .expense-row {
+    display: flex; align-items: center; gap: 12px; padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .expense-row:last-child { border-bottom: none; }
+  .cat-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .summary-stat { text-align: center; padding: 20px; }
+  .summary-stat .val { font-family: 'Josefin Sans', sans-serif; font-size: 28px; font-weight: 700; }
+  .summary-stat .lbl { font-size: 12px; color: var(--text2); margin-top: 4px; }
+
+  /* Events */
+  .event-item {
+    display: flex; gap: 14px; align-items: flex-start; padding: 14px;
+    background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px;
+    margin-bottom: 10px; transition: all 0.2s;
+  }
+  .event-item:hover { background: var(--glass-hover); }
+  .event-date-box {
+    min-width: 52px; text-align: center; background: rgba(240,165,192,0.12);
+    border-radius: 12px; padding: 8px 6px;
+  }
+  .event-date-box .day { font-family: 'Josefin Sans', sans-serif; font-size: 22px; font-weight: 700; color: var(--pink); line-height: 1; }
+  .event-date-box .mon { font-size: 11px; color: var(--text2); font-weight: 600; text-transform: uppercase; }
+  .event-info .etitle { font-weight: 600; font-size: 14px; margin-bottom: 3px; }
+  .event-info .edesc { font-size: 12px; color: var(--text2); }
+  .days-away { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+  .days-away.soon { background: rgba(245,199,126,0.15); color: var(--gold); }
+  .days-away.far { background: rgba(125,211,200,0.10); color: var(--teal); }
+  .days-away.past { background: rgba(255,255,255,0.07); color: var(--text3); }
+  .gcal-btn { font-size: 11px; color: var(--teal); cursor: pointer; text-decoration: underline; background: none; border: none; padding: 0; font-family: inherit; }
+
+  /* Tasks */
+  .kanban { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .kanban-col { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius); padding: 16px; }
+  .kanban-col-title { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+  .kanban-col-title .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .task-card {
+    background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+    border-radius: 12px; padding: 12px 14px; margin-bottom: 10px;
+    cursor: grab; transition: all 0.2s;
+  }
+  .task-card:hover { background: rgba(255,255,255,0.09); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+  .task-card .tc-title { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .task-card .tc-desc { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+  .task-card .tc-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .priority-badge { padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+  .p-high { background: rgba(240,120,120,0.15); color: var(--red); }
+  .p-med { background: rgba(245,199,126,0.15); color: var(--gold); }
+  .p-low { background: rgba(125,217,160,0.15); color: var(--green); }
+
+  /* Docs */
+  .doc-item {
+    display: flex; align-items: center; gap: 12px; padding: 13px 16px;
+    background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px;
+    margin-bottom: 10px; transition: all 0.2s;
+  }
+  .doc-item:hover { background: var(--glass-hover); }
+  .doc-icon { font-size: 22px; }
+  .doc-info { flex: 1; }
+  .doc-name { font-weight: 600; font-size: 14px; }
+  .doc-meta { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .doc-link { color: var(--teal); font-size: 12px; text-decoration: none; }
+  .doc-link:hover { text-decoration: underline; }
+
+  /* Books */
+  .books-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+  .book-card {
+    background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px;
+    padding: 16px 14px; text-align: center; transition: all 0.2s; cursor: pointer;
+  }
+  .book-card:hover { background: var(--glass-hover); transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+  .book-emoji { font-size: 36px; margin-bottom: 10px; }
+  .book-title { font-weight: 600; font-size: 13px; margin-bottom: 4px; line-height: 1.3; }
+  .book-author { font-size: 11px; color: var(--text2); margin-bottom: 8px; }
+  .book-status { padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; display: inline-block; }
+  .bs-reading { background: rgba(125,211,200,0.15); color: var(--teal); }
+  .bs-want { background: rgba(184,169,240,0.15); color: var(--lavender); }
+  .bs-done { background: rgba(125,217,160,0.15); color: var(--green); }
+  .book-rating { color: var(--gold); font-size: 12px; margin-top: 6px; }
+
+  /* Stats Row */
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .stat-box { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius); padding: 18px; }
+  .stat-val { font-family: 'Josefin Sans', sans-serif; font-size: 24px; font-weight: 700; }
+  .stat-lbl { font-size: 11px; color: var(--text2); margin-top: 3px; font-weight: 500; }
+
+  /* Progress bar */
+  .progress-wrap { background: rgba(255,255,255,0.08); border-radius: 20px; height: 6px; margin-top: 6px; overflow: hidden; }
+  .progress-bar { height: 100%; border-radius: 20px; background: linear-gradient(90deg, var(--pink2), var(--lavender)); transition: width 0.5s ease; }
+
+  /* Confirm delete */
+  .del-btn { color: var(--text3); background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px; transition: color 0.2s; }
+  .del-btn:hover { color: var(--red); }
+  .edit-btn { color: var(--text3); background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px; transition: color 0.2s; }
+  .edit-btn:hover { color: var(--teal); }
+
+  /* Toast */
+  #toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: #1e2030; border: 1px solid var(--glass-border);
+    color: var(--text); padding: 12px 22px; border-radius: 50px; font-size: 13px;
+    z-index: 999; transition: transform 0.3s ease; white-space: nowrap;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* Empty states */
+  .empty { text-align: center; padding: 40px 20px; color: var(--text3); }
+  .empty-icon { font-size: 40px; margin-bottom: 10px; }
+  .empty-text { font-size: 14px; }
+
+  /* Mobile */
+  @media (max-width: 768px) {
+    .header { padding: 14px 16px; flex-wrap: wrap; gap: 10px; }
+    .nav { gap: 2px; }
+    .nav-btn { padding: 6px 10px; font-size: 12px; }
+    .main { padding: 16px; }
+    .grid2, .grid3, .kanban { grid-template-columns: 1fr; }
+    .form-row.cols2, .form-row.cols3 { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .books-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+    .bill-months { display: none; }
+    .logo-sub { display: none; }
+  }
+
+  /* Month tracker modal stuff */
+  .months-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
+  .m-btn {
+    padding: 10px 6px; border-radius: 10px; border: 1px solid var(--glass-border);
+    background: var(--glass); color: var(--text2); font-family: 'Raleway', sans-serif;
+    font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: center;
+  }
+  .m-btn.paid { background: var(--green); color: #0f1117; border-color: var(--green); }
+  .m-btn.partial { background: var(--gold); color: #0f1117; border-color: var(--gold); }
+  .month-amount-row { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+  .month-amount-row input { flex: 1; }
+  .month-amount-row span { font-size: 12px; color: var(--text2); white-space: nowrap; }
+
+  .color-dots { display: flex; gap: 8px; flex-wrap: wrap; }
+  .color-dot { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s; }
+  .color-dot.sel { border-color: #fff; }
+
+  .tag-filter { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .tag-f { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text2); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .tag-f.active { background: rgba(240,165,192,0.15); color: var(--pink); border-color: var(--pink); }
+
+  .hide-xs { }
+  @media (max-width: 500px) { .hide-xs { display: none; } }
+  .star.on { color: var(--gold); }
+
+  /* Government account cards */
+  .gov-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .gov-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 18px; overflow: hidden; transition: all 0.2s; }
+  .gov-card:hover { background: var(--glass-hover); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.3); }
+  .gov-card-header { padding: 16px 18px 14px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .gov-card-icon { width: 46px; height: 46px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .gov-card-body { padding: 14px 18px; }
+  .gov-field { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .gov-field:last-child { border-bottom: none; }
+  .gov-field-label { font-size: 10px; color: var(--text3); font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; min-width: 80px; }
+  .gov-field-value { font-size: 13px; color: var(--text2); flex: 1; word-break: break-all; }
+  .gov-expiry-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .gov-expiry-ok { background: rgba(125,217,160,0.12); color: var(--green); }
+  .gov-expiry-soon { background: rgba(245,199,126,0.12); color: var(--gold); }
+  .gov-expiry-expired { background: rgba(240,120,120,0.12); color: var(--red); }
+  @media (max-width: 768px) { .gov-grid { grid-template-columns: 1fr; } }
+
+  /* Pagination */
+  .pagination { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 24px; flex-wrap: wrap; }
+  .pg-btn {
+    padding: 7px 13px; border-radius: 10px; border: 1px solid var(--glass-border);
+    background: var(--glass); color: var(--text2); font-family: 'Raleway', sans-serif;
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.18s;
+  }
+  .pg-btn:hover { background: var(--glass-hover); color: var(--text); }
+  .pg-btn.active { background: rgba(240,165,192,0.15); color: var(--pink); border-color: rgba(240,165,192,0.3); }
+  .pg-btn:disabled { opacity: 0.3; cursor: default; }
+  .pg-info { font-size: 12px; color: var(--text3); padding: 0 6px; }
+
+  .task-move-btn { font-size: 11px; color: var(--text3); background: none; border: none; cursor: pointer; padding: 2px 4px; transition: color 0.2s; }
+  .task-move-btn:hover { color: var(--pink); }
+
+  /* Password cards */
+  .pw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .pw-card {
+    background: var(--glass); border: 1px solid var(--glass-border);
+    border-radius: 16px; padding: 18px; transition: all 0.2s;
+  }
+  .pw-card:hover { background: var(--glass-hover); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.3); }
+  .pw-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .pw-icon { width: 42px; height: 42px; border-radius: 12px; background: rgba(255,255,255,0.07); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .pw-name { font-family: 'Josefin Sans', sans-serif; font-weight: 700; font-size: 15px; }
+  .pw-cat { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .pw-field { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .pw-field:last-child { border-bottom: none; }
+  .pw-field-label { font-size: 10px; color: var(--text3); font-weight: 700; letter-spacing: 0.07em; min-width: 70px; text-transform: uppercase; }
+  .pw-field-value { font-size: 13px; color: var(--text2); flex: 1; word-break: break-all; }
+  .pw-masked { letter-spacing: 0.2em; color: var(--text3); }
+  .copy-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 14px; padding: 2px 4px; transition: color 0.2s; flex-shrink: 0; }
+  .copy-btn:hover { color: var(--teal); }
+  .eye-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 13px; padding: 2px 4px; transition: color 0.2s; flex-shrink: 0; }
+  .eye-btn:hover { color: var(--pink); }
+  @media (max-width: 768px) { .pw-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Top bar -->
+  <div class="topbar">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button class="hamburger" onclick="toggleSidenav()">☰</button>
+      <div class="logo">
+        <span class="logo-icon">🏡</span>
+        <div>
+          <div class="logo-text">Nestkeeper</div>
+          <div class="logo-sub">your home, organized</div>
+        </div>
+      </div>
+    </div>
+    <span id="syncStatus" style="font-size:11px; color:var(--text3)">☁️ Loading…</span>
+  </div>
+
+  <div class="body-wrap">
+    <!-- Side overlay for mobile -->
+    <div class="sidenav-overlay" id="sidenavOverlay" onclick="toggleSidenav()"></div>
+
+    <!-- Side Nav -->
+    <nav class="sidenav" id="sidenav">
+
+      <div class="sidenav-section">
+        <div class="sidenav-label">Finance</div>
+        <button class="nav-btn active" onclick="showTab('bills', this)"><span class="nb-icon">💡</span>House Bills</button>
+        <button class="nav-btn" onclick="showTab('expenses', this)"><span class="nb-icon">💸</span>Other Expenses</button>
+        <button class="nav-btn" onclick="showTab('savings', this)"><span class="nb-icon">🐷</span>Savings Goals</button>
+        <button class="nav-btn" onclick="showTab('summary', this)"><span class="nb-icon">📊</span>Bills & Expenses Summary</button>
+      </div>
+
+      <div class="sidenav-section">
+        <div class="sidenav-label">Home & Life</div>
+        <button class="nav-btn" onclick="showTab('events', this)"><span class="nb-icon">📅</span>Important Events</button>
+        <button class="nav-btn" onclick="showTab('tasks', this)"><span class="nb-icon">✅</span>Tasks</button>
+      </div>
+
+      <div class="sidenav-section">
+        <div class="sidenav-label">Personal</div>
+        <button class="nav-btn" onclick="showTab('docs', this)"><span class="nb-icon">📎</span>Docs & Links</button>
+        <button class="nav-btn" onclick="showTab('books', this)"><span class="nb-icon">📚</span>Books Tracker</button>
+        <button class="nav-btn" onclick="showTab('passwords', this)"><span class="nb-icon">🔐</span>Passwords</button>
+        <button class="nav-btn" onclick="showTab('govaccounts', this)"><span class="nb-icon">🏛️</span>Government Accounts</button>
+      </div>
+
+      <div class="sidenav-section sidenav-setup">
+        <div class="sidenav-label">Settings</div>
+        <button class="nav-btn" onclick="openModal('setupModal')"><span class="nb-icon">⚙️</span>Google Sheets Setup</button>
+      </div>
+
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+
+    <!-- ======== BILLS TAB ======== -->
+    <div class="tab active" id="tab-bills">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
+        <div>
+          <div class="section-title">💡 House Bills</div>
+          <div class="section-sub">Track your recurring monthly bills and payment status</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('addBillModal')">＋ Add Bill</button>
+      </div>
+
+      <div class="stats-row" id="billStats"></div>
+
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+        <label style="margin:0; font-size:13px; color:var(--text2);">Tracking month:</label>
+        <select class="select" id="trackMonth" style="width:auto; min-width:140px;" onchange="renderBills()">
+          <option value="0">January</option><option value="1">February</option>
+          <option value="2">March</option><option value="3">April</option>
+          <option value="4">May</option><option value="5">June</option>
+          <option value="6">July</option><option value="7">August</option>
+          <option value="8">September</option><option value="9">October</option>
+          <option value="10">November</option><option value="11">December</option>
+        </select>
+        <select class="select" id="trackYear" style="width:auto; min-width:100px;" onchange="renderBills()"></select>
+      </div>
+
+      <div id="billsList"></div>
+    </div>
+
+    <!-- ======== EXPENSES TAB ======== -->
+    <div class="tab" id="tab-expenses">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
+        <div>
+          <div class="section-title">💸 Other Expenses</div>
+          <div class="section-sub">Log and analyze your spending</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('addExpenseModal')">＋ Add Expense</button>
+      </div>
+
+      <div class="stats-row" id="expenseStats"></div>
+
+      <div class="tag-filter" id="expenseFilters"></div>
+
+      <div class="card">
+        <div id="expenseList"></div>
+      </div>
+    </div>
+
+    <!-- ======== SUMMARY TAB ======== -->
+    <div class="tab" id="tab-summary">
+      <div style="margin-bottom:24px;">
+        <div class="section-title">📊 Bills & Expenses Summary</div>
+        <div class="section-sub">Your average monthly costs — bills and spending combined</div>
+      </div>
+
+      <!-- Year selector -->
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:24px; flex-wrap:wrap;">
+        <label style="margin:0; font-size:13px; color:var(--text2);">View year:</label>
+        <select class="select" id="summaryYear" style="width:auto; min-width:100px;" onchange="renderSummary()"></select>
+      </div>
+
+      <!-- Top totals -->
+      <div class="stats-row" id="summaryTopStats"></div>
+
+      <!-- Bills breakdown -->
+      <div class="card" style="margin-bottom:18px;">
+        <div class="card-title"><span class="icon">💡</span> Bills — Monthly Average per Item</div>
+        <div id="summaryBillsBreakdown"></div>
+      </div>
+
+      <!-- Expenses breakdown -->
+      <div class="card" style="margin-bottom:18px;">
+        <div class="card-title"><span class="icon">💸</span> Expenses — Average by Category</div>
+        <div id="summaryExpCats"></div>
+      </div>
+
+      <!-- Monthly trend table -->
+      <div class="card">
+        <div class="card-title"><span class="icon">📅</span> Month-by-Month Breakdown</div>
+        <div style="overflow-x:auto;">
+          <table id="summaryTable" style="width:100%; border-collapse:collapse; font-size:13px;"></table>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="tab" id="tab-events">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
+        <div>
+          <div class="section-title">📅 Important Events</div>
+          <div class="section-sub">Never miss a date again</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('addEventModal')">＋ Add Event</button>
+      </div>
+      <div id="eventsList"></div>
+    </div>
+
+    <!-- ======== TASKS TAB ======== -->
+    <div class="tab" id="tab-tasks">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
+        <div>
+          <div class="section-title">✅ Tasks</div>
+          <div class="section-sub">Your personal Trello board</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('addTaskModal')">＋ Add Task</button>
+      </div>
+      <div class="kanban">
+        <div class="kanban-col">
+          <div class="kanban-col-title"><span class="dot" style="background:var(--text3)"></span>To Do</div>
+          <div id="col-todo"></div>
+        </div>
+        <div class="kanban-col">
+          <div class="kanban-col-title"><span class="dot" style="background:var(--gold)"></span>In Progress</div>
+          <div id="col-inprogress"></div>
+        </div>
+        <div class="kanban-col">
+          <div class="kanban-col-title"><span class="dot" style="background:var(--green)"></span>Done ✨</div>
+          <div id="col-done"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======== DOCS TAB ======== -->
+    <div class="tab" id="tab-docs">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
+        <div>
+          <div class="section-title">📎 Documents & Links</div>
+          <div class="section-sub">Important files and links in one place</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('addDocModal')">＋ Add Document</button>
+      </div>
+
+      <div class="tag-filter" id="docFilters">
+        <span class="tag-f active" onclick="filterDocs('all', this)">All</span>
+      </div>
+
+      <div id="docsList"></div>
+    </div>
+
+    <!-- ======== BOOKS TAB ======== -->
+    <div class="tab" id="tab-books">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
+        <div>
+          <div class="section-title">📚 Books Tracker</div>
+          <div class="section-sub">Your reading journey</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('addBookModal')">＋ Add Book</button>
+      </div>
+
+      <div class="tag-filter" id="bookFilters">
+        <span class="tag-f active" onclick="filterBooks('all', this)">All</span>
+        <span class="tag-f" onclick="filterBooks('Reading', this)">📖 Reading</span>
+        <span class="tag-f" onclick="filterBooks('Want to Read', this)">💜 Want to Read</span>
+        <span class="tag-f" onclick="filterBooks('Finished', this)">✅ Finished</span>
+      </div>
+
+      <div class="books-grid" id="booksGrid"></div>
+    </div>
+
+    <!-- ======== SAVINGS TAB ======== -->
+    <div class="tab" id="tab-savings">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
+        <div>
+          <div class="section-title">🐷 Savings Goals</div>
+          <div class="section-sub">Track your goals and log deposits anytime</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('addSavingsModal')">＋ Add Goal</button>
+      </div>
+
+      <!-- Top stats -->
+      <div class="stats-row" id="savingsTopStats"></div>
+
+      <!-- Goals list -->
+      <div id="savingsGoalsList"></div>
+    </div>
+
+    <!-- ======== PASSWORDS TAB ======== -->
+    <div class="tab" id="tab-passwords">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:8px;">
+        <div>
+          <div class="section-title">🔐 Passwords</div>
+          <div class="section-sub">Keep your logins organized and easy to find</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('addPasswordModal')">＋ Add Login</button>
+      </div>
+
+      <!-- Warning banner -->
+      <div style="background:rgba(245,199,126,0.08); border:1px solid rgba(245,199,126,0.25); border-radius:12px; padding:12px 16px; margin-bottom:20px; display:flex; align-items:flex-start; gap:10px;">
+        <span style="font-size:16px;">⚠️</span>
+        <div style="font-size:12px; color:var(--gold); line-height:1.6;">Passwords here are <strong>not encrypted</strong>. Best for low-risk accounts (streaming, apps, loyalty cards). Avoid storing banking or email passwords here.</div>
+      </div>
+
+      <!-- Search & filter -->
+      <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+        <input class="input" id="pwSearch" placeholder="🔍  Search by name or username…" oninput="renderPasswords()" style="max-width:300px;">
+      </div>
+      <div class="tag-filter" id="pwFilters"></div>
+
+      <!-- Password grid -->
+      <div id="passwordsList"></div>
+    </div>
+
+    <!-- ======== GOVERNMENT ACCOUNTS TAB ======== -->
+    <div class="tab" id="tab-govaccounts">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
+        <div>
+          <div class="section-title">🏛️ Government Accounts</div>
+          <div class="section-sub">All your IDs, numbers, and account details in one place</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('addGovModal')">＋ Add Account</button>
+      </div>
+
+      <!-- Quick reference cards (pre-built PH gov accounts) -->
+      <div style="font-size:12px; color:var(--text3); font-weight:700; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:12px;">Your Accounts</div>
+      <div class="tag-filter" id="govFilters"></div>
+      <div id="govAccountsList"></div>
+    </div>
+
+  </main>
+  </div><!-- end body-wrap -->
+</div>
+
+<!-- ========== MODALS ========== -->
+
+<!-- Add Bill -->
+<div class="modal-overlay" id="addBillModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">💡 Add New Bill</div>
+      <button class="close-btn" onclick="closeModal('addBillModal')">×</button>
+    </div>
+    <div class="form-row">
+      <div><label>Bill Name *</label><input class="input" id="billName" placeholder="e.g. Meralco, PLDT..."></div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Icon / Emoji</label><input class="input" id="billIcon" placeholder="💡" maxlength="4"></div>
+      <div>
+        <label>Color</label>
+        <div class="color-dots" id="billColorPicker">
+          <div class="color-dot sel" style="background:#f0a5c0" onclick="selectColor(this,'#f0a5c0')"></div>
+          <div class="color-dot" style="background:#7dd3c8" onclick="selectColor(this,'#7dd3c8')"></div>
+          <div class="color-dot" style="background:#f5c77e" onclick="selectColor(this,'#f5c77e')"></div>
+          <div class="color-dot" style="background:#b8a9f0" onclick="selectColor(this,'#b8a9f0')"></div>
+          <div class="color-dot" style="background:#7dd9a0" onclick="selectColor(this,'#7dd9a0')"></div>
+          <div class="color-dot" style="background:#f07878" onclick="selectColor(this,'#f07878')"></div>
+        </div>
+      </div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Typical Amount (₱)</label><input class="input" id="billTypical" type="number" placeholder="0.00"></div>
+      <div><label>Due Day of Month</label><input class="input" id="billDueDay" type="number" placeholder="15" min="1" max="31"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Notes</label><input class="input" id="billNotes" placeholder="Any extra info..."></div>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('addBillModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBill()">Save Bill</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bill Month Tracker -->
+<div class="modal-overlay" id="billTrackModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="billTrackTitle">Track Payments</div>
+      <button class="close-btn" onclick="closeModal('billTrackModal')">×</button>
+    </div>
+    <div id="billTrackContent"></div>
+    <div style="margin-top:16px; display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="closeModal('billTrackModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Expense -->
+<div class="modal-overlay" id="addExpenseModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">💸 Add Expense</div>
+      <button class="close-btn" onclick="closeModal('addExpenseModal')">×</button>
+    </div>
+    <div class="form-row">
+      <div><label>Description *</label><input class="input" id="expDesc" placeholder="e.g. Grocery run at SM..."></div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Amount (₱) *</label><input class="input" id="expAmount" type="number" placeholder="0.00"></div>
+      <div><label>Date *</label><input class="input" id="expDate" type="date"></div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Category</label>
+        <select class="select" id="expCat">
+          <option>🛒 Groceries</option><option>🍽️ Food & Dining</option><option>🚗 Transportation</option>
+          <option>💊 Health</option><option>👗 Shopping</option><option>🎉 Entertainment</option>
+          <option>📚 Education</option><option>🏠 Home</option><option>💰 Savings</option><option>🌐 Other</option>
+        </select>
+      </div>
+      <div><label>Notes</label><input class="input" id="expNotes" placeholder="Optional"></div>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('addExpenseModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveExpense()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Event -->
+<div class="modal-overlay" id="addEventModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📅 Add Event</div>
+      <button class="close-btn" onclick="closeModal('addEventModal')">×</button>
+    </div>
+    <div class="form-row">
+      <div><label>Event Title *</label><input class="input" id="evTitle" placeholder="e.g. Lola's Birthday 🎂"></div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Date *</label><input class="input" id="evDate" type="date"></div>
+      <div><label>Time (optional)</label><input class="input" id="evTime" type="time"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Description</label><textarea class="textarea" id="evDesc" placeholder="Any details..."></textarea></div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Category / Emoji</label><input class="input" id="evEmoji" placeholder="🎂 Birthday, 💉 Checkup..."></div>
+      <div><label>Repeat?</label>
+        <select class="select" id="evRepeat">
+          <option value="none">No repeat</option>
+          <option value="yearly">Every year</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('addEventModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEvent()">Save Event</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Task -->
+<div class="modal-overlay" id="addTaskModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">✅ Add Task</div>
+      <button class="close-btn" onclick="closeModal('addTaskModal')">×</button>
+    </div>
+    <div class="form-row">
+      <div><label>Task Title *</label><input class="input" id="taskTitle" placeholder="What needs to be done?"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Details</label><textarea class="textarea" id="taskDesc" placeholder="More details here..."></textarea></div>
+    </div>
+    <div class="form-row cols3">
+      <div><label>Status</label>
+        <select class="select" id="taskStatus">
+          <option value="todo">To Do</option>
+          <option value="inprogress">In Progress</option>
+          <option value="done">Done</option>
+        </select>
+      </div>
+      <div><label>Priority</label>
+        <select class="select" id="taskPriority">
+          <option value="low">🟢 Low</option>
+          <option value="med">🟡 Medium</option>
+          <option value="high">🔴 High</option>
+        </select>
+      </div>
+      <div><label>Due Date</label><input class="input" id="taskDue" type="date"></div>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('addTaskModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTask()">Save Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Doc -->
+<div class="modal-overlay" id="addDocModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📎 Add Document / Link</div>
+      <button class="close-btn" onclick="closeModal('addDocModal')">×</button>
+    </div>
+    <div class="form-row">
+      <div><label>Title *</label><input class="input" id="docTitle" placeholder="e.g. SSS Account, Pag-IBIG Card..."></div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Icon / Emoji</label><input class="input" id="docIcon" placeholder="📄" maxlength="4"></div>
+      <div><label>Category</label>
+        <select class="select" id="docCat">
+          <option>🏛️ Government</option><option>🏦 Banking</option><option>🏥 Health</option>
+          <option>🏠 Home</option><option>📚 School</option><option>💼 Work</option>
+          <option>🔐 Passwords</option><option>🌐 Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div><label>Link / URL (optional)</label><input class="input" id="docLink" placeholder="https://..."></div>
+    </div>
+    <div class="form-row">
+      <div><label>Notes / Details</label><textarea class="textarea" id="docNotes" placeholder="Account number, location of physical doc, etc."></textarea></div>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('addDocModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDoc()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Book -->
+<div class="modal-overlay" id="addBookModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📚 Add Book</div>
+      <button class="close-btn" onclick="closeModal('addBookModal')">×</button>
+    </div>
+    <div class="form-row">
+      <div><label>Book Title *</label><input class="input" id="bookTitle" placeholder="e.g. Atomic Habits"></div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Author</label><input class="input" id="bookAuthor" placeholder="James Clear"></div>
+      <div><label>Cover Emoji</label><input class="input" id="bookEmoji" placeholder="📗" maxlength="4"></div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Status</label>
+        <select class="select" id="bookStatus">
+          <option>Want to Read</option><option>Reading</option><option>Finished</option>
+        </select>
+      </div>
+      <div><label>Genre</label><input class="input" id="bookGenre" placeholder="Self-help, Fiction..."></div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label>Rating (click stars)</label>
+        <div id="ratingInput" style="display:flex; gap:4px; margin-top:6px;">
+          <span class="star" onclick="setRating(1)">★</span>
+          <span class="star" onclick="setRating(2)">★</span>
+          <span class="star" onclick="setRating(3)">★</span>
+          <span class="star" onclick="setRating(4)">★</span>
+          <span class="star" onclick="setRating(5)">★</span>
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div><label>Notes / Review</label><textarea class="textarea" id="bookNotes" placeholder="Your thoughts..."></textarea></div>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('addBookModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBook()">Save Book</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Savings Goal -->
+<div class="modal-overlay" id="addSavingsModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="savingsModalTitle">🐷 Add Savings Goal</div>
+      <button class="close-btn" onclick="closeModal('addSavingsModal')">×</button>
+    </div>
+    <div class="form-row">
+      <div><label>Goal Name *</label><input class="input" id="sgName" placeholder="e.g. Emergency Fund, Vacation, New Laptop..."></div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Icon / Emoji</label><input class="input" id="sgIcon" placeholder="🎯" maxlength="4"></div>
+      <div>
+        <label>Color</label>
+        <div class="color-dots" id="sgColorPicker">
+          <div class="color-dot sel" style="background:#7dd9a0" onclick="selectSgColor(this,'#7dd9a0')"></div>
+          <div class="color-dot" style="background:#f0a5c0" onclick="selectSgColor(this,'#f0a5c0')"></div>
+          <div class="color-dot" style="background:#7dd3c8" onclick="selectSgColor(this,'#7dd3c8')"></div>
+          <div class="color-dot" style="background:#f5c77e" onclick="selectSgColor(this,'#f5c77e')"></div>
+          <div class="color-dot" style="background:#b8a9f0" onclick="selectSgColor(this,'#b8a9f0')"></div>
+          <div class="color-dot" style="background:#f07878" onclick="selectSgColor(this,'#f07878')"></div>
+        </div>
+      </div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Target Amount (₱) *</label><input class="input" id="sgTarget" type="number" placeholder="0.00"></div>
+      <div><label>Target Date (optional)</label><input class="input" id="sgDate" type="date"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Notes</label><input class="input" id="sgNotes" placeholder="What is this for?"></div>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('addSavingsModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSavingsGoal()">Save Goal</button>
+    </div>
+  </div>
+</div>
+
+<!-- Log Deposit Modal -->
+<div class="modal-overlay" id="depositModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="depositModalTitle">💰 Log Transaction</div>
+      <button class="close-btn" onclick="closeModal('depositModal')">×</button>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Type</label>
+        <select class="select" id="depositType">
+          <option value="deposit">➕ Deposit / Add</option>
+          <option value="withdraw">➖ Withdraw / Use</option>
+        </select>
+      </div>
+      <div><label>Amount (₱) *</label><input class="input" id="depositAmount" type="number" placeholder="0.00"></div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Date *</label><input class="input" id="depositDate" type="date"></div>
+      <div><label>Note (optional)</label><input class="input" id="depositNote" placeholder="e.g. Monthly allotment"></div>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('depositModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDeposit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add / Edit Password -->
+<div class="modal-overlay" id="addPasswordModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="pwModalTitle">🔐 Add Login</div>
+      <button class="close-btn" onclick="closeModal('addPasswordModal')">×</button>
+    </div>
+    <div class="form-row">
+      <div><label>Site / App Name *</label><input class="input" id="pwName" placeholder="e.g. Netflix, Gmail, Shopee…"></div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Icon / Emoji</label><input class="input" id="pwIcon" placeholder="🌐" maxlength="4"></div>
+      <div><label>Category</label>
+        <select class="select" id="pwCat">
+          <option>🎬 Streaming</option>
+          <option>🛒 Shopping</option>
+          <option>💼 Work</option>
+          <option>📱 Social Media</option>
+          <option>🏛️ Government</option>
+          <option>🏥 Health</option>
+          <option>🎮 Gaming</option>
+          <option>🌐 Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div><label>Website URL (optional)</label><input class="input" id="pwUrl" placeholder="https://…"></div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Username / Email</label><input class="input" id="pwUser" placeholder="yourname@email.com"></div>
+      <div>
+        <label>Password</label>
+        <div style="position:relative;">
+          <input class="input" id="pwPass" type="password" placeholder="••••••••" style="padding-right:40px;">
+          <button onclick="togglePwVisible('pwPass', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--text3); font-size:16px;">👁</button>
+        </div>
+      </div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>PIN (optional)</label><input class="input" id="pwPin" type="password" placeholder="e.g. 1234" style="padding-right:40px;" id="pwPin">
+        <button onclick="togglePwVisible('pwPin', this)" style="margin-top:6px; background:none; border:none; cursor:pointer; color:var(--text3); font-size:12px; padding:0;">👁 show PIN</button>
+      </div>
+      <div><label>Recovery Email (optional)</label><input class="input" id="pwRecovery" placeholder="backup@email.com"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Notes</label><textarea class="textarea" id="pwNotes" placeholder="Security questions, extra info…" style="min-height:60px;"></textarea></div>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('addPasswordModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePassword()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add / Edit Government Account -->
+<div class="modal-overlay" id="addGovModal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <div class="modal-title" id="govModalTitle">🏛️ Add Government Account</div>
+      <button class="close-btn" onclick="closeModal('addGovModal')">×</button>
+    </div>
+
+    <div class="form-row">
+      <div><label>Account / Agency Name *</label>
+        <input class="input" id="govName" placeholder="e.g. SSS, PhilHealth, Pag-IBIG, BIR…">
+      </div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Icon / Emoji</label><input class="input" id="govIcon" placeholder="🏛️" maxlength="4"></div>
+      <div><label>Category</label>
+        <select class="select" id="govCat">
+          <option>💼 Social Security</option>
+          <option>🏥 Health</option>
+          <option>🏠 Housing</option>
+          <option>💰 Tax</option>
+          <option>🪪 ID / Identification</option>
+          <option>📋 Permits & Licenses</option>
+          <option>🎓 Education</option>
+          <option>🌐 Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="font-size:11px; color:var(--text3); font-weight:700; letter-spacing:0.08em; text-transform:uppercase; margin:14px 0 10px;">Account Numbers & IDs</div>
+    <div class="form-row cols2">
+      <div><label>Account / ID Number</label><input class="input" id="govIdNum" placeholder="e.g. 12-3456789-0"></div>
+      <div><label>Secondary Number (if any)</label><input class="input" id="govIdNum2" placeholder="e.g. CRN, TIN…"></div>
+    </div>
+
+    <div style="font-size:11px; color:var(--text3); font-weight:700; letter-spacing:0.08em; text-transform:uppercase; margin:14px 0 10px;">Online Account</div>
+    <div class="form-row cols2">
+      <div><label>Website / Portal</label><input class="input" id="govUrl" placeholder="https://…"></div>
+      <div><label>Username / Email</label><input class="input" id="govUser" placeholder="yourname@email.com"></div>
+    </div>
+    <div class="form-row cols2">
+      <div>
+        <label>Password</label>
+        <div style="position:relative;">
+          <input class="input" id="govPass" type="password" placeholder="••••••••" style="padding-right:40px;">
+          <button onclick="togglePwVisible('govPass', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--text3); font-size:15px;">👁</button>
+        </div>
+      </div>
+      <div><label>PIN (optional)</label>
+        <div style="position:relative;">
+          <input class="input" id="govPin" type="password" placeholder="••••" style="padding-right:40px;">
+          <button onclick="togglePwVisible('govPin', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--text3); font-size:15px;">👁</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size:11px; color:var(--text3); font-weight:700; letter-spacing:0.08em; text-transform:uppercase; margin:14px 0 10px;">Important Dates & Reminders</div>
+    <div class="form-row cols2">
+      <div><label>Expiry Date (if applicable)</label><input class="input" id="govExpiry" type="date"></div>
+      <div><label>Next Renewal / Contribution Due</label><input class="input" id="govRenewal" type="date"></div>
+    </div>
+
+    <div style="font-size:11px; color:var(--text3); font-weight:700; letter-spacing:0.08em; text-transform:uppercase; margin:14px 0 10px;">Extra Details</div>
+    <div class="form-row cols2">
+      <div><label>Registered Address / Branch</label><input class="input" id="govAddress" placeholder="e.g. SSS Makati Branch"></div>
+      <div><label>Contact / Hotline</label><input class="input" id="govContact" placeholder="e.g. 1455"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Notes</label><textarea class="textarea" id="govNotes" placeholder="Beneficiaries, contribution tier, extra reminders…" style="min-height:60px;"></textarea></div>
+    </div>
+
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('addGovModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveGovAccount()">Save Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- Setup Modal -->
+<div class="modal-overlay" id="setupModal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <div class="modal-title">⚙️ Connect to Google Sheets</div>
+      <button class="close-btn" onclick="closeModal('setupModal')">×</button>
+    </div>
+
+    <div style="background:rgba(125,211,200,0.08); border:1px solid rgba(125,211,200,0.2); border-radius:12px; padding:16px; margin-bottom:20px;">
+      <div style="font-size:13px; font-weight:600; color:var(--teal); margin-bottom:6px;">✨ One-time setup — about 5 minutes!</div>
+      <div style="font-size:12px; color:var(--text2); line-height:1.7;">Once connected, all your data saves automatically to your own Google Sheet — accessible from any device, forever.</div>
+    </div>
+
+    <div style="font-size:13px; line-height:2; color:var(--text2);">
+      <div style="font-weight:700; color:var(--text); font-size:14px; margin-bottom:10px; font-family:'Josefin Sans',sans-serif; letter-spacing:0.04em;">STEP-BY-STEP GUIDE</div>
+
+      <div style="display:flex; gap:10px; margin-bottom:12px; align-items:flex-start;">
+        <span style="min-width:24px; height:24px; background:var(--pink2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; margin-top:1px;">1</span>
+        <div>Go to <a href="https://sheets.google.com" target="_blank" style="color:var(--teal);">sheets.google.com</a> and create a <strong>new blank spreadsheet</strong>. Name it <em>Nestkeeper</em>.</div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-bottom:12px; align-items:flex-start;">
+        <span style="min-width:24px; height:24px; background:var(--pink2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; margin-top:1px;">2</span>
+        <div>In the spreadsheet, click <strong>Extensions → Apps Script</strong> from the top menu.</div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-bottom:12px; align-items:flex-start;">
+        <span style="min-width:24px; height:24px; background:var(--pink2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; margin-top:1px;">3</span>
+        <div><strong>Delete</strong> all existing code in the editor, then <strong>paste</strong> the Apps Script code below.</div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-bottom:12px; align-items:flex-start;">
+        <span style="min-width:24px; height:24px; background:var(--pink2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; margin-top:1px;">4</span>
+        <div>Click <strong>Deploy → New deployment</strong>. Set type to <strong>Web app</strong>. Set <em>"Who has access"</em> to <strong>Anyone</strong>. Click <strong>Deploy</strong> and authorize when asked.</div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-bottom:16px; align-items:flex-start;">
+        <span style="min-width:24px; height:24px; background:var(--pink2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; margin-top:1px;">5</span>
+        <div>Copy the <strong>Web app URL</strong> and paste it below. Done! 🎉</div>
+      </div>
+
+      <div style="background:#0f1117; border:1px solid var(--glass-border); border-radius:10px; padding:14px; margin-bottom:16px; position:relative;">
+        <div style="font-size:10px; color:var(--text3); margin-bottom:8px; letter-spacing:0.08em; font-weight:600;">APPS SCRIPT CODE — COPY THIS</div>
+        <button onclick="copyScript()" style="position:absolute; top:10px; right:10px; background:var(--glass); border:1px solid var(--glass-border); color:var(--text2); border-radius:6px; padding:4px 10px; font-size:11px; cursor:pointer; font-family:'Raleway',sans-serif;">Copy</button>
+        <pre id="scriptCode" style="font-size:10px; color:var(--teal); overflow-x:auto; white-space:pre-wrap; line-height:1.6; font-family:monospace;">const SHEET_NAME = 'nestkeeper_data';
+
+function doGet(e) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(SHEET_NAME);
+    if (!sheet) return ContentService.createTextOutput(JSON.stringify({data:null})).setMimeType(ContentService.MimeType.JSON);
+    const val = sheet.getRange(1,1).getValue();
+    const data = val ? JSON.parse(val) : null;
+    return ContentService.createTextOutput(JSON.stringify({data})).setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({error:err.toString()})).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doPost(e) {
+  try {
+    const body = JSON.parse(e.postData.contents);
+    if (body.action === 'save') {
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      let sheet = ss.getSheetByName(SHEET_NAME);
+      if (!sheet) sheet = ss.insertSheet(SHEET_NAME);
+      sheet.getRange(1,1).setValue(JSON.stringify(body.data));
+      sheet.getRange(1,2).setValue(new Date().toISOString());
+    }
+    return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({error:err.toString()})).setMimeType(ContentService.MimeType.JSON);
+  }
+}</pre>
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <label>Your Web App URL</label>
+      <input class="input" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/..." value="">
+    </div>
+
+    <div style="display:flex; gap:10px; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="disconnectSheet()" style="color:var(--red);">Disconnect</button>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-ghost" onclick="closeModal('setupModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveScriptUrl()">Connect ✓</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast">✓ Saved!</div>
+
+<script>
+// ========== DATA ==========
+let db = {
+  bills: [], expenses: [], events: [], tasks: [], docs: [], books: [], savings: [], passwords: [], govaccounts: []
+};
+let selectedBillColor = '#f0a5c0';
+let currentBillRating = 0;
+let currentBookRating = 0;
+let currentExpenseFilter = 'all';
+let currentDocFilter = 'all';
+let currentBookFilter = 'all';
+let editingId = null;
+
+// ========== PAGINATION HELPER ==========
+const PAGE_SIZE = 50;
+const pages = { docs: 1, books: 1, passwords: 1, govaccounts: 1 };
+
+function paginate(items, page) {
+  const total = items.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const p = Math.min(Math.max(1, page), totalPages);
+  const slice = items.slice((p - 1) * PAGE_SIZE, p * PAGE_SIZE);
+  return { slice, p, totalPages, total };
+}
+
+function paginationHTML(section, p, totalPages, total) {
+  if (totalPages <= 1) return '';
+  const start = (p - 1) * PAGE_SIZE + 1;
+  const end = Math.min(p * PAGE_SIZE, total);
+  let btns = '';
+  for (let i = 1; i <= totalPages; i++) {
+    if (totalPages > 7 && i > 2 && i < totalPages - 1 && Math.abs(i - p) > 1) {
+      if (i === 3 || i === totalPages - 2) btns += `<span class="pg-info">…</span>`;
+      continue;
+    }
+    btns += `<button class="pg-btn ${i === p ? 'active' : ''}" onclick="goToPage('${section}',${i})">${i}</button>`;
+  }
+  return `<div class="pagination">
+    <button class="pg-btn" onclick="goToPage('${section}',${p - 1})" ${p <= 1 ? 'disabled' : ''}>‹ Prev</button>
+    ${btns}
+    <button class="pg-btn" onclick="goToPage('${section}',${p + 1})" ${p >= totalPages ? 'disabled' : ''}>Next ›</button>
+    <span class="pg-info">Showing ${start}–${end} of ${total}</span>
+  </div>`;
+}
+
+function goToPage(section, p) {
+  pages[section] = p;
+  if (section === 'docs') renderDocs();
+  if (section === 'books') renderBooks();
+  if (section === 'passwords') renderPasswords();
+  if (section === 'govaccounts') renderGovAccounts();
+  // Scroll content area to top
+  document.querySelector('.main').scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+// ========== STORAGE (Google Sheets via Apps Script) ==========
+let SCRIPT_URL = localStorage.getItem('nestkeeper_script_url') || '';
+let isSyncing = false;
+
+function setSyncStatus(state, msg) {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  const icons = { idle: '☁️', syncing: '⏳', ok: '✅', error: '⚠️' };
+  el.textContent = (icons[state] || '☁️') + ' ' + msg;
+  el.style.color = state === 'error' ? 'var(--red)' : state === 'ok' ? 'var(--green)' : 'var(--text3)';
+}
+
+async function save() {
+  // Always save locally as cache
+  try { localStorage.setItem('nestkeeper_v2', JSON.stringify(db)); } catch(e) {}
+  if (!SCRIPT_URL) return;
+  isSyncing = true;
+  setSyncStatus('syncing', 'Saving…');
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'save', data: db })
+    });
+    setSyncStatus('ok', 'Saved to Google Sheets');
+    setTimeout(() => setSyncStatus('idle', 'Connected'), 2500);
+  } catch(e) {
+    setSyncStatus('error', 'Could not reach Google Sheets');
+  }
+  isSyncing = false;
+}
+
+async function load() {
+  // Load local cache first so UI is instant
+  try {
+    const d = localStorage.getItem('nestkeeper_v2');
+    if (d) db = JSON.parse(d);
+    ['bills','expenses','events','tasks','docs','books','savings','passwords','govaccounts'].forEach(k => { if (!db[k]) db[k] = []; });
+  } catch(e) {}
+
+  if (!SCRIPT_URL) { setSyncStatus('error', 'Not connected — click ⚙️ Setup'); return; }
+
+  setSyncStatus('syncing', 'Loading from Google Sheets…');
+  try {
+    const res = await fetch(SCRIPT_URL + '?action=load', { method: 'GET', mode: 'cors' });
+    const json = await res.json();
+    if (json && json.data) {
+      db = json.data;
+      ['bills','expenses','events','tasks','docs','books','savings','passwords','govaccounts'].forEach(k => { if (!db[k]) db[k] = []; });
+      localStorage.setItem('nestkeeper_v2', JSON.stringify(db));
+      setSyncStatus('ok', 'Loaded from Google Sheets');
+      setTimeout(() => setSyncStatus('idle', 'Connected'), 2500);
+      // Re-render active tab
+      renderBills(); renderTasks();
+    } else {
+      setSyncStatus('ok', 'Connected (empty sheet)');
+    }
+  } catch(e) {
+    setSyncStatus('error', 'Could not reach Google Sheets — showing cached data');
+  }
+}
+
+function saveScriptUrl() {
+  const url = document.getElementById('scriptUrlInput').value.trim();
+  if (!url.startsWith('https://script.google.com')) {
+    alert('That doesn\'t look right — please paste the full URL starting with https://script.google.com');
+    return;
+  }
+  SCRIPT_URL = url;
+  localStorage.setItem('nestkeeper_script_url', url);
+  closeModal('setupModal');
+  toast('✅ Connected! Loading your data…');
+  load().then(() => { renderBills(); renderTasks(); renderExpenses(); renderEvents(); renderDocs(); renderBooks(); });
+}
+
+function disconnectSheet() {
+  if (!confirm('Disconnect from Google Sheets? Your local cached data stays.')) return;
+  SCRIPT_URL = '';
+  localStorage.removeItem('nestkeeper_script_url');
+  setSyncStatus('error', 'Not connected');
+  closeModal('setupModal');
+  toast('Disconnected from Google Sheets');
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+function toggleSidenav() {
+  document.getElementById('sidenav').classList.toggle('open');
+  document.getElementById('sidenavOverlay').classList.toggle('open');
+}
+
+// ========== TABS ==========
+function showTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  // Close sidenav on mobile after selecting
+  document.getElementById('sidenav').classList.remove('open');
+  document.getElementById('sidenavOverlay').classList.remove('open');
+  if (name === 'bills') renderBills();
+  if (name === 'expenses') renderExpenses();
+  if (name === 'savings') renderSavings();
+  if (name === 'passwords') renderPasswords();
+  if (name === 'govaccounts') renderGovAccounts();
+  if (name === 'events') renderEvents();
+  if (name === 'tasks') renderTasks();
+  if (name === 'docs') renderDocs();
+  if (name === 'books') renderBooks();
+}
+
+// ========== MODALS ==========
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'addExpenseModal') document.getElementById('expDate').value = new Date().toISOString().split('T')[0];
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  editingId = null;
+}
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+
+// ========== TOAST ==========
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ========== COLOR PICKER ==========
+function selectColor(el, color) {
+  selectedBillColor = color;
+  document.querySelectorAll('#billColorPicker .color-dot').forEach(d => d.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+// ========== RATING ==========
+function setRating(n) {
+  currentBookRating = n;
+  document.querySelectorAll('#ratingInput .star').forEach((s,i) => {
+    s.classList.toggle('on', i < n);
+  });
+}
+
+// ========== BILLS ==========
+function initYearSelect() {
+  const sel = document.getElementById('trackYear');
+  const y = new Date().getFullYear();
+  for (let i = y-1; i <= y+2; i++) {
+    const o = document.createElement('option');
+    o.value = i; o.textContent = i;
+    if (i === y) o.selected = true;
+    sel.appendChild(o);
+  }
+  document.getElementById('trackMonth').value = new Date().getMonth();
+}
+
+function saveBill() {
+  const name = document.getElementById('billName').value.trim();
+  if (!name) { alert('Please enter a bill name'); return; }
+  const bill = {
+    id: editingId || uid(),
+    name, icon: document.getElementById('billIcon').value.trim() || '💡',
+    color: selectedBillColor,
+    typical: parseFloat(document.getElementById('billTypical').value) || 0,
+    dueDay: parseInt(document.getElementById('billDueDay').value) || null,
+    notes: document.getElementById('billNotes').value.trim(),
+    payments: editingId ? (db.bills.find(b=>b.id===editingId)||{payments:{}}).payments : {}
+  };
+  if (editingId) db.bills = db.bills.map(b => b.id === editingId ? bill : b);
+  else db.bills.push(bill);
+  save(); closeModal('addBillModal'); resetBillForm(); renderBills(); toast('✓ Bill saved!');
+}
+
+function resetBillForm() {
+  ['billName','billIcon','billTypical','billDueDay','billNotes'].forEach(id => document.getElementById(id).value = '');
+}
+
+function renderBills() {
+  const month = parseInt(document.getElementById('trackMonth').value);
+  const year = parseInt(document.getElementById('trackYear').value);
+  const key = `${year}-${month}`;
+  const list = document.getElementById('billsList');
+  const stats = document.getElementById('billStats');
+
+  if (!db.bills.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">💡</div><div class="empty-text">No bills yet. Add your first bill!</div></div>`;
+    stats.innerHTML = '';
+    return;
+  }
+
+  let paidCount = 0, totalAmount = 0, paidAmount = 0;
+  db.bills.forEach(b => {
+    const p = (b.payments[key] || {});
+    if (p.status === 'paid' || p.status === 'partial') paidCount++;
+    const amt = p.amount || b.typical;
+    totalAmount += b.typical || 0;
+    if (p.status === 'paid') paidAmount += amt;
+  });
+
+  const pct = db.bills.length ? Math.round(paidCount/db.bills.length*100) : 0;
+  stats.innerHTML = `
+    <div class="stat-box"><div class="stat-val" style="color:var(--gold)">₱${fmt(totalAmount)}</div><div class="stat-lbl">Estimated Monthly Total</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--green)">${paidCount}/${db.bills.length}</div><div class="stat-lbl">Paid This Month<div class="progress-wrap"><div class="progress-bar" style="width:${pct}%"></div></div></div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--pink)">₱${fmt(paidAmount)}</div><div class="stat-lbl">Amount Paid</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--lavender)">₱${fmt(totalAmount - paidAmount)}</div><div class="stat-lbl">Remaining</div></div>
+  `;
+
+  list.innerHTML = db.bills.map(b => {
+    const p = b.payments[key] || {};
+    const isPaid = p.status === 'paid';
+    const isPartial = p.status === 'partial';
+    const displayAmt = p.amount || b.typical;
+    const avg = calcBillAvg(b);
+    return `
+      <div class="bill-item" style="border-left: 3px solid ${b.color}40;">
+        <div class="bill-icon" style="color:${b.color}">${b.icon}</div>
+        <div class="bill-info" style="flex:1">
+          <div class="bill-name">${b.name}</div>
+          <div class="bill-due" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            ${b.dueDay ? `Due: ${b.dueDay}th` : ''}
+            ${avg ? `<span class="avg-tag">avg ₱${fmt(avg)}</span>` : ''}
+            ${b.notes ? `<span style="color:var(--text3); font-size:11px">${b.notes}</span>` : ''}
+          </div>
+        </div>
+        <div style="text-align:right; margin-right:10px;">
+          <div class="bill-amount" style="color:${b.color}">₱${displayAmt ? fmt(displayAmt) : '---'}</div>
+          <div style="font-size:11px; color:${isPaid ? 'var(--green)' : isPartial ? 'var(--gold)' : 'var(--text3)'}">
+            ${isPaid ? '✓ Paid' : isPartial ? '⊘ Partial' : 'Unpaid'}
+          </div>
+        </div>
+        <div class="bill-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openBillTrack('${b.id}')">Track</button>
+          <button class="edit-btn" onclick="editBill('${b.id}')">✏️</button>
+          <button class="del-btn" onclick="deleteBill('${b.id}')">🗑</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function calcBillAvg(bill) {
+  const amounts = Object.values(bill.payments).filter(p => p.amount > 0).map(p => p.amount);
+  if (!amounts.length) return null;
+  return amounts.reduce((a,b) => a+b, 0) / amounts.length;
+}
+
+function openBillTrack(billId) {
+  const bill = db.bills.find(b => b.id === billId);
+  if (!bill) return;
+  const month = parseInt(document.getElementById('trackMonth').value);
+  const year = parseInt(document.getElementById('trackYear').value);
+  const key = `${year}-${month}`;
+  const p = bill.payments[key] || {};
+
+  document.getElementById('billTrackTitle').textContent = `${bill.icon} ${bill.name}`;
+  document.getElementById('billTrackContent').innerHTML = `
+    <div style="margin-bottom:14px;">
+      <label>Status for ${MONTHS_FULL[month]} ${year}</label>
+      <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+        <button class="btn btn-sm ${p.status==='paid'?'btn-primary':'btn-ghost'}" onclick="setBillStatus('${billId}','${key}','paid')">✓ Paid</button>
+        <button class="btn btn-sm ${p.status==='partial'?'btn-primary':'btn-ghost'}" onclick="setBillStatus('${billId}','${key}','partial')">⊘ Partial</button>
+        <button class="btn btn-sm ${!p.status?'btn-primary':'btn-ghost'}" onclick="setBillStatus('${billId}','${key}','unpaid')">✗ Unpaid</button>
+      </div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <label>Amount Paid (₱)</label>
+      <input class="input" id="billPayAmt" type="number" value="${p.amount||bill.typical||''}" placeholder="0.00">
+    </div>
+    <div>
+      <label>Payment Date</label>
+      <input class="input" id="billPayDate" type="date" value="${p.date||''}">
+    </div>
+    <div style="margin-top:16px; display:flex; gap:8px; justify-content:flex-end;">
+      <button class="btn btn-primary btn-sm" onclick="saveBillPayment('${billId}','${key}')">Save</button>
+    </div>
+    <div style="margin-top:20px;">
+      <div style="font-size:12px; color:var(--text2); margin-bottom:8px; font-weight:600;">PAYMENT HISTORY</div>
+      <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:6px;">
+        ${MONTHS_FULL.map((m,i) => {
+          const k = `${year}-${i}`;
+          const pp = bill.payments[k] || {};
+          return `<div class="m-btn ${pp.status==='paid'?'paid':pp.status==='partial'?'partial':''}">${m.slice(0,3)}<br><span style="font-size:9px; opacity:0.8">${pp.amount ? '₱'+fmt(pp.amount) : pp.status||'—'}</span></div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+  openModal('billTrackModal');
+}
+
+function setBillStatus(billId, key, status) {
+  const bill = db.bills.find(b => b.id === billId);
+  if (!bill) return;
+  if (!bill.payments[key]) bill.payments[key] = {};
+  bill.payments[key].status = status === 'unpaid' ? null : status;
+  save();
+  openBillTrack(billId);
+}
+
+function saveBillPayment(billId, key) {
+  const bill = db.bills.find(b => b.id === billId);
+  if (!bill) return;
+  if (!bill.payments[key]) bill.payments[key] = {};
+  const amt = parseFloat(document.getElementById('billPayAmt').value);
+  if (amt) bill.payments[key].amount = amt;
+  const dt = document.getElementById('billPayDate').value;
+  if (dt) bill.payments[key].date = dt;
+  save(); closeModal('billTrackModal'); renderBills(); toast('✓ Payment recorded!');
+}
+
+function editBill(id) {
+  const b = db.bills.find(b => b.id === id);
+  if (!b) return;
+  editingId = id;
+  document.getElementById('billName').value = b.name;
+  document.getElementById('billIcon').value = b.icon;
+  document.getElementById('billTypical').value = b.typical || '';
+  document.getElementById('billDueDay').value = b.dueDay || '';
+  document.getElementById('billNotes').value = b.notes || '';
+  selectedBillColor = b.color;
+  document.querySelectorAll('#billColorPicker .color-dot').forEach(d => {
+    d.classList.toggle('sel', d.style.background === b.color || d.getAttribute('onclick').includes(b.color));
+  });
+  openModal('addBillModal');
+}
+
+function deleteBill(id) {
+  if (!confirm('Delete this bill?')) return;
+  db.bills = db.bills.filter(b => b.id !== id);
+  save(); renderBills(); toast('🗑 Deleted');
+}
+
+// ========== EXPENSES ==========
+function saveExpense() {
+  const desc = document.getElementById('expDesc').value.trim();
+  const amount = parseFloat(document.getElementById('expAmount').value);
+  const date = document.getElementById('expDate').value;
+  if (!desc || !amount || !date) { alert('Please fill required fields'); return; }
+  const exp = {
+    id: editingId || uid(), desc, amount, date,
+    cat: document.getElementById('expCat').value,
+    notes: document.getElementById('expNotes').value.trim()
+  };
+  if (editingId) db.expenses = db.expenses.map(e => e.id === editingId ? exp : e);
+  else db.expenses.push(exp);
+  db.expenses.sort((a,b) => b.date.localeCompare(a.date));
+  save(); closeModal('addExpenseModal');
+  ['expDesc','expAmount','expNotes'].forEach(id => document.getElementById(id).value = '');
+  editingId = null;
+  renderExpenses(); toast('✓ Expense saved!');
+}
+
+function renderExpenses() {
+  const exps = db.expenses;
+  const stats = document.getElementById('expenseStats');
+  const list = document.getElementById('expenseList');
+
+  const cats = [...new Set(exps.map(e => e.cat))];
+  const filters = document.getElementById('expenseFilters');
+  filters.innerHTML = `<span class="tag-f ${currentExpenseFilter==='all'?'active':''}" onclick="filterExpenses('all',this)">All</span>` +
+    cats.map(c => `<span class="tag-f ${currentExpenseFilter===c?'active':''}" onclick="filterExpenses('${c}',this)">${c}</span>`).join('');
+
+  const filtered = currentExpenseFilter === 'all' ? exps : exps.filter(e => e.cat === currentExpenseFilter);
+
+  const now = new Date();
+  const thisMonth = exps.filter(e => { const d = new Date(e.date); return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear(); });
+  const total = exps.reduce((s,e) => s+e.amount, 0);
+  const monthTotal = thisMonth.reduce((s,e) => s+e.amount, 0);
+  const months = exps.length ? new Set(exps.map(e => e.date.slice(0,7))).size : 1;
+  const avgMonthly = total / months;
+
+  stats.innerHTML = `
+    <div class="stat-box"><div class="stat-val" style="color:var(--pink)">₱${fmt(monthTotal)}</div><div class="stat-lbl">This Month</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--gold)">₱${fmt(avgMonthly)}</div><div class="stat-lbl">Monthly Average</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--teal)">₱${fmt(avgMonthly*12)}</div><div class="stat-lbl">Estimated Annual</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--lavender)">${exps.length}</div><div class="stat-lbl">Total Entries</div></div>
+  `;
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">💸</div><div class="empty-text">No expenses yet</div></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(e => `
+    <div class="expense-row">
+      <div style="flex:1">
+        <div style="font-weight:600; font-size:14px;">${e.desc}</div>
+        <div style="display:flex; gap:8px; align-items:center; margin-top:3px; flex-wrap:wrap;">
+          <span class="cat-badge" style="background:rgba(255,255,255,0.07); color:var(--text2)">${e.cat}</span>
+          <span style="font-size:11px; color:var(--text3)">${formatDate(e.date)}</span>
+          ${e.notes ? `<span style="font-size:11px; color:var(--text3)">${e.notes}</span>` : ''}
+        </div>
+      </div>
+      <div style="font-family:'Josefin Sans',sans-serif; font-size:16px; font-weight:700; color:var(--gold)">₱${fmt(e.amount)}</div>
+      <button class="del-btn" onclick="deleteExpense('${e.id}')">🗑</button>
+    </div>
+  `).join('');
+}
+
+function filterExpenses(cat, el) {
+  currentExpenseFilter = cat;
+  document.querySelectorAll('#expenseFilters .tag-f').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderExpenses();
+}
+
+function deleteExpense(id) {
+  if (!confirm('Delete this expense?')) return;
+  db.expenses = db.expenses.filter(e => e.id !== id);
+  save(); renderExpenses(); toast('🗑 Deleted');
+}
+
+// ========== EVENTS ==========
+function saveEvent() {
+  const title = document.getElementById('evTitle').value.trim();
+  const date = document.getElementById('evDate').value;
+  if (!title || !date) { alert('Please fill in the title and date'); return; }
+  const ev = {
+    id: editingId || uid(), title, date,
+    time: document.getElementById('evTime').value,
+    desc: document.getElementById('evDesc').value.trim(),
+    emoji: document.getElementById('evEmoji').value.trim() || '📅',
+    repeat: document.getElementById('evRepeat').value
+  };
+  if (editingId) db.events = db.events.map(e => e.id === editingId ? ev : e);
+  else db.events.push(ev);
+  db.events.sort((a,b) => a.date.localeCompare(b.date));
+  save(); closeModal('addEventModal');
+  ['evTitle','evDate','evTime','evDesc','evEmoji'].forEach(id => document.getElementById(id).value = '');
+  editingId = null;
+  renderEvents(); toast('✓ Event saved!');
+}
+
+function renderEvents() {
+  const list = document.getElementById('eventsList');
+  if (!db.events.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">No events yet. Add important dates!</div></div>`;
+    return;
+  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  const sorted = [...db.events].sort((a,b) => {
+    const da = daysUntil(a.date, today), db2 = daysUntil(b.date, today);
+    if (da >= 0 && db2 < 0) return -1;
+    if (da < 0 && db2 >= 0) return 1;
+    return Math.abs(da) - Math.abs(db2);
+  });
+  list.innerHTML = sorted.map(ev => {
+    const d = new Date(ev.date + 'T00:00:00');
+    const diff = daysUntil(ev.date, today);
+    let daysLabel = '';
+    if (diff === 0) daysLabel = `<span class="days-away soon">Today! 🎉</span>`;
+    else if (diff === 1) daysLabel = `<span class="days-away soon">Tomorrow!</span>`;
+    else if (diff > 0 && diff <= 30) daysLabel = `<span class="days-away soon">In ${diff} days</span>`;
+    else if (diff > 30) daysLabel = `<span class="days-away far">In ${diff} days</span>`;
+    else daysLabel = `<span class="days-away past">${Math.abs(diff)} days ago</span>`;
+
+    const gcalUrl = buildGCalUrl(ev);
+    return `
+      <div class="event-item">
+        <div class="event-date-box">
+          <div class="day">${d.getDate()}</div>
+          <div class="mon">${MONTHS[d.getMonth()]}</div>
+        </div>
+        <div class="event-info" style="flex:1">
+          <div class="etitle">${ev.emoji} ${ev.title}</div>
+          <div class="edesc" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:4px;">
+            ${daysLabel}
+            ${ev.time ? `<span style="font-size:11px; color:var(--text3)">⏰ ${ev.time}</span>` : ''}
+            ${ev.repeat === 'yearly' ? `<span style="font-size:11px; color:var(--lavender)">🔄 Yearly</span>` : ''}
+          </div>
+          ${ev.desc ? `<div style="font-size:12px; color:var(--text2); margin-top:4px;">${ev.desc}</div>` : ''}
+          <div style="margin-top:6px;">
+            <a href="${gcalUrl}" target="_blank" style="font-size:11px; color:var(--teal); text-decoration:none;">📆 Add to Google Calendar</a>
+          </div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="del-btn" onclick="deleteEvent('${ev.id}')">🗑</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function daysUntil(dateStr, today) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return Math.round((d - today) / 86400000);
+}
+
+function buildGCalUrl(ev) {
+  const d = ev.date.replace(/-/g,'');
+  const start = ev.time ? d + 'T' + ev.time.replace(':','') + '00' : d;
+  const end = ev.time ? d + 'T' + ev.time.replace(':','').slice(0,4) + '00' : d;
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.title)}&dates=${start}/${end}&details=${encodeURIComponent(ev.desc||'')}`;
+}
+
+function deleteEvent(id) {
+  if (!confirm('Delete this event?')) return;
+  db.events = db.events.filter(e => e.id !== id);
+  save(); renderEvents(); toast('🗑 Deleted');
+}
+
+// ========== TASKS ==========
+function saveTask() {
+  const title = document.getElementById('taskTitle').value.trim();
+  if (!title) { alert('Please enter a task title'); return; }
+  const task = {
+    id: editingId || uid(), title,
+    desc: document.getElementById('taskDesc').value.trim(),
+    status: document.getElementById('taskStatus').value,
+    priority: document.getElementById('taskPriority').value,
+    due: document.getElementById('taskDue').value,
+    created: new Date().toISOString()
+  };
+  if (editingId) db.tasks = db.tasks.map(t => t.id === editingId ? task : t);
+  else db.tasks.push(task);
+  save(); closeModal('addTaskModal');
+  ['taskTitle','taskDesc','taskDue'].forEach(id => document.getElementById(id).value = '');
+  editingId = null;
+  renderTasks(); toast('✓ Task saved!');
+}
+
+function renderTasks() {
+  const cols = { todo: document.getElementById('col-todo'), inprogress: document.getElementById('col-inprogress'), done: document.getElementById('col-done') };
+  Object.values(cols).forEach(c => c.innerHTML = '');
+
+  if (!db.tasks.length) {
+    cols.todo.innerHTML = `<div class="empty" style="padding:20px"><div class="empty-icon" style="font-size:28px">✅</div><div class="empty-text">No tasks yet</div></div>`;
+    return;
+  }
+
+  const pColors = { high: 'p-high', med: 'p-med', low: 'p-low' };
+  const pLabels = { high: 'High', med: 'Medium', low: 'Low' };
+  const statOrder = { todo: ['inprogress','done'], inprogress: ['todo','done'], done: ['todo','inprogress'] };
+
+  db.tasks.forEach(task => {
+    const col = cols[task.status] || cols.todo;
+    const div = document.createElement('div');
+    div.className = 'task-card';
+    div.innerHTML = `
+      <div class="tc-title">${task.title}</div>
+      ${task.desc ? `<div class="tc-desc">${task.desc}</div>` : ''}
+      <div class="tc-meta">
+        <span class="priority-badge ${pColors[task.priority]}">${pLabels[task.priority]}</span>
+        ${task.due ? `<span style="font-size:10px; color:var(--text3)">📅 ${formatDate(task.due)}</span>` : ''}
+      </div>
+      <div style="display:flex; gap:4px; margin-top:8px; justify-content:flex-end; align-items:center;">
+        ${statOrder[task.status||'todo'].map(s => `<button class="task-move-btn" onclick="moveTask('${task.id}','${s}')">→ ${s==='todo'?'To Do':s==='inprogress'?'In Progress':'Done'}</button>`).join('')}
+        <button class="del-btn" style="font-size:13px;" onclick="deleteTask('${task.id}')">🗑</button>
+      </div>
+    `;
+    col.appendChild(div);
+  });
+}
+
+function moveTask(id, status) {
+  const t = db.tasks.find(t => t.id === id);
+  if (t) { t.status = status; save(); renderTasks(); toast('✓ Moved!'); }
+}
+
+function deleteTask(id) {
+  if (!confirm('Delete this task?')) return;
+  db.tasks = db.tasks.filter(t => t.id !== id);
+  save(); renderTasks(); toast('🗑 Deleted');
+}
+
+// ========== DOCS ==========
+function saveDoc() {
+  const title = document.getElementById('docTitle').value.trim();
+  if (!title) { alert('Please enter a title'); return; }
+  const doc = {
+    id: editingId || uid(), title,
+    icon: document.getElementById('docIcon').value.trim() || '📄',
+    cat: document.getElementById('docCat').value,
+    link: document.getElementById('docLink').value.trim(),
+    notes: document.getElementById('docNotes').value.trim(),
+    added: new Date().toLocaleDateString()
+  };
+  if (editingId) db.docs = db.docs.map(d => d.id === editingId ? doc : d);
+  else db.docs.push(doc);
+  save(); closeModal('addDocModal');
+  ['docTitle','docIcon','docLink','docNotes'].forEach(id => document.getElementById(id).value = '');
+  editingId = null;
+  renderDocs(); toast('✓ Document saved!');
+}
+
+function renderDocs() {
+  const list = document.getElementById('docsList');
+  const filtersEl = document.getElementById('docFilters');
+
+  const cats = [...new Set(db.docs.map(d => d.cat))];
+  filtersEl.innerHTML = `<span class="tag-f ${currentDocFilter==='all'?'active':''}" onclick="filterDocs('all',this)">All</span>` +
+    cats.map(c => `<span class="tag-f ${currentDocFilter===c?'active':''}" onclick="filterDocs('${c}',this)">${c}</span>`).join('');
+
+  const filtered = currentDocFilter === 'all' ? db.docs : db.docs.filter(d => d.cat === currentDocFilter);
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">📎</div><div class="empty-text">No documents yet</div></div>`;
+    return;
+  }
+
+  const { slice, p, totalPages, total } = paginate(filtered, pages.docs);
+  list.innerHTML = slice.map(doc => `
+    <div class="doc-item">
+      <div class="doc-icon">${doc.icon}</div>
+      <div class="doc-info">
+        <div class="doc-name">${doc.title}</div>
+        <div class="doc-meta">
+          <span style="background:rgba(255,255,255,0.07); padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600;">${doc.cat}</span>
+          ${doc.notes ? `<span style="margin-left:6px; color:var(--text3)">${doc.notes}</span>` : ''}
+        </div>
+      </div>
+      ${doc.link ? `<a href="${doc.link}" target="_blank" class="doc-link">🔗 Open</a>` : ''}
+      <button class="del-btn" onclick="deleteDoc('${doc.id}')">🗑</button>
+    </div>
+  `).join('') + paginationHTML('docs', p, totalPages, total);
+}
+
+function filterDocs(cat, el) {
+  currentDocFilter = cat;
+  pages.docs = 1;
+  document.querySelectorAll('#docFilters .tag-f').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderDocs();
+}
+
+function deleteDoc(id) {
+  if (!confirm('Delete this document?')) return;
+  db.docs = db.docs.filter(d => d.id !== id);
+  save(); renderDocs(); toast('🗑 Deleted');
+}
+
+// ========== BOOKS ==========
+function saveBook() {
+  const title = document.getElementById('bookTitle').value.trim();
+  if (!title) { alert('Please enter a book title'); return; }
+  const book = {
+    id: editingId || uid(), title,
+    author: document.getElementById('bookAuthor').value.trim(),
+    emoji: document.getElementById('bookEmoji').value.trim() || '📖',
+    status: document.getElementById('bookStatus').value,
+    genre: document.getElementById('bookGenre').value.trim(),
+    rating: currentBookRating,
+    notes: document.getElementById('bookNotes').value.trim(),
+    added: new Date().toLocaleDateString()
+  };
+  if (editingId) db.books = db.books.map(b => b.id === editingId ? book : b);
+  else db.books.push(book);
+  save(); closeModal('addBookModal');
+  ['bookTitle','bookAuthor','bookEmoji','bookGenre','bookNotes'].forEach(id => document.getElementById(id).value = '');
+  currentBookRating = 0;
+  document.querySelectorAll('#ratingInput .star').forEach(s => s.classList.remove('on'));
+  editingId = null;
+  renderBooks(); toast('✓ Book saved!');
+}
+
+function renderBooks() {
+  const grid = document.getElementById('booksGrid');
+  const statusMap = { 'Reading': 'bs-reading', 'Want to Read': 'bs-want', 'Finished': 'bs-done' };
+  const filtered = currentBookFilter === 'all' ? db.books : db.books.filter(b => b.status === currentBookFilter);
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📚</div><div class="empty-text">No books yet. Start your reading list!</div></div>`;
+    return;
+  }
+
+  const { slice, p, totalPages, total } = paginate(filtered, pages.books);
+  grid.innerHTML = slice.map(book => `
+    <div class="book-card" onclick="viewBook('${book.id}')">
+      <div class="book-emoji">${book.emoji}</div>
+      <div class="book-title">${book.title}</div>
+      <div class="book-author">${book.author || 'Unknown author'}</div>
+      <span class="book-status ${statusMap[book.status]||'bs-want'}">${book.status}</span>
+      ${book.rating ? `<div class="book-rating">${'★'.repeat(book.rating)}${'☆'.repeat(5-book.rating)}</div>` : ''}
+      ${book.genre ? `<div style="font-size:10px; color:var(--text3); margin-top:4px;">${book.genre}</div>` : ''}
+    </div>
+  `).join('') + `<div style="grid-column:1/-1">${paginationHTML('books', p, totalPages, total)}</div>`;
+}
+
+function filterBooks(status, el) {
+  currentBookFilter = status;
+  pages.books = 1;
+  document.querySelectorAll('#bookFilters .tag-f').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderBooks();
+}
+
+// ========== SAVINGS ==========
+let selectedSgColor = '#7dd9a0';
+let currentDepositGoalId = null;
+
+function selectSgColor(el, color) {
+  selectedSgColor = color;
+  document.querySelectorAll('#sgColorPicker .color-dot').forEach(d => d.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function saveSavingsGoal() {
+  const name = document.getElementById('sgName').value.trim();
+  const target = parseFloat(document.getElementById('sgTarget').value);
+  if (!name || !target) { alert('Please enter a goal name and target amount'); return; }
+  const goal = {
+    id: editingId || uid(),
+    name, icon: document.getElementById('sgIcon').value.trim() || '🎯',
+    color: selectedSgColor,
+    target,
+    targetDate: document.getElementById('sgDate').value,
+    notes: document.getElementById('sgNotes').value.trim(),
+    deposits: editingId ? (db.savings.find(g => g.id === editingId) || { deposits: [] }).deposits : [],
+    created: new Date().toISOString()
+  };
+  if (editingId) db.savings = db.savings.map(g => g.id === editingId ? goal : g);
+  else db.savings.push(goal);
+  save(); closeModal('addSavingsModal');
+  ['sgName','sgIcon','sgTarget','sgDate','sgNotes'].forEach(id => document.getElementById(id).value = '');
+  editingId = null;
+  renderSavings(); toast('✓ Goal saved!');
+}
+
+function openDepositModal(goalId) {
+  currentDepositGoalId = goalId;
+  const goal = db.savings.find(g => g.id === goalId);
+  document.getElementById('depositModalTitle').textContent = `💰 Log for: ${goal.icon} ${goal.name}`;
+  document.getElementById('depositDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('depositAmount').value = '';
+  document.getElementById('depositNote').value = '';
+  openModal('depositModal');
+}
+
+function saveDeposit() {
+  const amount = parseFloat(document.getElementById('depositAmount').value);
+  const date = document.getElementById('depositDate').value;
+  if (!amount || !date) { alert('Please enter an amount and date'); return; }
+  const goal = db.savings.find(g => g.id === currentDepositGoalId);
+  if (!goal) return;
+  const type = document.getElementById('depositType').value;
+  goal.deposits.push({
+    id: uid(), type, amount, date,
+    note: document.getElementById('depositNote').value.trim()
+  });
+  goal.deposits.sort((a, b) => b.date.localeCompare(a.date));
+  save(); closeModal('depositModal'); renderSavings();
+  toast(type === 'deposit' ? '✓ Deposit logged!' : '✓ Withdrawal logged!');
+}
+
+function getSavedAmount(goal) {
+  return goal.deposits.reduce((sum, d) => d.type === 'withdraw' ? sum - d.amount : sum + d.amount, 0);
+}
+
+function renderSavings() {
+  if (!db.savings) db.savings = [];
+  const statsEl = document.getElementById('savingsTopStats');
+  const listEl = document.getElementById('savingsGoalsList');
+
+  const totalTarget = db.savings.reduce((s, g) => s + g.target, 0);
+  const totalSaved = db.savings.reduce((s, g) => s + getSavedAmount(g), 0);
+  const completed = db.savings.filter(g => getSavedAmount(g) >= g.target).length;
+  const overallPct = totalTarget ? Math.min(100, Math.round(totalSaved / totalTarget * 100)) : 0;
+
+  statsEl.innerHTML = `
+    <div class="stat-box"><div class="stat-val" style="color:var(--green)">₱${fmt(totalSaved)}</div><div class="stat-lbl">Total Saved<div class="progress-wrap" style="margin-top:6px;"><div class="progress-bar" style="width:${overallPct}%; background:linear-gradient(90deg,var(--green),var(--teal))"></div></div></div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--gold)">₱${fmt(totalTarget)}</div><div class="stat-lbl">Total Target</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--teal)">${overallPct}%</div><div class="stat-lbl">Overall Progress</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--lavender)">${completed}/${db.savings.length}</div><div class="stat-lbl">Goals Completed</div></div>
+  `;
+
+  if (!db.savings.length) {
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">🐷</div><div class="empty-text">No savings goals yet. Add your first goal!</div></div>`;
+    return;
+  }
+
+  listEl.innerHTML = db.savings.map(goal => {
+    const saved = getSavedAmount(goal);
+    const pct = Math.min(100, goal.target ? Math.round(saved / goal.target * 100) : 0);
+    const remaining = Math.max(0, goal.target - saved);
+    const isComplete = saved >= goal.target;
+
+    // Days until target date
+    let daysTag = '';
+    if (goal.targetDate) {
+      const diff = Math.round((new Date(goal.targetDate + 'T00:00:00') - new Date()) / 86400000);
+      daysTag = diff > 0
+        ? `<span style="font-size:11px; color:var(--gold); background:rgba(245,199,126,0.1); padding:2px 8px; border-radius:20px;">⏰ ${diff} days left</span>`
+        : `<span style="font-size:11px; color:var(--text3); background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:20px;">Past due date</span>`;
+    }
+
+    // Recent deposits (last 4)
+    const recent = (goal.deposits || []).slice(0, 4);
+    const historyHtml = recent.length ? `
+      <div style="margin-top:14px; border-top:1px solid rgba(255,255,255,0.06); padding-top:12px;">
+        <div style="font-size:11px; color:var(--text3); font-weight:700; letter-spacing:0.08em; margin-bottom:8px;">RECENT TRANSACTIONS</div>
+        ${recent.map(d => `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 0; font-size:12px; border-bottom:1px solid rgba(255,255,255,0.04);">
+            <div style="display:flex; gap:8px; align-items:center; color:var(--text2);">
+              <span>${d.type === 'deposit' ? '➕' : '➖'}</span>
+              <span>${formatDate(d.date)}</span>
+              ${d.note ? `<span style="color:var(--text3);">${d.note}</span>` : ''}
+            </div>
+            <div style="font-weight:700; color:${d.type === 'deposit' ? 'var(--green)' : 'var(--red)'};">${d.type === 'deposit' ? '+' : '-'}₱${fmt(d.amount)}</div>
+          </div>
+        `).join('')}
+      </div>` : '';
+
+    return `
+      <div class="card" style="margin-bottom:16px; border-left:3px solid ${goal.color}40;">
+        <div style="display:flex; align-items:flex-start; gap:14px; flex-wrap:wrap;">
+          <div style="font-size:32px; width:50px; height:50px; border-radius:14px; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; flex-shrink:0;">${goal.icon}</div>
+          <div style="flex:1; min-width:200px;">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:4px;">
+              <div style="font-family:'Josefin Sans',sans-serif; font-size:17px; font-weight:700;">${goal.name}</div>
+              ${isComplete ? `<span style="background:rgba(125,217,160,0.15); color:var(--green); font-size:11px; font-weight:700; padding:2px 10px; border-radius:20px;">🎉 COMPLETE!</span>` : ''}
+              ${daysTag}
+            </div>
+            ${goal.notes ? `<div style="font-size:12px; color:var(--text3); margin-bottom:8px;">${goal.notes}</div>` : ''}
+
+            <!-- Progress bar -->
+            <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text2); margin-bottom:5px;">
+              <span>Saved: <strong style="color:${goal.color}">₱${fmt(saved)}</strong></span>
+              <span>Target: <strong style="color:var(--text)">₱${fmt(goal.target)}</strong></span>
+            </div>
+            <div class="progress-wrap" style="height:10px; border-radius:20px;">
+              <div class="progress-bar" style="width:${pct}%; background:linear-gradient(90deg,${goal.color},${goal.color}99); height:100%;"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text3); margin-top:4px;">
+              <span>${pct}% reached</span>
+              ${remaining > 0 ? `<span>₱${fmt(remaining)} to go</span>` : `<span style="color:var(--green);">✓ Goal reached!</span>`}
+            </div>
+            ${historyHtml}
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
+            <button class="btn btn-primary btn-sm" onclick="openDepositModal('${goal.id}')">+ Log</button>
+            <button class="btn btn-ghost btn-sm" onclick="editSavingsGoal('${goal.id}')">✏️ Edit</button>
+            <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteSavingsGoal('${goal.id}')">🗑</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function editSavingsGoal(id) {
+  const g = db.savings.find(g => g.id === id);
+  if (!g) return;
+  editingId = id;
+  document.getElementById('sgName').value = g.name;
+  document.getElementById('sgIcon').value = g.icon;
+  document.getElementById('sgTarget').value = g.target;
+  document.getElementById('sgDate').value = g.targetDate || '';
+  document.getElementById('sgNotes').value = g.notes || '';
+  selectedSgColor = g.color;
+  document.querySelectorAll('#sgColorPicker .color-dot').forEach(d => {
+    d.classList.toggle('sel', d.getAttribute('onclick') && d.getAttribute('onclick').includes(g.color));
+  });
+  openModal('addSavingsModal');
+}
+
+function deleteSavingsGoal(id) {
+  if (!confirm('Delete this savings goal and all its history?')) return;
+  db.savings = db.savings.filter(g => g.id !== id);
+  save(); renderSavings(); toast('🗑 Deleted');
+}
+
+// ========== GOVERNMENT ACCOUNTS ==========
+let currentGovFilter = 'all';
+
+// Category color map
+const GOV_CAT_COLORS = {
+  '💼 Social Security': '#b8a9f0',
+  '🏥 Health': '#7dd3c8',
+  '🏠 Housing': '#f0a5c0',
+  '💰 Tax': '#f5c77e',
+  '🪪 ID / Identification': '#7dd9a0',
+  '📋 Permits & Licenses': '#f07878',
+  '🎓 Education': '#e879a0',
+  '🌐 Other': 'rgba(255,255,255,0.3)'
+};
+
+function saveGovAccount() {
+  const name = document.getElementById('govName').value.trim();
+  if (!name) { alert('Please enter an account or agency name'); return; }
+  const acc = {
+    id: editingId || uid(),
+    name,
+    icon: document.getElementById('govIcon').value.trim() || '🏛️',
+    cat: document.getElementById('govCat').value,
+    idNum: document.getElementById('govIdNum').value.trim(),
+    idNum2: document.getElementById('govIdNum2').value.trim(),
+    url: document.getElementById('govUrl').value.trim(),
+    user: document.getElementById('govUser').value.trim(),
+    pass: document.getElementById('govPass').value,
+    pin: document.getElementById('govPin').value,
+    expiry: document.getElementById('govExpiry').value,
+    renewal: document.getElementById('govRenewal').value,
+    address: document.getElementById('govAddress').value.trim(),
+    contact: document.getElementById('govContact').value.trim(),
+    notes: document.getElementById('govNotes').value.trim(),
+    updated: new Date().toLocaleDateString()
+  };
+  if (editingId) db.govaccounts = db.govaccounts.map(a => a.id === editingId ? acc : a);
+  else db.govaccounts.push(acc);
+  db.govaccounts.sort((a, b) => a.name.localeCompare(b.name));
+  save(); closeModal('addGovModal');
+  ['govName','govIcon','govUrl','govUser','govPass','govPin','govIdNum','govIdNum2','govExpiry','govRenewal','govAddress','govContact','govNotes'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  editingId = null;
+  renderGovAccounts(); toast('✓ Account saved!');
+}
+
+function getExpiryStatus(dateStr) {
+  if (!dateStr) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const exp = new Date(dateStr + 'T00:00:00');
+  const diff = Math.round((exp - today) / 86400000);
+  if (diff < 0) return { label: 'Expired', cls: 'gov-expiry-expired', diff };
+  if (diff <= 90) return { label: `Expires in ${diff}d`, cls: 'gov-expiry-soon', diff };
+  return { label: `Valid until ${formatDate(dateStr)}`, cls: 'gov-expiry-ok', diff };
+}
+
+function renderGovAccounts() {
+  if (!db.govaccounts) db.govaccounts = [];
+  const listEl = document.getElementById('govAccountsList');
+  const filtersEl = document.getElementById('govFilters');
+
+  const cats = [...new Set(db.govaccounts.map(a => a.cat))];
+  filtersEl.innerHTML = `<span class="tag-f ${currentGovFilter==='all'?'active':''}" onclick="filterGov('all',this)">All (${db.govaccounts.length})</span>` +
+    cats.map(c => `<span class="tag-f ${currentGovFilter===c?'active':''}" onclick="filterGov('${c}',this)">${c}</span>`).join('');
+
+  const filtered = currentGovFilter === 'all' ? db.govaccounts : db.govaccounts.filter(a => a.cat === currentGovFilter);
+
+  if (!filtered.length) {
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">🏛️</div><div class="empty-text">${db.govaccounts.length ? 'No results' : 'No accounts yet. Add your first one!'}</div></div>`;
+    return;
+  }
+
+  const color = a => GOV_CAT_COLORS[a.cat] || 'rgba(255,255,255,0.3)';
+  const expiryBadge = dateStr => {
+    const s = getExpiryStatus(dateStr);
+    return s ? `<span class="gov-expiry-badge ${s.cls}">⏰ ${s.label}</span>` : '';
+  };
+  const renewalBadge = dateStr => {
+    if (!dateStr) return '';
+    const s = getExpiryStatus(dateStr);
+    const label = s && s.diff < 0 ? '⚠️ Renewal overdue' : s && s.diff <= 90 ? `🔔 Renewal in ${s.diff}d` : `📅 Renewal: ${formatDate(dateStr)}`;
+    const cls = s && s.diff < 0 ? 'gov-expiry-expired' : s && s.diff <= 90 ? 'gov-expiry-soon' : 'gov-expiry-ok';
+    return `<span class="gov-expiry-badge ${cls}">${label}</span>`;
+  };
+
+  const { slice: govSlice, p: govP, totalPages: govTotalPages, total: govTotal } = paginate(filtered, pages.govaccounts);
+  listEl.innerHTML = `<div class="gov-grid">${govSlice.map(acc => {
+    const c = color(acc);
+    return `
+      <div class="gov-card" style="border-top: 3px solid ${c};">
+        <div class="gov-card-header">
+          <div class="gov-card-icon" style="background:${c}22; color:${c};">${acc.icon}</div>
+          <div style="flex:1; min-width:0;">
+            <div style="font-family:'Josefin Sans',sans-serif; font-weight:700; font-size:16px;">${acc.name}</div>
+            <div style="font-size:11px; color:var(--text3); margin-top:2px;">${acc.cat}</div>
+          </div>
+          <div style="display:flex; gap:4px; flex-shrink:0;">
+            ${acc.url ? `<a href="${acc.url}" target="_blank" style="color:var(--teal); font-size:16px; text-decoration:none; padding:4px;" title="Open portal">🔗</a>` : ''}
+            <button class="edit-btn" onclick="editGovAccount('${acc.id}')" title="Edit">✏️</button>
+            <button class="del-btn" onclick="deleteGovAccount('${acc.id}')" title="Delete">🗑</button>
+          </div>
+        </div>
+        <div class="gov-card-body">
+
+          ${(acc.expiry || acc.renewal) ? `
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
+            ${expiryBadge(acc.expiry)}
+            ${renewalBadge(acc.renewal)}
+          </div>` : ''}
+
+          ${acc.idNum ? `
+          <div class="gov-field">
+            <span class="gov-field-label">ID / No.</span>
+            <span class="gov-field-value" style="font-family:'Josefin Sans',sans-serif; font-weight:600; color:${c}; letter-spacing:0.04em;">${acc.idNum}</span>
+            <button class="copy-btn" onclick="copyToClipboard('${acc.idNum.replace(/'/g,"\\'")}','ID Number')" title="Copy">📋</button>
+          </div>` : ''}
+
+          ${acc.idNum2 ? `
+          <div class="gov-field">
+            <span class="gov-field-label">Alt. No.</span>
+            <span class="gov-field-value" style="font-family:'Josefin Sans',sans-serif; font-weight:600; letter-spacing:0.04em;">${acc.idNum2}</span>
+            <button class="copy-btn" onclick="copyToClipboard('${acc.idNum2.replace(/'/g,"\\'")}','Alt Number')" title="Copy">📋</button>
+          </div>` : ''}
+
+          ${acc.user ? `
+          <div class="gov-field">
+            <span class="gov-field-label">Username</span>
+            <span class="gov-field-value">${acc.user}</span>
+            <button class="copy-btn" onclick="copyToClipboard('${acc.user.replace(/'/g,"\\'")}','Username')" title="Copy">📋</button>
+          </div>` : ''}
+
+          ${acc.pass ? `
+          <div class="gov-field">
+            <span class="gov-field-label">Password</span>
+            <span class="gov-field-value pw-masked" id="gpass-${acc.id}">••••••••</span>
+            <button class="eye-btn" onclick="toggleField('gpass-${acc.id}','${acc.pass.replace(/'/g,"\\'")}',this)">👁</button>
+            <button class="copy-btn" onclick="copyToClipboard('${acc.pass.replace(/'/g,"\\'")}','Password')">📋</button>
+          </div>` : ''}
+
+          ${acc.pin ? `
+          <div class="gov-field">
+            <span class="gov-field-label">PIN</span>
+            <span class="gov-field-value pw-masked" id="gpin-${acc.id}">••••</span>
+            <button class="eye-btn" onclick="toggleField('gpin-${acc.id}','${acc.pin.replace(/'/g,"\\'")}',this)">👁</button>
+            <button class="copy-btn" onclick="copyToClipboard('${acc.pin.replace(/'/g,"\\'")}','PIN')">📋</button>
+          </div>` : ''}
+
+          ${acc.address ? `
+          <div class="gov-field">
+            <span class="gov-field-label">Branch</span>
+            <span class="gov-field-value" style="font-size:12px;">${acc.address}</span>
+          </div>` : ''}
+
+          ${acc.contact ? `
+          <div class="gov-field">
+            <span class="gov-field-label">Hotline</span>
+            <span class="gov-field-value" style="font-size:12px;">${acc.contact}</span>
+            <button class="copy-btn" onclick="copyToClipboard('${acc.contact.replace(/'/g,"\\'")}','Contact')">📋</button>
+          </div>` : ''}
+
+          ${acc.notes ? `
+          <div class="gov-field">
+            <span class="gov-field-label">Notes</span>
+            <span class="gov-field-value" style="font-size:12px; color:var(--text3); line-height:1.5;">${acc.notes}</span>
+          </div>` : ''}
+
+          <div style="font-size:10px; color:var(--text3); text-align:right; margin-top:8px;">Updated ${acc.updated||''}</div>
+        </div>
+      </div>
+    `;
+  }).join('')}</div>${paginationHTML('passwords', pwP, pwTotal, pwTotalCount)}`;
+}
+
+function filterGov(cat, el) {
+  currentGovFilter = cat;
+  pages.govaccounts = 1;
+  document.querySelectorAll('#govFilters .tag-f').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderGovAccounts();
+}
+
+function editGovAccount(id) {
+  const acc = db.govaccounts.find(a => a.id === id);
+  if (!acc) return;
+  editingId = id;
+  document.getElementById('govModalTitle').textContent = '✏️ Edit Account';
+  const fields = { govName:'name', govIcon:'icon', govCat:'cat', govIdNum:'idNum', govIdNum2:'idNum2', govUrl:'url', govUser:'user', govPass:'pass', govPin:'pin', govExpiry:'expiry', govRenewal:'renewal', govAddress:'address', govContact:'contact', govNotes:'notes' };
+  Object.entries(fields).forEach(([elId, key]) => {
+    const el = document.getElementById(elId);
+    if (el) el.value = acc[key] || '';
+  });
+  openModal('addGovModal');
+}
+
+function deleteGovAccount(id) {
+  if (!confirm('Delete this account?')) return;
+  db.govaccounts = db.govaccounts.filter(a => a.id !== id);
+  save(); renderGovAccounts(); toast('🗑 Deleted');
+}
+
+// ========== PASSWORDS ==========
+let currentPwFilter = 'all';
+
+function savePassword() {
+  const name = document.getElementById('pwName').value.trim();
+  if (!name) { alert('Please enter a site or app name'); return; }
+  const pw = {
+    id: editingId || uid(),
+    name,
+    icon: document.getElementById('pwIcon').value.trim() || '🌐',
+    cat: document.getElementById('pwCat').value,
+    url: document.getElementById('pwUrl').value.trim(),
+    user: document.getElementById('pwUser').value.trim(),
+    pass: document.getElementById('pwPass').value,
+    pin: document.getElementById('pwPin').value,
+    recovery: document.getElementById('pwRecovery').value.trim(),
+    notes: document.getElementById('pwNotes').value.trim(),
+    updated: new Date().toLocaleDateString()
+  };
+  if (editingId) db.passwords = db.passwords.map(p => p.id === editingId ? pw : p);
+  else db.passwords.push(pw);
+  db.passwords.sort((a, b) => a.name.localeCompare(b.name));
+  save(); closeModal('addPasswordModal');
+  ['pwName','pwIcon','pwUrl','pwUser','pwPass','pwPin','pwRecovery','pwNotes'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  editingId = null;
+  renderPasswords(); toast('✓ Login saved!');
+}
+
+function renderPasswords() {
+  if (!db.passwords) db.passwords = [];
+  const listEl = document.getElementById('passwordsList');
+  const search = (document.getElementById('pwSearch').value || '').toLowerCase();
+  // Reset to page 1 when search changes
+  if (renderPasswords._lastSearch !== search) { pages.passwords = 1; renderPasswords._lastSearch = search; }
+
+  // Category filters
+  const cats = [...new Set(db.passwords.map(p => p.cat))];
+  const filtersEl = document.getElementById('pwFilters');
+  filtersEl.innerHTML = `<span class="tag-f ${currentPwFilter==='all'?'active':''}" onclick="filterPasswords('all',this)">All (${db.passwords.length})</span>` +
+    cats.map(c => `<span class="tag-f ${currentPwFilter===c?'active':''}" onclick="filterPasswords('${c}',this)">${c}</span>`).join('');
+
+  let filtered = currentPwFilter === 'all' ? db.passwords : db.passwords.filter(p => p.cat === currentPwFilter);
+  if (search) filtered = filtered.filter(p => p.name.toLowerCase().includes(search) || (p.user||'').toLowerCase().includes(search));
+
+  if (!filtered.length) {
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">🔐</div><div class="empty-text">${db.passwords.length ? 'No results found' : 'No logins yet. Add your first one!'}</div></div>`;
+    return;
+  }
+
+  const { slice: pwSlice, p: pwP, totalPages: pwTotal, total: pwTotalCount } = paginate(filtered, pages.passwords);
+  listEl.innerHTML = `<div class="pw-grid">${pwSlice.map(pw => {
+    const hasPass = !!pw.pass;
+    const hasPin = !!pw.pin;
+    return `
+      <div class="pw-card">
+        <div class="pw-card-header">
+          <div class="pw-icon">${pw.icon}</div>
+          <div style="flex:1; min-width:0;">
+            <div class="pw-name">${pw.name}</div>
+            <div class="pw-cat">${pw.cat}</div>
+          </div>
+          <div style="display:flex; gap:4px;">
+            ${pw.url ? `<a href="${pw.url}" target="_blank" title="Open site" style="background:none; border:none; cursor:pointer; color:var(--teal); font-size:16px; text-decoration:none; padding:4px;">🔗</a>` : ''}
+            <button class="edit-btn" onclick="editPassword('${pw.id}')" title="Edit">✏️</button>
+            <button class="del-btn" onclick="deletePassword('${pw.id}')" title="Delete">🗑</button>
+          </div>
+        </div>
+
+        ${pw.user ? `
+        <div class="pw-field">
+          <span class="pw-field-label">User</span>
+          <span class="pw-field-value">${pw.user}</span>
+          <button class="copy-btn" onclick="copyToClipboard('${pw.user.replace(/'/g,"\\'")}', 'Username')" title="Copy">📋</button>
+        </div>` : ''}
+
+        ${hasPass ? `
+        <div class="pw-field">
+          <span class="pw-field-label">Password</span>
+          <span class="pw-field-value pw-masked" id="pass-${pw.id}">••••••••</span>
+          <button class="eye-btn" onclick="toggleField('pass-${pw.id}', '${pw.pass.replace(/'/g,"\\'")}', this)" title="Show/Hide">👁</button>
+          <button class="copy-btn" onclick="copyToClipboard('${pw.pass.replace(/'/g,"\\'")}', 'Password')" title="Copy">📋</button>
+        </div>` : ''}
+
+        ${hasPin ? `
+        <div class="pw-field">
+          <span class="pw-field-label">PIN</span>
+          <span class="pw-field-value pw-masked" id="pin-${pw.id}">••••</span>
+          <button class="eye-btn" onclick="toggleField('pin-${pw.id}', '${pw.pin.replace(/'/g,"\\'")}', this)" title="Show/Hide">👁</button>
+          <button class="copy-btn" onclick="copyToClipboard('${pw.pin.replace(/'/g,"\\'")}', 'PIN')" title="Copy">📋</button>
+        </div>` : ''}
+
+        ${pw.recovery ? `
+        <div class="pw-field">
+          <span class="pw-field-label">Recovery</span>
+          <span class="pw-field-value" style="font-size:12px;">${pw.recovery}</span>
+          <button class="copy-btn" onclick="copyToClipboard('${pw.recovery.replace(/'/g,"\\'")}', 'Recovery email')" title="Copy">📋</button>
+        </div>` : ''}
+
+        ${pw.notes ? `
+        <div class="pw-field">
+          <span class="pw-field-label">Notes</span>
+          <span class="pw-field-value" style="font-size:12px; color:var(--text3);">${pw.notes}</span>
+        </div>` : ''}
+
+        <div style="font-size:10px; color:var(--text3); text-align:right; margin-top:8px;">Updated ${pw.updated||''}</div>
+      </div>
+    `;
+  }).join('')}</div>${paginationHTML('govaccounts', govP, govTotalPages, govTotal)}`;
+}
+
+function toggleField(elId, value, btn) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const isHidden = el.classList.contains('pw-masked');
+  if (isHidden) {
+    el.textContent = value;
+    el.classList.remove('pw-masked');
+    btn.style.color = 'var(--pink)';
+  } else {
+    el.textContent = elId.includes('pin') ? '••••' : '••••••••';
+    el.classList.add('pw-masked');
+    btn.style.color = '';
+  }
+}
+
+function togglePwVisible(inputId, btn) {
+  const el = document.getElementById(inputId);
+  if (!el) return;
+  el.type = el.type === 'password' ? 'text' : 'password';
+  btn.textContent = el.type === 'password' ? '👁' : '🙈';
+}
+
+function copyToClipboard(text, label) {
+  navigator.clipboard.writeText(text).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+  });
+  toast(`📋 ${label} copied!`);
+}
+
+function filterPasswords(cat, el) {
+  currentPwFilter = cat;
+  pages.passwords = 1;
+  document.querySelectorAll('#pwFilters .tag-f').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderPasswords();
+}
+
+function editPassword(id) {
+  const pw = db.passwords.find(p => p.id === id);
+  if (!pw) return;
+  editingId = id;
+  document.getElementById('pwModalTitle').textContent = '✏️ Edit Login';
+  document.getElementById('pwName').value = pw.name;
+  document.getElementById('pwIcon').value = pw.icon;
+  document.getElementById('pwCat').value = pw.cat;
+  document.getElementById('pwUrl').value = pw.url || '';
+  document.getElementById('pwUser').value = pw.user || '';
+  document.getElementById('pwPass').value = pw.pass || '';
+  document.getElementById('pwPin').value = pw.pin || '';
+  document.getElementById('pwRecovery').value = pw.recovery || '';
+  document.getElementById('pwNotes').value = pw.notes || '';
+  openModal('addPasswordModal');
+}
+
+function deletePassword(id) {
+  if (!confirm('Delete this login?')) return;
+  db.passwords = db.passwords.filter(p => p.id !== id);
+  save(); renderPasswords(); toast('🗑 Deleted');
+}
+
+// ========== SUMMARY ==========
+function initSummaryYear() {
+  const sel = document.getElementById('summaryYear');
+  if (!sel || sel.options.length) return;
+  const y = new Date().getFullYear();
+  for (let i = y - 2; i <= y + 1; i++) {
+    const o = document.createElement('option');
+    o.value = i; o.textContent = i;
+    if (i === y) o.selected = true;
+    sel.appendChild(o);
+  }
+}
+
+function renderSummary() {
+  initSummaryYear();
+  const year = parseInt(document.getElementById('summaryYear').value);
+
+  // ---- Bills data ----
+  // For each bill, collect amounts paid per month this year
+  const billMonthTotals = Array(12).fill(0); // total bills per month
+  const billRows = db.bills.map(b => {
+    const monthAmts = MONTHS.map((_, i) => {
+      const p = b.payments[`${year}-${i}`] || {};
+      return (p.status === 'paid' || p.status === 'partial') ? (p.amount || b.typical || 0) : (b.typical || 0);
+    });
+    monthAmts.forEach((a, i) => billMonthTotals[i] += a);
+    const avg = monthAmts.reduce((s, v) => s + v, 0) / 12;
+    return { name: b.name, icon: b.icon, color: b.color, monthAmts, avg, annual: avg * 12 };
+  });
+
+  // ---- Expenses data ----
+  const expThisYear = db.expenses.filter(e => e.date && e.date.startsWith(year));
+  const expMonthTotals = Array(12).fill(0);
+  expThisYear.forEach(e => {
+    const m = parseInt(e.date.split('-')[1]) - 1;
+    if (m >= 0 && m < 12) expMonthTotals[m] += e.amount;
+  });
+  const expMonthsWithData = expMonthTotals.filter(v => v > 0).length || 1;
+  const expAvgMonthly = expMonthTotals.reduce((s, v) => s + v, 0) / expMonthsWithData;
+
+  // By category
+  const catMap = {};
+  expThisYear.forEach(e => {
+    if (!catMap[e.cat]) catMap[e.cat] = 0;
+    catMap[e.cat] += e.amount;
+  });
+  const catEntries = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
+
+  // ---- Combined monthly totals ----
+  const combined = MONTHS.map((_, i) => billMonthTotals[i] + expMonthTotals[i]);
+  const totalBills = billMonthTotals.reduce((s, v) => s + v, 0);
+  const totalExp = expMonthTotals.reduce((s, v) => s + v, 0);
+  const grandTotal = totalBills + totalExp;
+  const avgBillsMonthly = totalBills / 12;
+  const maxBar = Math.max(...combined, 1);
+
+  // ---- TOP STATS ----
+  document.getElementById('summaryTopStats').innerHTML = `
+    <div class="stat-box">
+      <div class="stat-val" style="color:var(--pink)">₱${fmt(grandTotal / 12)}</div>
+      <div class="stat-lbl">Avg Monthly Total</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val" style="color:var(--gold)">₱${fmt(grandTotal)}</div>
+      <div class="stat-lbl">Estimated Annual Total</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val" style="color:var(--teal)">₱${fmt(avgBillsMonthly)}</div>
+      <div class="stat-lbl">Avg Monthly Bills</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val" style="color:var(--lavender)">₱${fmt(expAvgMonthly)}</div>
+      <div class="stat-lbl">Avg Monthly Expenses</div>
+    </div>
+  `;
+
+  // ---- BILLS BREAKDOWN ----
+  const billsEl = document.getElementById('summaryBillsBreakdown');
+  if (!billRows.length) {
+    billsEl.innerHTML = `<div class="empty"><div class="empty-text">No bills added yet</div></div>`;
+  } else {
+    const maxBillAvg = Math.max(...billRows.map(b => b.avg), 1);
+    billsEl.innerHTML = billRows.map(b => `
+      <div style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+        <div style="font-size:20px; width:32px; text-align:center;">${b.icon}</div>
+        <div style="flex:1;">
+          <div style="font-size:13px; font-weight:600; margin-bottom:5px;">${b.name}</div>
+          <div class="progress-wrap"><div class="progress-bar" style="width:${Math.round(b.avg/maxBillAvg*100)}%; background:linear-gradient(90deg,${b.color},${b.color}99);"></div></div>
+        </div>
+        <div style="text-align:right; min-width:110px;">
+          <div style="font-family:'Josefin Sans',sans-serif; font-weight:700; color:${b.color};">₱${fmt(b.avg)}<span style="font-size:10px; color:var(--text3);">/mo</span></div>
+          <div style="font-size:11px; color:var(--text3);">₱${fmt(b.annual)} /yr</div>
+        </div>
+      </div>
+    `).join('') + `
+      <div style="display:flex; justify-content:flex-end; padding-top:12px; gap:20px;">
+        <div style="text-align:right;">
+          <div style="font-size:11px; color:var(--text2); font-weight:600; letter-spacing:0.06em;">TOTAL BILLS AVG</div>
+          <div style="font-family:'Josefin Sans',sans-serif; font-size:20px; font-weight:700; color:var(--gold);">₱${fmt(avgBillsMonthly)}<span style="font-size:11px; color:var(--text3);">/mo</span></div>
+          <div style="font-size:12px; color:var(--text3);">₱${fmt(avgBillsMonthly*12)} /yr</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ---- EXPENSES BY CATEGORY ----
+  const expEl = document.getElementById('summaryExpCats');
+  if (!catEntries.length) {
+    expEl.innerHTML = `<div class="empty"><div class="empty-text">No expenses logged for ${year}</div></div>`;
+  } else {
+    const maxCat = catEntries[0][1];
+    const catColors = ['var(--pink)','var(--teal)','var(--gold)','var(--lavender)','var(--green)','var(--red)','var(--pink2)'];
+    expEl.innerHTML = catEntries.map(([cat, total], idx) => {
+      const avgPerMonth = total / expMonthsWithData;
+      return `
+        <div style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+          <div style="font-size:18px; width:32px; text-align:center;">${cat.split(' ')[0]}</div>
+          <div style="flex:1;">
+            <div style="font-size:13px; font-weight:600; margin-bottom:5px;">${cat.split(' ').slice(1).join(' ')}</div>
+            <div class="progress-wrap"><div class="progress-bar" style="width:${Math.round(total/maxCat*100)}%; background:linear-gradient(90deg,${catColors[idx%catColors.length]},${catColors[idx%catColors.length]}88);"></div></div>
+          </div>
+          <div style="text-align:right; min-width:120px;">
+            <div style="font-family:'Josefin Sans',sans-serif; font-weight:700; color:${catColors[idx%catColors.length]};">₱${fmt(avgPerMonth)}<span style="font-size:10px; color:var(--text3);">/mo avg</span></div>
+            <div style="font-size:11px; color:var(--text3);">₱${fmt(total)} total</div>
+          </div>
+        </div>
+      `;
+    }).join('') + `
+      <div style="display:flex; justify-content:flex-end; padding-top:12px;">
+        <div style="text-align:right;">
+          <div style="font-size:11px; color:var(--text2); font-weight:600; letter-spacing:0.06em;">TOTAL EXPENSES AVG</div>
+          <div style="font-family:'Josefin Sans',sans-serif; font-size:20px; font-weight:700; color:var(--lavender);">₱${fmt(expAvgMonthly)}<span style="font-size:11px; color:var(--text3);">/mo</span></div>
+          <div style="font-size:12px; color:var(--text3);">₱${fmt(expAvgMonthly*12)} /yr est.</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ---- MONTH-BY-MONTH TABLE ----
+  const table = document.getElementById('summaryTable');
+  const thStyle = `style="padding:10px 12px; text-align:right; font-size:11px; font-weight:700; color:var(--text3); letter-spacing:0.07em; border-bottom:1px solid rgba(255,255,255,0.08);"`;
+  const tdStyle = (color='var(--text)') => `style="padding:10px 12px; text-align:right; font-size:13px; color:${color}; border-bottom:1px solid rgba(255,255,255,0.05);"`;
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th ${thStyle} style="text-align:left; padding:10px 12px; font-size:11px; font-weight:700; color:var(--text3); letter-spacing:0.07em; border-bottom:1px solid rgba(255,255,255,0.08);">MONTH</th>
+        <th ${thStyle}>BILLS</th>
+        <th ${thStyle}>EXPENSES</th>
+        <th ${thStyle}>TOTAL</th>
+        <th ${thStyle} style="padding:10px 12px; text-align:right; font-size:11px; font-weight:700; color:var(--text3); letter-spacing:0.07em; border-bottom:1px solid rgba(255,255,255,0.08);">CHART</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${MONTHS_FULL.map((m, i) => {
+        const bills = billMonthTotals[i];
+        const exps = expMonthTotals[i];
+        const tot = bills + exps;
+        const barW = Math.round(tot / maxBar * 100);
+        const isThisMonth = (i === new Date().getMonth() && year === new Date().getFullYear());
+        const rowStyle = isThisMonth ? 'background:rgba(240,165,192,0.05);' : '';
+        return `<tr style="${rowStyle}">
+          <td style="padding:10px 12px; font-size:13px; font-weight:${isThisMonth?'700':'500'}; color:${isThisMonth?'var(--pink)':'var(--text)'}; border-bottom:1px solid rgba(255,255,255,0.05);">
+            ${m}${isThisMonth?' ◀':''}
+          </td>
+          <td ${tdStyle('var(--teal)')}>₱${fmt(bills)}</td>
+          <td ${tdStyle('var(--lavender)')}>₱${fmt(exps)}</td>
+          <td ${tdStyle('var(--gold)')} style="font-weight:700; padding:10px 12px; text-align:right; font-size:13px; color:var(--gold); border-bottom:1px solid rgba(255,255,255,0.05);">₱${fmt(tot)}</td>
+          <td style="padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.05); min-width:100px;">
+            <div style="background:rgba(255,255,255,0.06); border-radius:20px; height:6px; overflow:hidden;">
+              <div style="height:100%; width:${barW}%; border-radius:20px; background:linear-gradient(90deg,var(--pink2),var(--lavender)); transition:width 0.4s ease;"></div>
+            </div>
+          </td>
+        </tr>`;
+      }).join('')}
+      <tr style="background:rgba(255,255,255,0.03);">
+        <td style="padding:12px; font-size:12px; font-weight:700; color:var(--text2); letter-spacing:0.06em;">AVG / MONTH</td>
+        <td style="padding:12px; text-align:right; font-family:'Josefin Sans',sans-serif; font-weight:700; color:var(--teal);">₱${fmt(avgBillsMonthly)}</td>
+        <td style="padding:12px; text-align:right; font-family:'Josefin Sans',sans-serif; font-weight:700; color:var(--lavender);">₱${fmt(expAvgMonthly)}</td>
+        <td style="padding:12px; text-align:right; font-family:'Josefin Sans',sans-serif; font-weight:700; color:var(--gold);">₱${fmt(avgBillsMonthly + expAvgMonthly)}</td>
+        <td></td>
+      </tr>
+    </tbody>
+  `;
+}
+
+// ========== UTILS ==========
+function fmt(n) {
+  if (!n && n !== 0) return '0.00';
+  return parseFloat(n).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+}
+
+function copyScript() {
+  const text = document.getElementById('scriptCode').textContent;
+  navigator.clipboard.writeText(text).then(() => toast('📋 Script copied!')).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    toast('📋 Script copied!');
+  });
+}
+
+// ========== INIT ==========
+window.addEventListener('DOMContentLoaded', async () => {
+  initYearSelect();
+  // Pre-fill script URL if already saved
+  const saved = localStorage.getItem('nestkeeper_script_url');
+  if (saved) document.getElementById('scriptUrlInput').value = saved;
+
+  await load();
+  renderBills();
+
+  // Sample data only if completely empty and not connected
+  if (!SCRIPT_URL && !db.bills.length && !db.expenses.length && !db.events.length) {
+    db.bills = [
+      { id:uid(), name:'Meralco', icon:'⚡', color:'#f5c77e', typical:3500, dueDay:20, notes:'', payments:{} },
+      { id:uid(), name:'Manila Water', icon:'💧', color:'#7dd3c8', typical:800, dueDay:15, notes:'', payments:{} },
+      { id:uid(), name:'PLDT / Globe', icon:'📡', color:'#b8a9f0', typical:1500, dueDay:10, notes:'', payments:{} },
+    ];
+    const today = new Date().toISOString().split('T')[0];
+    db.events = [
+      { id:uid(), title:"Mom's Birthday", date:today.slice(0,7)+'-25', time:'', desc:'', emoji:'🎂', repeat:'yearly' },
+    ];
+    db.tasks = [
+      { id:uid(), title:'Pay electric bill', desc:'Check Meralco app', status:'todo', priority:'high', due: today, created: new Date().toISOString() },
+      { id:uid(), title:'Buy medicine refill', desc:'Check list from Dr.', status:'inprogress', priority:'med', due:'', created: new Date().toISOString() },
+    ];
+    try { localStorage.setItem('nestkeeper_v2', JSON.stringify(db)); } catch(e) {}
+    renderBills();
+  }
+});
+</script>
+</body>
+</html>
