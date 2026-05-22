@@ -782,6 +782,8 @@
       </div>
     </div>
 
+    <div id="loginError" style="display:none; margin-top:12px; background:rgba(240,120,120,0.1); border:1px solid rgba(240,120,120,0.3); border-radius:10px; padding:12px 14px; font-size:12px; color:var(--red); text-align:left; line-height:1.5;"></div>
+
     <div class="login-divider"><span>or</span></div>
 
     <button class="btn btn-ghost" style="width:100%; justify-content:center;" onclick="continueAsGuest()">
@@ -1428,11 +1430,16 @@ function goToPage(section, p) {
   document.querySelector('.main').scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// ========== APP CONFIGURATION — edit these values and redeploy to sync settings across all devices ==========
+const CONFIG_GOOGLE_CLIENT_ID = ''; // Paste your Google OAuth Client ID here
+const CONFIG_SCRIPT_URL = '';       // Paste your Google Apps Script URL here
+const ALLOWED_EMAILS = ['jbmarigondon@gmail.com', 'colomale@gmail.com']; // Leave as [] to allow any Google account
+
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 // ========== STORAGE (Google Sheets via Apps Script) ==========
-let SCRIPT_URL = localStorage.getItem('nestkeeper_script_url') || '';
+let SCRIPT_URL = CONFIG_SCRIPT_URL || localStorage.getItem('nestkeeper_script_url') || '';
 let isSyncing = false;
 
 function setSyncStatus(state, msg) {
@@ -2877,16 +2884,22 @@ function copyScript() {
 }
 
 // ========== GOOGLE AUTH ==========
-let GOOGLE_CLIENT_ID = localStorage.getItem('nestkeeper_google_client_id') || '';
+let GOOGLE_CLIENT_ID = CONFIG_GOOGLE_CLIENT_ID || localStorage.getItem('nestkeeper_google_client_id') || '';
 let currentUser = null;
 
 function initGoogleAuth() {
   const stored = localStorage.getItem('nestkeeper_user');
   if (stored) {
     try {
-      currentUser = JSON.parse(stored);
-      showApp();
-      return;
+      const u = JSON.parse(stored);
+      if (ALLOWED_EMAILS.length && !ALLOWED_EMAILS.includes(u.email)) {
+        // Email no longer authorized — clear stale session
+        localStorage.removeItem('nestkeeper_user');
+      } else {
+        currentUser = u;
+        showApp();
+        return;
+      }
     } catch(e) {}
   }
   if (!GOOGLE_CLIENT_ID) {
@@ -2929,10 +2942,19 @@ function showLoginScreen(hasClientId) {
 
 function handleCredentialResponse(response) {
   const user = decodeJwt(response.credential);
-  if (!user) { toast('⚠️ Sign-in failed — please try again'); return; }
+  if (!user) { showLoginError('Sign-in failed — please try again.'); return; }
+  if (ALLOWED_EMAILS.length && !ALLOWED_EMAILS.includes(user.email)) {
+    showLoginError('⛔ ' + user.email + ' is not authorized to access this app.');
+    return;
+  }
   currentUser = { name: user.name, email: user.email, picture: user.picture || '', sub: user.sub };
   localStorage.setItem('nestkeeper_user', JSON.stringify(currentUser));
   showApp();
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('loginError');
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
 }
 
 function decodeJwt(token) {
@@ -3004,7 +3026,7 @@ function removeGoogleLogin() {
 
 async function loadAppData() {
   initYearSelect();
-  const saved = localStorage.getItem('nestkeeper_script_url');
+  const saved = CONFIG_SCRIPT_URL || localStorage.getItem('nestkeeper_script_url') || '';
   if (saved) document.getElementById('scriptUrlInput').value = saved;
   await load();
   renderBills();
@@ -3029,8 +3051,8 @@ async function loadAppData() {
 
 // ========== INIT ==========
 window.addEventListener('DOMContentLoaded', () => {
-  // Pre-fill client ID input if already saved
   if (GOOGLE_CLIENT_ID) document.getElementById('clientIdInput').value = GOOGLE_CLIENT_ID;
+  if (SCRIPT_URL) document.getElementById('scriptUrlInput').value = SCRIPT_URL;
   initGoogleAuth();
 });
 </script>
