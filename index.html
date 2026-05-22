@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nestkeeper 🏡</title>
-<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root {
@@ -478,6 +479,45 @@
   .logout-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 12px; padding: 4px 8px; border-radius: 6px; transition: all 0.2s; font-family: 'Raleway', sans-serif; }
   .logout-btn:hover { color: var(--red); background: rgba(240,120,120,0.1); }
   @media (max-width: 768px) { .login-card { margin: 16px; padding: 28px 22px; } }
+
+  /* ========== MODERNIZATION: Inter font + refined styles ========== */
+  html, body { font-family: 'Inter', sans-serif; }
+  .btn, .input, .select, .textarea, label, .stat-lbl, .bill-name, .bill-due,
+  .kanban-col-title, .tag-f, .priority-badge, .cat-badge, .days-away, .avg-tag,
+  .doc-name, .doc-meta, .book-title, .book-author, .pw-name, .pw-cat,
+  .pw-field-label, .pw-field-value, .gov-field-label, .gov-field-value,
+  .pg-btn, .sidenav-label, .close-btn, .gcal-btn, .logout-btn, .user-name,
+  .task-move-btn, .del-btn, .edit-btn, .tc-title, .tc-desc, .modal-title { font-family: 'Inter', sans-serif; }
+
+  /* Nav icons — Lucide SVGs inherit size from parent */
+  .nb-icon, .nb-icon svg { width: 16px; height: 16px; flex-shrink: 0; display: block; }
+  .nav-btn { font-family: 'Inter', sans-serif; font-size: 12.5px; gap: 9px; padding: 9px 11px; border-radius: 9px; }
+  .nav-btn .nb-icon { margin-top: 1px; }
+  .nav-btn.active { background: linear-gradient(135deg, rgba(240,165,192,0.14), rgba(184,169,240,0.09)); border-color: rgba(240,165,192,0.22); }
+  .sidenav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; }
+
+  /* Typography refinements */
+  .section-title { font-size: 23px; letter-spacing: 0.02em; }
+  .section-sub { font-size: 13px; color: var(--text3); }
+  .card-title { font-size: 15px; letter-spacing: 0.025em; }
+  .modal-title { font-size: 18px; }
+  .stat-val { font-family: 'Inter', sans-serif; font-size: 22px; letter-spacing: -0.02em; }
+  .summary-stat .val { font-family: 'Inter', sans-serif; letter-spacing: -0.02em; }
+  .bill-amount { font-family: 'Inter', sans-serif; font-size: 15px; letter-spacing: -0.01em; }
+  .tc-title { font-size: 12.5px; }
+  .kanban-col-title { font-size: 11px; letter-spacing: 0.08em; }
+
+  /* Input & label refinements */
+  .input, .select, .textarea { font-size: 13.5px; }
+  label { font-size: 11.5px; letter-spacing: 0.01em; }
+
+  /* Button polish */
+  .btn { letter-spacing: 0.01em; }
+  .btn-primary { box-shadow: 0 4px 14px rgba(232,121,160,0.18); }
+  .btn-sm { font-size: 12px; }
+
+  /* Login card */
+  .login-app-title { font-size: 26px; }
 </style>
 </head>
 <body>
@@ -514,30 +554,30 @@
 
       <div class="sidenav-section">
         <div class="sidenav-label">Finance</div>
-        <button class="nav-btn active" onclick="showTab('bills', this)"><span class="nb-icon">💡</span>House Bills</button>
-        <button class="nav-btn" onclick="showTab('expenses', this)"><span class="nb-icon">💸</span>Other Expenses</button>
-        <button class="nav-btn" onclick="showTab('savings', this)"><span class="nb-icon">🐷</span>Savings Goals</button>
-        <button class="nav-btn" onclick="showTab('summary', this)"><span class="nb-icon">📊</span>Bills & Expenses Summary</button>
+        <button class="nav-btn active" onclick="showTab('bills', this)"><i data-lucide="zap" class="nb-icon"></i>House Bills</button>
+        <button class="nav-btn" onclick="showTab('expenses', this)"><i data-lucide="receipt" class="nb-icon"></i>Other Expenses</button>
+        <button class="nav-btn" onclick="showTab('savings', this)"><i data-lucide="piggy-bank" class="nb-icon"></i>Savings Goals</button>
+        <button class="nav-btn" onclick="showTab('summary', this)"><i data-lucide="bar-chart-2" class="nb-icon"></i>Bills & Expenses Summary</button>
       </div>
 
       <div class="sidenav-section">
         <div class="sidenav-label">Home & Life</div>
-        <button class="nav-btn" onclick="showTab('events', this)"><span class="nb-icon">📅</span>Important Events</button>
-        <button class="nav-btn" onclick="showTab('tasks', this)"><span class="nb-icon">✅</span>Tasks</button>
+        <button class="nav-btn" onclick="showTab('events', this)"><i data-lucide="calendar-days" class="nb-icon"></i>Important Events</button>
+        <button class="nav-btn" onclick="showTab('tasks', this)"><i data-lucide="check-square" class="nb-icon"></i>Tasks</button>
       </div>
 
       <div class="sidenav-section">
         <div class="sidenav-label">Personal</div>
-        <button class="nav-btn" onclick="showTab('docs', this)"><span class="nb-icon">📎</span>Docs & Links</button>
-        <button class="nav-btn" onclick="showTab('books', this)"><span class="nb-icon">📚</span>Books Tracker</button>
-        <button class="nav-btn" onclick="showTab('passwords', this)"><span class="nb-icon">🔐</span>Passwords</button>
-        <button class="nav-btn" onclick="showTab('govaccounts', this)"><span class="nb-icon">🏛️</span>Government Accounts</button>
+        <button class="nav-btn" onclick="showTab('docs', this)"><i data-lucide="paperclip" class="nb-icon"></i>Docs & Links</button>
+        <button class="nav-btn" onclick="showTab('books', this)"><i data-lucide="book-open" class="nb-icon"></i>Books Tracker</button>
+        <button class="nav-btn" onclick="showTab('passwords', this)"><i data-lucide="lock" class="nb-icon"></i>Passwords</button>
+        <button class="nav-btn" onclick="showTab('govaccounts', this)"><i data-lucide="landmark" class="nb-icon"></i>Government Accounts</button>
       </div>
 
       <div class="sidenav-section sidenav-setup">
         <div class="sidenav-label">Settings</div>
-        <button class="nav-btn" onclick="openModal('setupModal')"><span class="nb-icon">⚙️</span>Google Sheets Setup</button>
-        <button class="nav-btn" onclick="openModal('googleLoginModal')"><span class="nb-icon">🔑</span>Google Login Setup</button>
+        <button class="nav-btn" onclick="openModal('setupModal')"><i data-lucide="settings" class="nb-icon"></i>Google Sheets Setup</button>
+        <button class="nav-btn" onclick="openModal('googleLoginModal')"><i data-lucide="key" class="nb-icon"></i>Google Login Setup</button>
       </div>
 
     </nav>
@@ -549,7 +589,7 @@
     <div class="tab active" id="tab-bills">
       <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
         <div>
-          <div class="section-title">💡 House Bills</div>
+          <div class="section-title">House Bills</div>
           <div class="section-sub">Track your recurring monthly bills and payment status</div>
         </div>
         <button class="btn btn-primary" onclick="openModal('addBillModal')">＋ Add Bill</button>
@@ -577,7 +617,7 @@
     <div class="tab" id="tab-expenses">
       <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
         <div>
-          <div class="section-title">💸 Other Expenses</div>
+          <div class="section-title">Other Expenses</div>
           <div class="section-sub">Log and analyze your spending</div>
         </div>
         <button class="btn btn-primary" onclick="openModal('addExpenseModal')">＋ Add Expense</button>
@@ -595,7 +635,7 @@
     <!-- ======== SUMMARY TAB ======== -->
     <div class="tab" id="tab-summary">
       <div style="margin-bottom:24px;">
-        <div class="section-title">📊 Bills & Expenses Summary</div>
+        <div class="section-title">Bills & Expenses Summary</div>
         <div class="section-sub">Your average monthly costs — bills and spending combined</div>
       </div>
 
@@ -610,19 +650,19 @@
 
       <!-- Bills breakdown -->
       <div class="card" style="margin-bottom:18px;">
-        <div class="card-title"><span class="icon">💡</span> Bills — Monthly Average per Item</div>
+        <div class="card-title">Bills — Monthly Average per Item</div>
         <div id="summaryBillsBreakdown"></div>
       </div>
 
       <!-- Expenses breakdown -->
       <div class="card" style="margin-bottom:18px;">
-        <div class="card-title"><span class="icon">💸</span> Expenses — Average by Category</div>
+        <div class="card-title">Expenses — Average by Category</div>
         <div id="summaryExpCats"></div>
       </div>
 
       <!-- Monthly trend table -->
       <div class="card">
-        <div class="card-title"><span class="icon">📅</span> Month-by-Month Breakdown</div>
+        <div class="card-title">Month-by-Month Breakdown</div>
         <div style="overflow-x:auto;">
           <table id="summaryTable" style="width:100%; border-collapse:collapse; font-size:13px;"></table>
         </div>
@@ -633,7 +673,7 @@
     <div class="tab" id="tab-events">
       <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
         <div>
-          <div class="section-title">📅 Important Events</div>
+          <div class="section-title">Important Events</div>
           <div class="section-sub">Never miss a date again</div>
         </div>
         <button class="btn btn-primary" onclick="openModal('addEventModal')">＋ Add Event</button>
@@ -645,7 +685,7 @@
     <div class="tab" id="tab-tasks">
       <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
         <div>
-          <div class="section-title">✅ Tasks</div>
+          <div class="section-title">Tasks</div>
           <div class="section-sub">Your personal Trello board</div>
         </div>
         <button class="btn btn-primary" onclick="openModal('addTaskModal')">＋ Add Task</button>
@@ -670,7 +710,7 @@
     <div class="tab" id="tab-docs">
       <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
         <div>
-          <div class="section-title">📎 Documents & Links</div>
+          <div class="section-title">Documents & Links</div>
           <div class="section-sub">Important files and links in one place</div>
         </div>
         <button class="btn btn-primary" onclick="openModal('addDocModal')">＋ Add Document</button>
@@ -687,7 +727,7 @@
     <div class="tab" id="tab-books">
       <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
         <div>
-          <div class="section-title">📚 Books Tracker</div>
+          <div class="section-title">Books Tracker</div>
           <div class="section-sub">Your reading journey</div>
         </div>
         <button class="btn btn-primary" onclick="openModal('addBookModal')">＋ Add Book</button>
@@ -707,7 +747,7 @@
     <div class="tab" id="tab-savings">
       <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
         <div>
-          <div class="section-title">🐷 Savings Goals</div>
+          <div class="section-title">Savings Goals</div>
           <div class="section-sub">Track your goals and log deposits anytime</div>
         </div>
         <button class="btn btn-primary" onclick="openModal('addSavingsModal')">＋ Add Goal</button>
@@ -724,7 +764,7 @@
     <div class="tab" id="tab-passwords">
       <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:8px;">
         <div>
-          <div class="section-title">🔐 Passwords</div>
+          <div class="section-title">Passwords</div>
           <div class="section-sub">Keep your logins organized and easy to find</div>
         </div>
         <button class="btn btn-primary" onclick="openModal('addPasswordModal')">＋ Add Login</button>
@@ -750,7 +790,7 @@
     <div class="tab" id="tab-govaccounts">
       <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
         <div>
-          <div class="section-title">🏛️ Government Accounts</div>
+          <div class="section-title">Government Accounts</div>
           <div class="section-sub">All your IDs, numbers, and account details in one place</div>
         </div>
         <button class="btn btn-primary" onclick="openModal('addGovModal')">＋ Add Account</button>
@@ -3148,6 +3188,7 @@ async function updateGoogleTaskStatus(task, googleStatus) {
 
 // ========== INIT ==========
 window.addEventListener('DOMContentLoaded', () => {
+  if (typeof lucide !== 'undefined') lucide.createIcons();
   if (GOOGLE_CLIENT_ID) document.getElementById('clientIdInput').value = GOOGLE_CLIENT_ID;
   if (SCRIPT_URL) document.getElementById('scriptUrlInput').value = SCRIPT_URL;
   initGoogleAuth();
