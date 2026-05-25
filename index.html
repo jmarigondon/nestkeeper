@@ -266,6 +266,16 @@
   .bsm-bill-name { font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 7px; }
   .bsm-rate { font-size: 11px; color: var(--text3); margin-top: 1px; }
 
+  /* Budget Planner */
+  .budget-income-item { display: flex; align-items: center; gap: 12px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 14px 18px; }
+  .budget-alloc-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 18px; margin-bottom: 12px; }
+  .budget-alloc-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .budget-alloc-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.04); }
+  .budget-remaining { display: flex; justify-content: space-between; align-items: center; padding: 16px 18px; border-radius: 14px; margin-top: 4px; }
+  .budget-cat-input { width: 110px; padding: 5px 8px !important; font-size: 13px !important; }
+  .budget-review-row { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .budget-net-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
+
   /* Expenses */
   .expense-row {
     display: flex; align-items: center; gap: 12px; padding: 12px 0;
@@ -589,6 +599,7 @@
         <button class="nav-btn active" onclick="showTab('bills')"><i data-lucide="zap" class="nb-icon"></i>House Bills</button>
         <button class="nav-btn" onclick="showTab('expenses')"><i data-lucide="receipt" class="nb-icon"></i>Other Expenses</button>
         <button class="nav-btn" onclick="showTab('savings')"><i data-lucide="piggy-bank" class="nb-icon"></i>Savings Goals</button>
+        <button class="nav-btn" onclick="showTab('budget')"><i data-lucide="wallet" class="nb-icon"></i>Budget Planner</button>
         <button class="nav-btn" onclick="showTab('summary')"><i data-lucide="bar-chart-2" class="nb-icon"></i>Bills & Expenses Summary</button>
       </div>
 
@@ -700,6 +711,48 @@
         </div>
         <div class="stats-row" id="expSummaryStats"></div>
         <div id="expSummaryContent"></div>
+      </div>
+    </div>
+
+    <!-- ======== BUDGET TAB ======== -->
+    <div class="tab" id="tab-budget">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+        <div>
+          <div class="section-title">Budget Planner</div>
+          <div class="section-sub">Manage combined income and keep spending in check</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('addIncomeModal')"><i data-lucide="plus" class="nb-icon"></i>Add Income</button>
+      </div>
+
+      <div class="bills-subnav">
+        <button class="bills-subbtn active" id="budgetSubPlan" onclick="showBudgetView('plan')">
+          <i data-lucide="layout-dashboard" class="nb-icon"></i>Budget Plan
+        </button>
+        <button class="bills-subbtn" id="budgetSubReview" onclick="showBudgetView('review')">
+          <i data-lucide="calendar-check" class="nb-icon"></i>Month Review
+        </button>
+      </div>
+
+      <!-- Budget Plan sub-view -->
+      <div class="bills-subview active" id="budget-view-plan">
+        <div id="budgetPlanContent"></div>
+      </div>
+
+      <!-- Month Review sub-view -->
+      <div class="bills-subview" id="budget-view-review">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+          <label style="margin:0; font-size:13px; color:var(--text2);">Reviewing:</label>
+          <select class="select" id="budgetReviewMonth" style="width:auto; min-width:140px;" onchange="renderBudgetReview()">
+            <option value="0">January</option><option value="1">February</option>
+            <option value="2">March</option><option value="3">April</option>
+            <option value="4">May</option><option value="5">June</option>
+            <option value="6">July</option><option value="7">August</option>
+            <option value="8">September</option><option value="9">October</option>
+            <option value="10">November</option><option value="11">December</option>
+          </select>
+          <select class="select" id="budgetReviewYear" style="width:auto; min-width:100px;" onchange="renderBudgetReview()"></select>
+        </div>
+        <div id="budgetReviewContent"></div>
       </div>
     </div>
 
@@ -961,6 +1014,27 @@
         <button class="btn btn-ghost" onclick="closeModal('googleLoginModal')">Cancel</button>
         <button class="btn btn-primary" onclick="saveClientId()">Save & Enable ✓</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Income -->
+<div class="modal-overlay" id="addIncomeModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">💰 Income Source</div>
+      <button class="close-btn" onclick="closeModal('addIncomeModal')">×</button>
+    </div>
+    <div class="form-row">
+      <div><label>Label *</label><input class="input" id="incomeName" placeholder="e.g. Jona — Salary"></div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Monthly Amount (₱) *</label><input class="input" id="incomeAmount" type="number" placeholder="0.00" min="0"></div>
+      <div><label>Icon</label><input class="input" id="incomeIcon" placeholder="💼" maxlength="4"></div>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('addIncomeModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveIncome()">Save</button>
     </div>
   </div>
 </div>
@@ -1510,7 +1584,8 @@ function doPost(e) {
 <script>
 // ========== DATA ==========
 let db = {
-  bills: [], expenses: [], events: [], tasks: [], docs: [], books: [], savings: [], passwords: [], govaccounts: []
+  bills: [], expenses: [], events: [], tasks: [], docs: [], books: [], savings: [], passwords: [], govaccounts: [],
+  budget: { incomes: [], categoryLimits: {}, savingsAllocations: {} }
 };
 let selectedBillColor = '#f0a5c0';
 let selectedBillFreq = 'monthly';
@@ -1610,6 +1685,10 @@ async function load() {
     const d = localStorage.getItem('nestkeeper_v2');
     if (d) db = JSON.parse(d);
     ['bills','expenses','events','tasks','docs','books','savings','passwords','govaccounts'].forEach(k => { if (!db[k]) db[k] = []; });
+    if (!db.budget) db.budget = { incomes: [], categoryLimits: {}, savingsAllocations: {} };
+    if (!db.budget.incomes) db.budget.incomes = [];
+    if (!db.budget.categoryLimits) db.budget.categoryLimits = {};
+    if (!db.budget.savingsAllocations) db.budget.savingsAllocations = {};
   } catch(e) {}
 
   if (!SCRIPT_URL) { setSyncStatus('error', 'Not connected — click ⚙️ Setup'); return; }
@@ -1621,6 +1700,10 @@ async function load() {
     if (json && json.data) {
       db = json.data;
       ['bills','expenses','events','tasks','docs','books','savings','passwords','govaccounts'].forEach(k => { if (!db[k]) db[k] = []; });
+    if (!db.budget) db.budget = { incomes: [], categoryLimits: {}, savingsAllocations: {} };
+    if (!db.budget.incomes) db.budget.incomes = [];
+    if (!db.budget.categoryLimits) db.budget.categoryLimits = {};
+    if (!db.budget.savingsAllocations) db.budget.savingsAllocations = {};
       localStorage.setItem('nestkeeper_v2', JSON.stringify(db));
       setSyncStatus('ok', 'Loaded from Google Sheets');
       setTimeout(() => setSyncStatus('idle', 'Connected'), 2500);
@@ -1665,7 +1748,7 @@ function toggleSidenav() {
 
 // ========== TABS ==========
 // ========== ROUTING ==========
-const VALID_TABS = new Set(['bills','expenses','savings','summary','events','tasks','docs','books','passwords','govaccounts']);
+const VALID_TABS = new Set(['bills','expenses','savings','budget','summary','events','tasks','docs','books','passwords','govaccounts']);
 
 function _activateTab(name) {
   if (!VALID_TABS.has(name)) name = 'bills';
@@ -1679,7 +1762,7 @@ function _activateTab(name) {
   document.getElementById('sidenavOverlay').classList.remove('open');
   const renders = {
     bills: renderBills, expenses: renderExpenses, savings: renderSavings,
-    summary: renderSummary, passwords: renderPasswords, govaccounts: renderGovAccounts,
+    budget: renderBudget, summary: renderSummary, passwords: renderPasswords, govaccounts: renderGovAccounts,
     events: renderEvents, tasks: renderTasks, docs: renderDocs, books: renderBooks
   };
   if (renders[name]) renders[name]();
@@ -2892,6 +2975,399 @@ function deleteSavingsGoal(id) {
   if (!confirm('Delete this savings goal and all its history?')) return;
   db.savings = db.savings.filter(g => g.id !== id);
   save(); renderSavings(); toast('🗑 Deleted');
+}
+
+// ========== BUDGET PLANNER ==========
+
+function initBudget() {
+  if (!db.budget) db.budget = { incomes: [], categoryLimits: {}, savingsAllocations: {} };
+  if (!db.budget.incomes) db.budget.incomes = [];
+  if (!db.budget.categoryLimits) db.budget.categoryLimits = {};
+  if (!db.budget.savingsAllocations) db.budget.savingsAllocations = {};
+}
+
+function renderBudget() {
+  initBudget();
+  if (document.getElementById('budget-view-review').classList.contains('active')) {
+    initBudgetReviewSelects();
+    renderBudgetReview();
+  } else {
+    renderBudgetPlan();
+  }
+}
+
+function showBudgetView(view) {
+  document.getElementById('budgetSubPlan').classList.toggle('active', view === 'plan');
+  document.getElementById('budgetSubReview').classList.toggle('active', view === 'review');
+  document.getElementById('budget-view-plan').classList.toggle('active', view === 'plan');
+  document.getElementById('budget-view-review').classList.toggle('active', view === 'review');
+  if (view === 'plan') renderBudgetPlan();
+  else { initBudgetReviewSelects(); renderBudgetReview(); }
+}
+
+function initBudgetReviewSelects() {
+  const ySel = document.getElementById('budgetReviewYear');
+  if (ySel.options.length > 0) return;
+  const now = new Date();
+  document.getElementById('budgetReviewMonth').value = now.getMonth();
+  const y = now.getFullYear();
+  for (let i = y - 1; i <= y + 1; i++) {
+    const o = document.createElement('option');
+    o.value = i; o.textContent = i;
+    if (i === y) o.selected = true;
+    ySel.appendChild(o);
+  }
+}
+
+function renderBudgetPlan() {
+  initBudget();
+  const el = document.getElementById('budgetPlanContent');
+  const totalIncome = db.budget.incomes.reduce((s, i) => s + i.amount, 0);
+
+  const fixedBills = db.bills.reduce((s, b) =>
+    s + ((b.frequency || 'monthly') === 'annual' ? (b.typical || 0) / 12 : (b.typical || 0)), 0);
+  const budgetedExpTotal = Object.values(db.budget.categoryLimits).reduce((s, v) => s + v, 0);
+  const savingsTotal = Object.values(db.budget.savingsAllocations).reduce((s, v) => s + v, 0);
+  const remaining = totalIncome - fixedBills - budgetedExpTotal - savingsTotal;
+
+  function pctOfIncome(amt) {
+    return totalIncome > 0 ? Math.round(amt / totalIncome * 100) : 0;
+  }
+  function barW(amt) { return totalIncome > 0 ? Math.min(100, pctOfIncome(amt)) : 0; }
+
+  // Income sources
+  let html = '';
+  if (!db.budget.incomes.length) {
+    html += `<div class="empty" style="margin-bottom:24px;"><div class="empty-icon">💰</div><div class="empty-text">No income sources yet.<br>Click <strong>+ Add Income</strong> to start planning.</div></div>`;
+  } else {
+    html += `<div style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;">
+      ${db.budget.incomes.map(inc => `
+        <div class="budget-income-item">
+          <div style="font-size:24px; width:42px; height:42px; border-radius:10px; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; flex-shrink:0;">${inc.icon || '💼'}</div>
+          <div style="flex:1;">
+            <div style="font-weight:600; font-size:14px;">${inc.label}</div>
+            <div style="font-size:11px; color:var(--text3);">Monthly income source</div>
+          </div>
+          <div style="font-weight:700; font-size:16px; color:var(--green);">₱${fmt(inc.amount)}<span style="font-size:11px; color:var(--text3); font-weight:400">/mo</span></div>
+          <button class="edit-btn" onclick="editIncome('${inc.id}')">${lc('pencil')}</button>
+          <button class="del-btn" onclick="deleteIncome('${inc.id}')">${lc('trash-2')}</button>
+        </div>`).join('')}
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; background:linear-gradient(135deg,rgba(125,210,160,0.12),rgba(125,210,160,0.04)); border:1px solid rgba(125,210,160,0.22); border-radius:14px; margin-bottom:28px;">
+      <div style="font-size:12px; font-weight:700; letter-spacing:0.07em; color:var(--text2);">TOTAL MONTHLY INCOME</div>
+      <div style="font-size:22px; font-weight:700; color:var(--green);">₱${fmt(totalIncome)}</div>
+    </div>`;
+  }
+
+  if (totalIncome > 0) {
+    html += `<div style="font-size:11px; font-weight:700; letter-spacing:0.09em; color:var(--text3); margin-bottom:14px;">ALLOCATION BREAKDOWN</div>`;
+
+    // Fixed Bills
+    html += `<div class="budget-alloc-card">
+      <div class="budget-alloc-header">
+        <div style="font-size:20px; width:36px; text-align:center;">🏠</div>
+        <div style="flex:1;">
+          <div style="font-weight:600; font-size:14px;">Fixed Bills <span style="font-size:11px; color:var(--text3); font-weight:400;">auto from bills tracker</span></div>
+          <div class="progress-wrap" style="margin-top:6px;"><div class="progress-bar" style="width:${barW(fixedBills)}%; background:var(--teal);"></div></div>
+        </div>
+        <div style="text-align:right; min-width:120px;">
+          <div style="font-weight:700; color:var(--teal);">₱${fmt(fixedBills)}/mo</div>
+          <div style="font-size:11px; color:var(--text3);">${pctOfIncome(fixedBills)}% of income</div>
+        </div>
+      </div>
+      ${db.bills.length ? db.bills.map(b => {
+        const mo = (b.frequency || 'monthly') === 'annual' ? (b.typical || 0) / 12 : (b.typical || 0);
+        return `<div class="budget-alloc-row">
+          <span style="color:var(--text2); font-size:13px;">${b.icon} ${b.name}${b.frequency === 'annual' ? ' <span style="font-size:10px; opacity:.6">÷12</span>' : ''}</span>
+          <span style="margin-left:auto; color:var(--text3); font-size:12px;">₱${fmt(mo)}/mo</span>
+        </div>`;
+      }).join('') : '<div style="padding:8px 0; font-size:12px; color:var(--text3);">No bills added yet.</div>'}
+    </div>`;
+
+    // Expense Budgets
+    const allCats = [...new Set([
+      ...Object.keys(db.budget.categoryLimits),
+      ...db.expenses.map(e => e.cat)
+    ])].sort();
+
+    html += `<div class="budget-alloc-card">
+      <div class="budget-alloc-header">
+        <div style="font-size:20px; width:36px; text-align:center;">💸</div>
+        <div style="flex:1;">
+          <div style="font-weight:600; font-size:14px;">Expense Budgets</div>
+          <div class="progress-wrap" style="margin-top:6px;"><div class="progress-bar" id="budgetExpBar" style="width:${barW(budgetedExpTotal)}%; background:var(--pink);"></div></div>
+        </div>
+        <div style="text-align:right; min-width:120px;">
+          <div style="font-weight:700; color:var(--pink);" id="budgetExpTotalDisplay">₱${fmt(budgetedExpTotal)}/mo</div>
+          <div style="font-size:11px; color:var(--text3);" id="budgetExpPct">${pctOfIncome(budgetedExpTotal)}% of income</div>
+        </div>
+      </div>
+      ${allCats.length ? allCats.map(cat => {
+        const limit = db.budget.categoryLimits[cat] || 0;
+        return `<div class="budget-alloc-row">
+          <span style="flex:1; font-size:13px; color:var(--text2);">${cat}</span>
+          <div style="display:flex; align-items:center; gap:5px;">
+            <span style="font-size:12px; color:var(--text3);">₱</span>
+            <input class="input budget-cat-input" type="number" value="${limit || ''}" placeholder="no limit" min="0"
+              onchange="saveCategoryLimit('${cat.replace(/'/g, "\\'")}', this.value)">
+            <span style="font-size:12px; color:var(--text3);">/mo</span>
+          </div>
+        </div>`;
+      }).join('') : '<div style="padding:8px 0; font-size:12px; color:var(--text3);">Add expenses first — categories will appear here automatically.</div>'}
+    </div>`;
+
+    // Savings Allocations
+    html += `<div class="budget-alloc-card">
+      <div class="budget-alloc-header">
+        <div style="font-size:20px; width:36px; text-align:center;">🏦</div>
+        <div style="flex:1;">
+          <div style="font-weight:600; font-size:14px;">Savings Goals</div>
+          <div class="progress-wrap" style="margin-top:6px;"><div class="progress-bar" id="budgetSavBar" style="width:${barW(savingsTotal)}%; background:var(--gold);"></div></div>
+        </div>
+        <div style="text-align:right; min-width:120px;">
+          <div style="font-weight:700; color:var(--gold);" id="budgetSavTotalDisplay">₱${fmt(savingsTotal)}/mo</div>
+          <div style="font-size:11px; color:var(--text3);" id="budgetSavPct">${pctOfIncome(savingsTotal)}% of income</div>
+        </div>
+      </div>
+      ${db.savings.length ? db.savings.map(goal => {
+        const alloc = db.budget.savingsAllocations[goal.id] || 0;
+        return `<div class="budget-alloc-row">
+          <span style="font-size:18px;">${goal.icon}</span>
+          <span style="flex:1; font-size:13px; color:var(--text2); margin-left:6px;">${goal.name}</span>
+          <div style="display:flex; align-items:center; gap:5px;">
+            <span style="font-size:12px; color:var(--text3);">₱</span>
+            <input class="input budget-cat-input" type="number" value="${alloc || ''}" placeholder="monthly" min="0"
+              onchange="saveSavingsAlloc('${goal.id}', this.value)">
+            <span style="font-size:12px; color:var(--text3);">/mo</span>
+          </div>
+        </div>`;
+      }).join('') : '<div style="padding:8px 0; font-size:12px; color:var(--text3);">No savings goals added yet.</div>'}
+    </div>`;
+
+    // Remaining
+    const remPos = remaining >= 0;
+    html += `<div id="budgetRemainingCard" class="budget-remaining" style="background:${remPos ? 'rgba(125,210,160,0.08)' : 'rgba(240,120,120,0.08)'}; border:1px solid ${remPos ? 'rgba(125,210,160,0.22)' : 'rgba(240,120,120,0.22)'};">
+      <div>
+        <div id="budgetRemainingLabel" style="font-size:12px; font-weight:700; letter-spacing:0.06em; color:${remPos ? 'var(--green)' : 'var(--red)'};">${remPos ? 'UNALLOCATED' : '⚠ OVER BUDGET'}</div>
+        <div id="budgetRemainingPct" style="font-size:11px; color:var(--text3); margin-top:2px;">${Math.abs(pctOfIncome(remaining))}% of income ${remPos ? 'not yet allocated' : 'exceeds income'}</div>
+      </div>
+      <div id="budgetRemainingAmt" style="font-size:24px; font-weight:700; color:${remPos ? 'var(--green)' : 'var(--red)'};">${remPos ? '' : '–'}₱${fmt(Math.abs(remaining))}</div>
+    </div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+function updateBudgetTotals() {
+  initBudget();
+  const totalIncome = db.budget.incomes.reduce((s, i) => s + i.amount, 0);
+  if (!totalIncome) return;
+  const fixedBills = db.bills.reduce((s, b) =>
+    s + ((b.frequency || 'monthly') === 'annual' ? (b.typical || 0) / 12 : (b.typical || 0)), 0);
+  const budgetedExpTotal = Object.values(db.budget.categoryLimits).reduce((s, v) => s + v, 0);
+  const savingsTotal = Object.values(db.budget.savingsAllocations).reduce((s, v) => s + v, 0);
+  const remaining = totalIncome - fixedBills - budgetedExpTotal - savingsTotal;
+  const pct = (amt) => Math.min(100, Math.round(amt / totalIncome * 100));
+
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el[typeof val === 'string' ? 'textContent' : 'style'] = val; };
+  const setStyle = (id, prop, val) => { const el = document.getElementById(id); if (el) el.style[prop] = val; };
+  const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+  setText('budgetExpTotalDisplay', `₱${fmt(budgetedExpTotal)}/mo`);
+  setText('budgetExpPct', `${pct(budgetedExpTotal)}% of income`);
+  setStyle('budgetExpBar', 'width', `${pct(budgetedExpTotal)}%`);
+
+  setText('budgetSavTotalDisplay', `₱${fmt(savingsTotal)}/mo`);
+  setText('budgetSavPct', `${pct(savingsTotal)}% of income`);
+  setStyle('budgetSavBar', 'width', `${pct(savingsTotal)}%`);
+
+  const remPos = remaining >= 0;
+  const remClr = remPos ? 'var(--green)' : 'var(--red)';
+  setText('budgetRemainingLabel', remPos ? 'UNALLOCATED' : '⚠ OVER BUDGET');
+  setStyle('budgetRemainingLabel', 'color', remClr);
+  setText('budgetRemainingPct', `${Math.abs(pct(remaining))}% of income ${remPos ? 'not yet allocated' : 'exceeds income'}`);
+  setText('budgetRemainingAmt', `${remPos ? '' : '–'}₱${fmt(Math.abs(remaining))}`);
+  setStyle('budgetRemainingAmt', 'color', remClr);
+  const card = document.getElementById('budgetRemainingCard');
+  if (card) {
+    card.style.background = remPos ? 'rgba(125,210,160,0.08)' : 'rgba(240,120,120,0.08)';
+    card.style.border = `1px solid ${remPos ? 'rgba(125,210,160,0.22)' : 'rgba(240,120,120,0.22)'}`;
+  }
+}
+
+function renderBudgetReview() {
+  initBudget();
+  const month = parseInt(document.getElementById('budgetReviewMonth').value);
+  const year = parseInt(document.getElementById('budgetReviewYear').value);
+  const el = document.getElementById('budgetReviewContent');
+  const monthKey = `${year}-${month}`;
+
+  const totalIncome = db.budget.incomes.reduce((s, i) => s + i.amount, 0);
+  const monthExps = db.expenses.filter(e => e.date && e.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`));
+  const actualExpTotal = monthExps.reduce((s, e) => s + e.amount, 0);
+
+  const billsEst = db.bills.reduce((s, b) =>
+    s + ((b.frequency || 'monthly') === 'annual' ? (b.typical || 0) / 12 : (b.typical || 0)), 0);
+  const budgetedExpTotal = Object.values(db.budget.categoryLimits).reduce((s, v) => s + v, 0);
+  const savingsTotal = Object.values(db.budget.savingsAllocations).reduce((s, v) => s + v, 0);
+  const totalBudget = billsEst + budgetedExpTotal + savingsTotal;
+  const totalActual = billsEst + actualExpTotal;
+  const remaining = totalIncome - totalActual - savingsTotal;
+
+  // Stats
+  let html = `<div class="stats-row" style="margin-bottom:20px;">
+    <div class="stat-box"><div class="stat-val" style="color:var(--green)">₱${fmt(totalIncome)}</div><div class="stat-lbl">Monthly Income</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--teal)">₱${fmt(totalBudget)}</div><div class="stat-lbl">Total Budgeted</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--pink)">₱${fmt(totalActual)}</div><div class="stat-lbl">Bills + Actual Spend</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:${remaining >= 0 ? 'var(--green)' : 'var(--red)'}">₱${fmt(Math.abs(remaining))}</div><div class="stat-lbl">${remaining >= 0 ? 'Est. Remaining' : 'Over Budget'}</div></div>
+  </div>`;
+
+  // Fixed Bills
+  html += `<div class="card" style="margin-bottom:16px;">
+    <div class="card-title" style="margin-bottom:14px;">🏠 Fixed Bills — ${MONTHS_FULL[month]} ${year}</div>
+    ${!db.bills.length ? '<div style="font-size:13px; color:var(--text3);">No bills added.</div>' :
+      db.bills.map(b => {
+        const isAnnual = b.frequency === 'annual';
+        const p = (isAnnual ? b.payments[`annual-${year}`] : b.payments[monthKey]) || {};
+        const amt = isAnnual ? (b.typical || 0) / 12 : (p.amount || b.typical || 0);
+        const statusClr = p.status === 'paid' ? 'var(--green)' : p.status === 'partial' ? 'var(--gold)' : 'var(--text3)';
+        const statusTxt = p.status === 'paid' ? '✓ Paid' : p.status === 'partial' ? '⊘ Partial' : 'Unpaid';
+        return `<div style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04);">
+          <span style="font-size:18px;">${b.icon}</span>
+          <span style="flex:1; font-size:13px; font-weight:500;">${b.name}${isAnnual ? ' <span class="bill-freq-badge annual" style="font-size:9px; padding:1px 5px;">ANNUAL</span>' : ''}</span>
+          <span style="font-size:12px; color:${statusClr}; font-weight:600; margin-right:8px;">${statusTxt}</span>
+          <span style="font-weight:700; color:var(--teal); font-size:14px;">₱${fmt(amt)}${isAnnual ? '<span style="font-size:10px; color:var(--text3); font-weight:400">/mo eq.</span>' : ''}</span>
+        </div>`;
+      }).join('')}
+  </div>`;
+
+  // Expense Budgets vs Actual
+  const catActuals = {};
+  monthExps.forEach(e => { catActuals[e.cat] = (catActuals[e.cat] || 0) + e.amount; });
+  const budgetedCats = Object.keys(db.budget.categoryLimits);
+  const unbudgetedCats = Object.keys(catActuals).filter(c => !db.budget.categoryLimits[c]);
+
+  if (budgetedCats.length) {
+    html += `<div class="card" style="margin-bottom:16px;">
+      <div class="card-title" style="margin-bottom:14px;">💸 Budget vs Actual — ${MONTHS_FULL[month]} ${year}</div>
+      ${budgetedCats.map(cat => {
+        const budget = db.budget.categoryLimits[cat];
+        const actual = catActuals[cat] || 0;
+        const diff = budget - actual;
+        const usedPct = Math.min(100, budget > 0 ? Math.round(actual / budget * 100) : 0);
+        const isOver = actual > budget;
+        const isNear = !isOver && usedPct >= 80;
+        const barClr = isOver ? 'var(--red)' : isNear ? 'var(--gold)' : 'var(--green)';
+        return `<div style="margin-bottom:14px;">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:5px; flex-wrap:wrap; gap:4px;">
+            <div style="font-weight:600; font-size:13px;">${cat}</div>
+            <div style="display:flex; gap:10px; align-items:baseline; flex-wrap:wrap;">
+              <span style="font-size:11px; color:var(--text3);">limit ₱${fmt(budget)}</span>
+              <span style="font-weight:700; font-size:14px; color:${isOver ? 'var(--red)' : 'var(--text)'};">₱${fmt(actual)}</span>
+              <span style="font-size:12px; font-weight:600; color:${isOver ? 'var(--red)' : 'var(--green)'};">${isOver ? '⚠ ₱' + fmt(Math.abs(diff)) + ' over' : actual === 0 ? '—' : '✓ ₱' + fmt(diff) + ' left'}</span>
+            </div>
+          </div>
+          <div class="progress-wrap"><div class="progress-bar" style="width:${usedPct}%; background:${barClr};"></div></div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  } else if (!budgetedCats.length) {
+    html += `<div class="card" style="margin-bottom:16px; text-align:center; padding:28px;">
+      <div style="font-size:13px; color:var(--text3); margin-bottom:8px;">No expense budget caps set yet.</div>
+      <div style="font-size:12px; color:var(--text3);">Go to <strong>Budget Plan</strong> and set monthly limits per category.</div>
+    </div>`;
+  }
+
+  if (unbudgetedCats.length) {
+    html += `<div class="card" style="margin-bottom:16px;">
+      <div class="card-title" style="margin-bottom:14px; display:flex; align-items:center; gap:8px;">⚠ Unbudgeted Spending <span style="font-size:11px; font-weight:400; color:var(--text3);">no limit set</span></div>
+      ${unbudgetedCats.map(cat => `
+        <div class="budget-review-row">
+          <span style="font-size:13px; color:var(--text2);">${cat}</span>
+          <span style="font-weight:700; color:var(--gold);">₱${fmt(catActuals[cat])}</span>
+        </div>`).join('')}
+    </div>`;
+  }
+
+  // Savings
+  const allocatedGoals = db.savings.filter(g => db.budget.savingsAllocations[g.id]);
+  if (allocatedGoals.length) {
+    html += `<div class="card" style="margin-bottom:16px;">
+      <div class="card-title" style="margin-bottom:14px;">🏦 Savings Allocation — ${MONTHS_FULL[month]}</div>
+      ${allocatedGoals.map(g => {
+        const alloc = db.budget.savingsAllocations[g.id];
+        return `<div class="budget-review-row">
+          <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:18px;">${g.icon}</span><span style="font-size:13px; font-weight:500;">${g.name}</span></div>
+          <span style="font-weight:700; color:var(--gold);">₱${fmt(alloc)}/mo</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  // Net Summary
+  const afterBillsExp = totalIncome - billsEst - actualExpTotal;
+  const afterSavings = afterBillsExp - savingsTotal;
+  html += `<div class="card">
+    <div class="card-title" style="margin-bottom:14px;">📊 Net Summary — ${MONTHS_FULL[month]} ${year}</div>
+    <div class="budget-net-row"><span style="color:var(--text2);">Total Income</span><span style="font-weight:700; color:var(--green);">+₱${fmt(totalIncome)}</span></div>
+    <div class="budget-net-row"><span style="color:var(--text2);">Fixed Bills (est.)</span><span style="font-weight:700; color:var(--teal);">−₱${fmt(billsEst)}</span></div>
+    <div class="budget-net-row"><span style="color:var(--text2);">Expenses (actual)</span><span style="font-weight:700; color:var(--pink);">−₱${fmt(actualExpTotal)}</span></div>
+    <div class="budget-net-row"><span style="color:var(--text2);">Savings (planned)</span><span style="font-weight:700; color:var(--gold);">−₱${fmt(savingsTotal)}</span></div>
+    <div style="display:flex; justify-content:space-between; padding:14px 0 4px; font-weight:700; font-size:15px;">
+      <span>Net Remaining</span>
+      <span style="font-size:20px; color:${afterSavings >= 0 ? 'var(--green)' : 'var(--red)'};">${afterSavings >= 0 ? '' : '–'}₱${fmt(Math.abs(afterSavings))}</span>
+    </div>
+  </div>`;
+
+  el.innerHTML = html;
+}
+
+function saveIncome() {
+  const label = document.getElementById('incomeName').value.trim();
+  const amount = parseFloat(document.getElementById('incomeAmount').value);
+  if (!label || !amount) { alert('Please enter a label and amount.'); return; }
+  initBudget();
+  const inc = { id: editingId || uid(), label, amount, icon: document.getElementById('incomeIcon').value.trim() || '💼' };
+  if (editingId) db.budget.incomes = db.budget.incomes.map(i => i.id === editingId ? inc : i);
+  else db.budget.incomes.push(inc);
+  editingId = null;
+  save(); closeModal('addIncomeModal');
+  ['incomeName','incomeAmount','incomeIcon'].forEach(id => document.getElementById(id).value = '');
+  renderBudgetPlan(); toast('✓ Income saved!');
+}
+
+function editIncome(id) {
+  initBudget();
+  const inc = db.budget.incomes.find(i => i.id === id);
+  if (!inc) return;
+  editingId = id;
+  document.getElementById('incomeName').value = inc.label;
+  document.getElementById('incomeAmount').value = inc.amount;
+  document.getElementById('incomeIcon').value = inc.icon || '';
+  openModal('addIncomeModal');
+}
+
+function deleteIncome(id) {
+  if (!confirm('Remove this income source?')) return;
+  initBudget();
+  db.budget.incomes = db.budget.incomes.filter(i => i.id !== id);
+  save(); renderBudgetPlan(); toast('🗑 Removed');
+}
+
+function saveCategoryLimit(cat, value) {
+  initBudget();
+  const amt = parseFloat(value) || 0;
+  if (amt > 0) db.budget.categoryLimits[cat] = amt;
+  else delete db.budget.categoryLimits[cat];
+  save(); updateBudgetTotals();
+}
+
+function saveSavingsAlloc(goalId, value) {
+  initBudget();
+  const amt = parseFloat(value) || 0;
+  if (amt > 0) db.budget.savingsAllocations[goalId] = amt;
+  else delete db.budget.savingsAllocations[goalId];
+  save(); updateBudgetTotals();
 }
 
 // ========== GOVERNMENT ACCOUNTS ==========
