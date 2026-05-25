@@ -276,6 +276,37 @@
   .budget-review-row { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
   .budget-net-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
 
+  /* Shared status badges */
+  .status-badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; letter-spacing:0.04em; }
+  .status-planned { background:rgba(184,169,240,0.15); color:var(--lavender); }
+  .status-inprogress { background:rgba(245,199,126,0.18); color:var(--gold); }
+  .status-done { background:rgba(125,210,160,0.15); color:var(--green); }
+
+  /* Home Renovations */
+  .reno-card { background:var(--glass); border:1px solid var(--glass-border); border-radius:14px; padding:16px 18px; margin-bottom:12px; transition:background 0.2s; }
+  .reno-card:hover { background:var(--glass-hover); }
+  .reno-meta { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:5px; }
+  .reno-costs { display:flex; gap:16px; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06); flex-wrap:wrap; }
+  .reno-cost-item { font-size:12px; color:var(--text3); }
+  .reno-cost-val { font-weight:700; font-size:14px; }
+
+  /* Medical */
+  .appt-card { background:var(--glass); border:1px solid var(--glass-border); border-radius:13px; padding:14px 16px; margin-bottom:10px; }
+  .vax-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+  .overdue-tag { background:rgba(240,120,120,0.15); color:var(--red); font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; }
+  .due-soon-tag { background:rgba(245,199,126,0.15); color:var(--gold); font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; }
+  .person-chip { display:inline-flex; padding:5px 13px; border-radius:20px; border:1px solid var(--glass-border); background:transparent; color:var(--text2); font-size:12px; font-weight:500; cursor:pointer; transition:all 0.18s; font-family:'Inter',sans-serif; }
+  .person-chip.active { background:rgba(240,165,192,0.15); border-color:rgba(240,165,192,0.3); color:var(--pink); font-weight:600; }
+  .section-divider { font-size:10.5px; font-weight:700; letter-spacing:0.09em; color:var(--text3); padding:16px 2px 8px; display:flex; align-items:center; gap:10px; }
+  .section-divider::after { content:''; flex:1; height:1px; background:rgba(255,255,255,0.06); }
+
+  /* School */
+  .day-header { font-size:11px; font-weight:700; letter-spacing:0.08em; color:var(--text3); padding:14px 0 8px; display:flex; align-items:center; gap:10px; }
+  .day-header::after { content:''; flex:1; height:1px; background:rgba(255,255,255,0.06); }
+  .school-item { background:var(--glass); border:1px solid var(--glass-border); border-radius:12px; padding:12px 15px; margin-bottom:8px; display:flex; gap:12px; align-items:flex-start; }
+  .school-time { font-size:11px; font-weight:700; color:var(--lavender); min-width:70px; padding-top:2px; }
+  .event-type-badge { display:inline-flex; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:700; background:rgba(255,255,255,0.07); color:var(--text2); }
+
   /* Expenses */
   .expense-row {
     display: flex; align-items: center; gap: 12px; padding: 12px 0;
@@ -607,6 +638,9 @@
         <div class="sidenav-label">Home & Life</div>
         <button class="nav-btn" onclick="showTab('events')"><i data-lucide="calendar-days" class="nb-icon"></i>Important Events</button>
         <button class="nav-btn" onclick="showTab('tasks')"><i data-lucide="check-square" class="nb-icon"></i>Tasks</button>
+        <button class="nav-btn" onclick="showTab('renovations')"><i data-lucide="hammer" class="nb-icon"></i>Home Renovations</button>
+        <button class="nav-btn" onclick="showTab('medical')"><i data-lucide="heart-pulse" class="nb-icon"></i>Medical</button>
+        <button class="nav-btn" onclick="showTab('school')"><i data-lucide="graduation-cap" class="nb-icon"></i>School Tracker</button>
       </div>
 
       <div class="sidenav-section">
@@ -753,6 +787,85 @@
           <select class="select" id="budgetReviewYear" style="width:auto; min-width:100px;" onchange="renderBudgetReview()"></select>
         </div>
         <div id="budgetReviewContent"></div>
+      </div>
+    </div>
+
+    <!-- ======== RENOVATIONS TAB ======== -->
+    <div class="tab" id="tab-renovations">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+        <div>
+          <div class="section-title">Home Renovations</div>
+          <div class="section-sub">Track projects, costs and progress</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('addRenovationModal')"><i data-lucide="plus" class="nb-icon"></i>Add Project</button>
+      </div>
+      <div class="stats-row" id="renoStats"></div>
+      <div class="tag-filter" id="renoFilters" style="margin-bottom:16px;"></div>
+      <div id="renoList"></div>
+    </div>
+
+    <!-- ======== MEDICAL TAB ======== -->
+    <div class="tab" id="tab-medical">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+        <div>
+          <div class="section-title">Medical</div>
+          <div class="section-sub">Appointments, vaccines and health records</div>
+        </div>
+      </div>
+      <div class="bills-subnav">
+        <button class="bills-subbtn active" id="medSubAppt" onclick="showMedicalView('appointments')"><i data-lucide="calendar-clock" class="nb-icon"></i>Appointments</button>
+        <button class="bills-subbtn" id="medSubVax" onclick="showMedicalView('vaccines')"><i data-lucide="syringe" class="nb-icon"></i>Vaccine Tracker</button>
+      </div>
+      <div class="bills-subview active" id="med-view-appointments">
+        <div style="display:flex; justify-content:flex-end; margin-bottom:14px;">
+          <button class="btn btn-primary" onclick="openModal('addAppointmentModal')"><i data-lucide="plus" class="nb-icon"></i>Add Appointment</button>
+        </div>
+        <div id="apptPersonFilter" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;"></div>
+        <div id="apptList"></div>
+      </div>
+      <div class="bills-subview" id="med-view-vaccines">
+        <div style="display:flex; justify-content:flex-end; margin-bottom:14px;">
+          <button class="btn btn-primary" onclick="openModal('addVaccineModal')"><i data-lucide="plus" class="nb-icon"></i>Add Vaccine</button>
+        </div>
+        <div id="vaxPersonFilter" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;"></div>
+        <div id="vaxList"></div>
+      </div>
+    </div>
+
+    <!-- ======== SCHOOL TAB ======== -->
+    <div class="tab" id="tab-school">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+        <div>
+          <div class="section-title">School Tracker</div>
+          <div class="section-sub" id="schoolSubTitle">Schedule, activities and events</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px; background:var(--glass); border:1px solid var(--glass-border); border-radius:12px; padding:10px 14px;">
+        <i data-lucide="user" class="nb-icon" style="color:var(--lavender); width:18px; height:18px;"></i>
+        <input class="input" id="schoolChildName" placeholder="Child's name (e.g. Sofia)" style="border:none; background:transparent; padding:0; flex:1;" oninput="saveSchoolChildName(this.value)">
+      </div>
+      <div class="bills-subnav">
+        <button class="bills-subbtn active" id="schoolSubEvents" onclick="showSchoolView('events')"><i data-lucide="calendar-days" class="nb-icon"></i>Events</button>
+        <button class="bills-subbtn" id="schoolSubSchedule" onclick="showSchoolView('schedule')"><i data-lucide="clock" class="nb-icon"></i>Schedule</button>
+        <button class="bills-subbtn" id="schoolSubExtra" onclick="showSchoolView('extra')"><i data-lucide="star" class="nb-icon"></i>Extracurriculars</button>
+      </div>
+      <div class="bills-subview active" id="school-view-events">
+        <div style="display:flex; justify-content:flex-end; margin-bottom:14px;">
+          <button class="btn btn-primary" onclick="openModal('addSchoolEventModal')"><i data-lucide="plus" class="nb-icon"></i>Add Event</button>
+        </div>
+        <div id="schoolEventsList"></div>
+      </div>
+      <div class="bills-subview" id="school-view-schedule">
+        <div style="display:flex; justify-content:flex-end; margin-bottom:14px;">
+          <button class="btn btn-primary" onclick="openModal('addScheduleModal')"><i data-lucide="plus" class="nb-icon"></i>Add Class</button>
+        </div>
+        <div id="schoolScheduleList"></div>
+      </div>
+      <div class="bills-subview" id="school-view-extra">
+        <div style="display:flex; justify-content:flex-end; margin-bottom:14px;">
+          <button class="btn btn-primary" onclick="openModal('addExtraModal')"><i data-lucide="plus" class="nb-icon"></i>Add Activity</button>
+        </div>
+        <div id="schoolExtraList"></div>
       </div>
     </div>
 
@@ -1014,6 +1127,203 @@
         <button class="btn btn-ghost" onclick="closeModal('googleLoginModal')">Cancel</button>
         <button class="btn btn-primary" onclick="saveClientId()">Save & Enable ✓</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Renovation -->
+<div class="modal-overlay" id="addRenovationModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🔨 Renovation Project</div>
+      <button class="close-btn" onclick="closeModal('addRenovationModal')">×</button>
+    </div>
+    <div class="form-row"><div><label>Project Name *</label><input class="input" id="renoName" placeholder="e.g. Kitchen Cabinet Repaint"></div></div>
+    <div class="form-row cols2">
+      <div><label>Area</label>
+        <select class="select" id="renoArea">
+          <option value="Kitchen">Kitchen</option><option value="Bathroom">Bathroom</option>
+          <option value="Living Room">Living Room</option><option value="Bedroom">Bedroom</option>
+          <option value="Dining Room">Dining Room</option><option value="Garden/Outdoor">Garden/Outdoor</option>
+          <option value="Roof/Ceiling">Roof/Ceiling</option><option value="Flooring">Flooring</option>
+          <option value="Electrical">Electrical</option><option value="Plumbing">Plumbing</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div><label>Status</label>
+        <select class="select" id="renoStatus">
+          <option value="planned">Planned</option>
+          <option value="inprogress">In Progress</option>
+          <option value="done">Done</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Budget (₱)</label><input class="input" id="renoBudget" type="number" placeholder="0.00"></div>
+      <div><label>Actual Cost (₱)</label><input class="input" id="renoActual" type="number" placeholder="0.00"></div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Start Date</label><input class="input" id="renoStart" type="date"></div>
+      <div><label>Target / End Date</label><input class="input" id="renoEnd" type="date"></div>
+    </div>
+    <div class="form-row"><div><label>Contractor</label><input class="input" id="renoContractor" placeholder="Name or company"></div></div>
+    <div class="form-row"><div><label>Notes</label><input class="input" id="renoNotes" placeholder="Details, materials, links…"></div></div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('addRenovationModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveRenovation()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Appointment -->
+<div class="modal-overlay" id="addAppointmentModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🩺 Medical Appointment</div>
+      <button class="close-btn" onclick="closeModal('addAppointmentModal')">×</button>
+    </div>
+    <div class="form-row cols2">
+      <div><label>For (Person) *</label><input class="input" id="apptPerson" placeholder="e.g. Jona"></div>
+      <div><label>Date *</label><input class="input" id="apptDate" type="date"></div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Doctor / Specialist *</label><input class="input" id="apptDoctor" placeholder="Dr. Santos"></div>
+      <div><label>Time</label><input class="input" id="apptTime" type="time"></div>
+    </div>
+    <div class="form-row"><div><label>Clinic / Hospital</label><input class="input" id="apptClinic" placeholder="Clinic or hospital name"></div></div>
+    <div class="form-row"><div><label>Reason / Purpose</label><input class="input" id="apptReason" placeholder="Annual checkup, follow-up…"></div></div>
+    <div class="form-row cols2">
+      <div><label>Follow-up Date</label><input class="input" id="apptFollowUp" type="date"></div>
+      <div><label>Status</label>
+        <select class="select" id="apptStatus">
+          <option value="upcoming">Upcoming</option>
+          <option value="done">Done</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row"><div><label>Notes</label><input class="input" id="apptNotes" placeholder="Bring records, fasting required…"></div></div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('addAppointmentModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAppointment()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Vaccine -->
+<div class="modal-overlay" id="addVaccineModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">💉 Vaccine Record</div>
+      <button class="close-btn" onclick="closeModal('addVaccineModal')">×</button>
+    </div>
+    <div class="form-row cols2">
+      <div><label>For (Person) *</label><input class="input" id="vaxPerson" placeholder="e.g. Sofia"></div>
+      <div><label>Vaccine Name *</label><input class="input" id="vaxName" placeholder="e.g. Flu, COVID, MMR"></div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Date Given *</label><input class="input" id="vaxDate" type="date"></div>
+      <div><label>Next Due Date</label><input class="input" id="vaxNextDue" type="date"></div>
+    </div>
+    <div class="form-row"><div><label>Notes</label><input class="input" id="vaxNotes" placeholder="Clinic, dose number, batch…"></div></div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('addVaccineModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveVaccine()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Schedule Item -->
+<div class="modal-overlay" id="addScheduleModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📚 Class / Subject</div>
+      <button class="close-btn" onclick="closeModal('addScheduleModal')">×</button>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Day *</label>
+        <select class="select" id="schedDay">
+          <option value="Monday">Monday</option><option value="Tuesday">Tuesday</option>
+          <option value="Wednesday">Wednesday</option><option value="Thursday">Thursday</option>
+          <option value="Friday">Friday</option><option value="Saturday">Saturday</option>
+          <option value="Sunday">Sunday</option>
+        </select>
+      </div>
+      <div><label>Subject *</label><input class="input" id="schedSubject" placeholder="e.g. Math, Science"></div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Time Start</label><input class="input" id="schedStart" type="time"></div>
+      <div><label>Time End</label><input class="input" id="schedEnd" type="time"></div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Teacher</label><input class="input" id="schedTeacher" placeholder="Teacher's name"></div>
+      <div><label>Room / Location</label><input class="input" id="schedRoom" placeholder="Room 101"></div>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('addScheduleModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveScheduleItem()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Extracurricular -->
+<div class="modal-overlay" id="addExtraModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">⭐ Extracurricular Activity</div>
+      <button class="close-btn" onclick="closeModal('addExtraModal')">×</button>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Activity Name *</label><input class="input" id="extraName" placeholder="e.g. Swimming, Piano"></div>
+      <div><label>Day *</label>
+        <select class="select" id="extraDay">
+          <option value="Monday">Monday</option><option value="Tuesday">Tuesday</option>
+          <option value="Wednesday">Wednesday</option><option value="Thursday">Thursday</option>
+          <option value="Friday">Friday</option><option value="Saturday">Saturday</option>
+          <option value="Sunday">Sunday</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Time Start</label><input class="input" id="extraStart" type="time"></div>
+      <div><label>Time End</label><input class="input" id="extraEnd" type="time"></div>
+    </div>
+    <div class="form-row"><div><label>Venue</label><input class="input" id="extraVenue" placeholder="Location or address"></div></div>
+    <div class="form-row"><div><label>Notes</label><input class="input" id="extraNotes" placeholder="Coach name, fee, notes…"></div></div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('addExtraModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveExtracurricular()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add School Event -->
+<div class="modal-overlay" id="addSchoolEventModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🎒 School Event</div>
+      <button class="close-btn" onclick="closeModal('addSchoolEventModal')">×</button>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Title *</label><input class="input" id="schoolEvTitle" placeholder="e.g. Science Fair"></div>
+      <div><label>Date *</label><input class="input" id="schoolEvDate" type="date"></div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Type</label>
+        <select class="select" id="schoolEvType">
+          <option value="Exam">Exam / Test</option><option value="Quiz">Quiz</option>
+          <option value="Field Trip">Field Trip</option><option value="Holiday">Holiday / No School</option>
+          <option value="Meeting">Parent Meeting</option><option value="Performance">Performance / Recital</option>
+          <option value="Sports">Sports / Competition</option><option value="Deadline">Deadline / Submission</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div><label>Emoji</label><input class="input" id="schoolEvEmoji" placeholder="🎓" maxlength="4"></div>
+    </div>
+    <div class="form-row"><div><label>Description</label><input class="input" id="schoolEvDesc" placeholder="Details, reminders…"></div></div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('addSchoolEventModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSchoolEvent()">Save</button>
     </div>
   </div>
 </div>
@@ -1585,7 +1895,10 @@ function doPost(e) {
 // ========== DATA ==========
 let db = {
   bills: [], expenses: [], events: [], tasks: [], docs: [], books: [], savings: [], passwords: [], govaccounts: [],
-  budget: { incomes: [], categoryLimits: {}, savingsAllocations: {} }
+  budget: { incomes: [], categoryLimits: {}, savingsAllocations: {} },
+  renovations: [],
+  medical: { appointments: [], vaccines: [] },
+  school: { childName: '', schedule: [], extracurriculars: [], events: [] }
 };
 let selectedBillColor = '#f0a5c0';
 let selectedBillFreq = 'monthly';
@@ -1689,6 +2002,14 @@ async function load() {
     if (!db.budget.incomes) db.budget.incomes = [];
     if (!db.budget.categoryLimits) db.budget.categoryLimits = {};
     if (!db.budget.savingsAllocations) db.budget.savingsAllocations = {};
+    if (!db.renovations) db.renovations = [];
+    if (!db.medical) db.medical = { appointments: [], vaccines: [] };
+    if (!db.medical.appointments) db.medical.appointments = [];
+    if (!db.medical.vaccines) db.medical.vaccines = [];
+    if (!db.school) db.school = { childName: '', schedule: [], extracurriculars: [], events: [] };
+    if (!db.school.schedule) db.school.schedule = [];
+    if (!db.school.extracurriculars) db.school.extracurriculars = [];
+    if (!db.school.events) db.school.events = [];
   } catch(e) {}
 
   if (!SCRIPT_URL) { setSyncStatus('error', 'Not connected — click ⚙️ Setup'); return; }
@@ -1704,6 +2025,14 @@ async function load() {
     if (!db.budget.incomes) db.budget.incomes = [];
     if (!db.budget.categoryLimits) db.budget.categoryLimits = {};
     if (!db.budget.savingsAllocations) db.budget.savingsAllocations = {};
+    if (!db.renovations) db.renovations = [];
+    if (!db.medical) db.medical = { appointments: [], vaccines: [] };
+    if (!db.medical.appointments) db.medical.appointments = [];
+    if (!db.medical.vaccines) db.medical.vaccines = [];
+    if (!db.school) db.school = { childName: '', schedule: [], extracurriculars: [], events: [] };
+    if (!db.school.schedule) db.school.schedule = [];
+    if (!db.school.extracurriculars) db.school.extracurriculars = [];
+    if (!db.school.events) db.school.events = [];
       localStorage.setItem('nestkeeper_v2', JSON.stringify(db));
       setSyncStatus('ok', 'Loaded from Google Sheets');
       setTimeout(() => setSyncStatus('idle', 'Connected'), 2500);
@@ -1748,7 +2077,7 @@ function toggleSidenav() {
 
 // ========== TABS ==========
 // ========== ROUTING ==========
-const VALID_TABS = new Set(['bills','expenses','savings','budget','summary','events','tasks','docs','books','passwords','govaccounts']);
+const VALID_TABS = new Set(['bills','expenses','savings','budget','summary','events','tasks','renovations','medical','school','docs','books','passwords','govaccounts']);
 
 function _activateTab(name) {
   if (!VALID_TABS.has(name)) name = 'bills';
@@ -1763,7 +2092,8 @@ function _activateTab(name) {
   const renders = {
     bills: renderBills, expenses: renderExpenses, savings: renderSavings,
     budget: renderBudget, summary: renderSummary, passwords: renderPasswords, govaccounts: renderGovAccounts,
-    events: renderEvents, tasks: renderTasks, docs: renderDocs, books: renderBooks
+    events: renderEvents, tasks: renderTasks, renovations: renderRenovations, medical: renderMedical, school: renderSchool,
+    docs: renderDocs, books: renderBooks
   };
   if (renders[name]) renders[name]();
 }
@@ -3742,6 +4072,597 @@ function deletePassword(id) {
   if (!confirm('Delete this login?')) return;
   db.passwords = db.passwords.filter(p => p.id !== id);
   save(); renderPasswords(); toast('🗑 Deleted');
+}
+
+// ========== HOME RENOVATIONS ==========
+let currentRenoFilter = 'all';
+
+function renderRenovations() {
+  const renos = db.renovations || [];
+  const statsEl = document.getElementById('renoStats');
+  const filtersEl = document.getElementById('renoFilters');
+  const listEl = document.getElementById('renoList');
+
+  const totalBudget = renos.reduce((s, r) => s + (r.budget || 0), 0);
+  const totalActual = renos.reduce((s, r) => s + (r.actual || 0), 0);
+  const inProgress = renos.filter(r => r.status === 'inprogress').length;
+  const done = renos.filter(r => r.status === 'done').length;
+  statsEl.innerHTML = `
+    <div class="stat-box"><div class="stat-val" style="color:var(--lavender)">${renos.length}</div><div class="stat-lbl">Total Projects</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--gold)">${inProgress}</div><div class="stat-lbl">In Progress</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--green)">${done}</div><div class="stat-lbl">Completed</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--pink); font-size:16px">₱${fmt(totalActual)}<span style="font-size:11px; color:var(--text3)"> / ₱${fmt(totalBudget)}</span></div><div class="stat-lbl">Actual / Budget</div></div>`;
+
+  filtersEl.innerHTML = ['all','planned','inprogress','done'].map(f =>
+    `<span class="tag-f ${currentRenoFilter===f?'active':''}" onclick="filterRenos('${f}',this)">${f==='all'?'All':f==='inprogress'?'In Progress':f.charAt(0).toUpperCase()+f.slice(1)}</span>`
+  ).join('');
+
+  const filtered = currentRenoFilter === 'all' ? renos : renos.filter(r => r.status === currentRenoFilter);
+  if (!filtered.length) {
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">🔨</div><div class="empty-text">${renos.length ? 'No projects match this filter.' : 'No projects yet. Add your first renovation!'}</div></div>`;
+    return;
+  }
+
+  const statusLabel = { planned: 'Planned', inprogress: 'In Progress', done: 'Done' };
+  const statusClass = { planned: 'status-planned', inprogress: 'status-inprogress', done: 'status-done' };
+
+  listEl.innerHTML = filtered.map(r => {
+    const overBudget = r.actual && r.budget && r.actual > r.budget;
+    return `<div class="reno-card" style="border-left: 3px solid ${r.status==='done'?'var(--green)':r.status==='inprogress'?'var(--gold)':'var(--lavender)'}40;">
+      <div style="display:flex; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:180px;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">
+            <div style="font-weight:700; font-size:15px;">${r.name}</div>
+            <span class="status-badge ${statusClass[r.status]}">${statusLabel[r.status]}</span>
+          </div>
+          <div class="reno-meta">
+            <span style="font-size:11px; font-weight:600; background:rgba(255,255,255,0.07); color:var(--text2); padding:2px 8px; border-radius:20px;">${r.area}</span>
+            ${r.contractor ? `<span style="font-size:12px; color:var(--text3);">👷 ${r.contractor}</span>` : ''}
+            ${r.startDate ? `<span style="font-size:11px; color:var(--text3);">${formatDate(r.startDate)}${r.endDate?' → '+formatDate(r.endDate):''}</span>` : ''}
+          </div>
+          ${r.notes ? `<div style="font-size:12px; color:var(--text3); margin-top:6px;">${r.notes}</div>` : ''}
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          ${r.status !== 'done' ? `<button class="btn btn-ghost btn-sm" onclick="advanceReno('${r.id}')">${r.status==='planned'?'→ Start':'→ Done'}</button>` : ''}
+          <button class="edit-btn" onclick="editRenovation('${r.id}')">${lc('pencil')}</button>
+          <button class="del-btn" onclick="deleteRenovation('${r.id}')">${lc('trash-2')}</button>
+        </div>
+      </div>
+      ${(r.budget || r.actual) ? `<div class="reno-costs">
+        ${r.budget ? `<div class="reno-cost-item">Budget<div class="reno-cost-val" style="color:var(--teal)">₱${fmt(r.budget)}</div></div>` : ''}
+        ${r.actual ? `<div class="reno-cost-item">Actual<div class="reno-cost-val" style="color:${overBudget?'var(--red)':'var(--green)'}">₱${fmt(r.actual)}${overBudget?` <span style="font-size:10px">⚠ +₱${fmt(r.actual-r.budget)} over</span>`:''}</div></div>` : ''}
+        ${r.budget && r.actual ? `<div class="reno-cost-item">Remaining<div class="reno-cost-val" style="color:${overBudget?'var(--red)':'var(--text2)'}">₱${fmt(Math.abs(r.budget-r.actual))}${overBudget?' over':' left'}</div></div>` : ''}
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function filterRenos(f) { currentRenoFilter = f; renderRenovations(); }
+
+function advanceReno(id) {
+  const r = db.renovations.find(r => r.id === id);
+  if (!r) return;
+  r.status = r.status === 'planned' ? 'inprogress' : 'done';
+  save(); renderRenovations(); toast('✓ Status updated!');
+}
+
+function saveRenovation() {
+  const name = document.getElementById('renoName').value.trim();
+  if (!name) { alert('Please enter a project name'); return; }
+  const reno = {
+    id: editingId || uid(), name,
+    area: document.getElementById('renoArea').value,
+    status: document.getElementById('renoStatus').value,
+    budget: parseFloat(document.getElementById('renoBudget').value) || 0,
+    actual: parseFloat(document.getElementById('renoActual').value) || 0,
+    startDate: document.getElementById('renoStart').value,
+    endDate: document.getElementById('renoEnd').value,
+    contractor: document.getElementById('renoContractor').value.trim(),
+    notes: document.getElementById('renoNotes').value.trim()
+  };
+  if (editingId) db.renovations = db.renovations.map(r => r.id === editingId ? reno : r);
+  else db.renovations.push(reno);
+  editingId = null;
+  save(); closeModal('addRenovationModal'); resetRenoForm(); renderRenovations(); toast('✓ Project saved!');
+}
+
+function resetRenoForm() {
+  ['renoName','renoBudget','renoActual','renoStart','renoEnd','renoContractor','renoNotes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('renoStatus').value = 'planned';
+}
+
+function editRenovation(id) {
+  const r = db.renovations.find(r => r.id === id);
+  if (!r) return;
+  editingId = id;
+  document.getElementById('renoName').value = r.name;
+  document.getElementById('renoArea').value = r.area;
+  document.getElementById('renoStatus').value = r.status;
+  document.getElementById('renoBudget').value = r.budget || '';
+  document.getElementById('renoActual').value = r.actual || '';
+  document.getElementById('renoStart').value = r.startDate || '';
+  document.getElementById('renoEnd').value = r.endDate || '';
+  document.getElementById('renoContractor').value = r.contractor || '';
+  document.getElementById('renoNotes').value = r.notes || '';
+  openModal('addRenovationModal');
+}
+
+function deleteRenovation(id) {
+  if (!confirm('Delete this project?')) return;
+  db.renovations = db.renovations.filter(r => r.id !== id);
+  save(); renderRenovations(); toast('🗑 Deleted');
+}
+
+// ========== MEDICAL ==========
+let currentMedPersonFilter = 'all';
+let currentVaxPersonFilter = 'all';
+
+function renderMedical() {
+  if (document.getElementById('med-view-vaccines').classList.contains('active')) {
+    renderVaccineTracker();
+  } else {
+    renderAppointments();
+  }
+}
+
+function showMedicalView(view) {
+  document.getElementById('medSubAppt').classList.toggle('active', view === 'appointments');
+  document.getElementById('medSubVax').classList.toggle('active', view === 'vaccines');
+  document.getElementById('med-view-appointments').classList.toggle('active', view === 'appointments');
+  document.getElementById('med-view-vaccines').classList.toggle('active', view === 'vaccines');
+  if (view === 'appointments') renderAppointments();
+  else renderVaccineTracker();
+}
+
+function renderAppointments() {
+  const appts = db.medical.appointments || [];
+  const persons = [...new Set(appts.map(a => a.person))].filter(Boolean);
+  const filterEl = document.getElementById('apptPersonFilter');
+  filterEl.innerHTML = persons.length > 1 ? ['all', ...persons].map(p =>
+    `<button class="person-chip ${currentMedPersonFilter===p?'active':''}" onclick="filterApptPerson('${p}')">${p==='all'?'All':p}</button>`
+  ).join('') : '';
+
+  const filtered = currentMedPersonFilter === 'all' ? appts : appts.filter(a => a.person === currentMedPersonFilter);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const upcoming = filtered.filter(a => a.status !== 'cancelled' && new Date(a.date) >= today).sort((a,b) => a.date.localeCompare(b.date));
+  const past = filtered.filter(a => a.status === 'done' || (a.status !== 'cancelled' && new Date(a.date) < today)).sort((a,b) => b.date.localeCompare(a.date));
+  const cancelled = filtered.filter(a => a.status === 'cancelled');
+
+  const listEl = document.getElementById('apptList');
+  if (!filtered.length) {
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">🩺</div><div class="empty-text">No appointments yet.</div></div>`;
+    return;
+  }
+
+  function renderApptCard(a) {
+    const d = new Date(a.date + 'T00:00:00');
+    const diff = Math.round((d - today) / 86400000);
+    const isPast = diff < 0;
+    const isToday = diff === 0;
+    let daysTag = '';
+    if (a.status !== 'done' && a.status !== 'cancelled') {
+      if (isToday) daysTag = `<span style="background:rgba(240,165,192,0.2); color:var(--pink); font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px;">TODAY</span>`;
+      else if (!isPast && diff <= 7) daysTag = `<span class="due-soon-tag">in ${diff}d</span>`;
+      else if (!isPast) daysTag = `<span style="font-size:11px; color:var(--text3);">in ${diff}d</span>`;
+    }
+    const statusDot = a.status === 'done' ? '✓' : a.status === 'cancelled' ? '✗' : '●';
+    const statusClr = a.status === 'done' ? 'var(--green)' : a.status === 'cancelled' ? 'var(--text3)' : 'var(--pink)';
+    return `<div class="appt-card" style="border-left:3px solid ${statusClr}40; opacity:${a.status==='cancelled'?'0.55':'1'}">
+      <div style="display:flex; align-items:flex-start; gap:10px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:160px;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">
+            <div style="font-weight:700; font-size:14px;">${a.doctor}</div>
+            ${daysTag}
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; font-size:12px; color:var(--text3);">
+            <span style="color:var(--lavender); font-weight:600;">${a.person}</span>
+            ${a.clinic ? `<span>📍 ${a.clinic}</span>` : ''}
+            <span>📅 ${formatDate(a.date)}${a.time?' · '+a.time:''}</span>
+          </div>
+          ${a.reason ? `<div style="font-size:12px; color:var(--text2); margin-top:4px;">${a.reason}</div>` : ''}
+          ${a.followUp ? `<div style="font-size:11px; color:var(--gold); margin-top:3px;">↪ Follow-up: ${formatDate(a.followUp)}</div>` : ''}
+          ${a.notes ? `<div style="font-size:11px; color:var(--text3); margin-top:3px;">${a.notes}</div>` : ''}
+        </div>
+        <div style="display:flex; gap:6px; align-items:center;">
+          ${a.status === 'upcoming' ? `<button class="btn btn-ghost btn-sm" onclick="markApptDone('${a.id}')">✓ Done</button>` : `<span style="font-size:11px; color:${statusClr}; font-weight:600;">${statusDot} ${a.status}</span>`}
+          <button class="edit-btn" onclick="editAppointment('${a.id}')">${lc('pencil')}</button>
+          <button class="del-btn" onclick="deleteAppointment('${a.id}')">${lc('trash-2')}</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  let html = '';
+  if (upcoming.length) { html += `<div class="section-divider">UPCOMING</div>${upcoming.map(renderApptCard).join('')}`; }
+  if (past.length) { html += `<div class="section-divider">PAST</div>${past.map(renderApptCard).join('')}`; }
+  if (cancelled.length) { html += `<div class="section-divider">CANCELLED</div>${cancelled.map(renderApptCard).join('')}`; }
+  listEl.innerHTML = html;
+}
+
+function filterApptPerson(p) { currentMedPersonFilter = p; renderAppointments(); }
+
+function markApptDone(id) {
+  const a = db.medical.appointments.find(a => a.id === id);
+  if (a) { a.status = 'done'; save(); renderAppointments(); toast('✓ Marked done!'); }
+}
+
+function saveAppointment() {
+  const person = document.getElementById('apptPerson').value.trim();
+  const doctor = document.getElementById('apptDoctor').value.trim();
+  const date = document.getElementById('apptDate').value;
+  if (!person || !doctor || !date) { alert('Please fill in Person, Doctor and Date'); return; }
+  const appt = {
+    id: editingId || uid(), person, doctor, date,
+    time: document.getElementById('apptTime').value,
+    clinic: document.getElementById('apptClinic').value.trim(),
+    reason: document.getElementById('apptReason').value.trim(),
+    followUp: document.getElementById('apptFollowUp').value,
+    status: document.getElementById('apptStatus').value,
+    notes: document.getElementById('apptNotes').value.trim()
+  };
+  if (editingId) db.medical.appointments = db.medical.appointments.map(a => a.id === editingId ? appt : a);
+  else db.medical.appointments.push(appt);
+  editingId = null;
+  save(); closeModal('addAppointmentModal'); resetApptForm(); renderAppointments(); toast('✓ Appointment saved!');
+}
+
+function resetApptForm() {
+  ['apptPerson','apptDoctor','apptDate','apptTime','apptClinic','apptReason','apptFollowUp','apptNotes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('apptStatus').value = 'upcoming';
+}
+
+function editAppointment(id) {
+  const a = db.medical.appointments.find(a => a.id === id);
+  if (!a) return;
+  editingId = id;
+  document.getElementById('apptPerson').value = a.person;
+  document.getElementById('apptDoctor').value = a.doctor;
+  document.getElementById('apptDate').value = a.date;
+  document.getElementById('apptTime').value = a.time || '';
+  document.getElementById('apptClinic').value = a.clinic || '';
+  document.getElementById('apptReason').value = a.reason || '';
+  document.getElementById('apptFollowUp').value = a.followUp || '';
+  document.getElementById('apptStatus').value = a.status || 'upcoming';
+  document.getElementById('apptNotes').value = a.notes || '';
+  openModal('addAppointmentModal');
+}
+
+function deleteAppointment(id) {
+  if (!confirm('Delete this appointment?')) return;
+  db.medical.appointments = db.medical.appointments.filter(a => a.id !== id);
+  save(); renderAppointments(); toast('🗑 Deleted');
+}
+
+function renderVaccineTracker() {
+  const vaccines = db.medical.vaccines || [];
+  const persons = [...new Set(vaccines.map(v => v.person))].filter(Boolean);
+  const filterEl = document.getElementById('vaxPersonFilter');
+  filterEl.innerHTML = persons.length > 1 ? ['all', ...persons].map(p =>
+    `<button class="person-chip ${currentVaxPersonFilter===p?'active':''}" onclick="filterVaxPerson('${p}')">${p==='all'?'All':p}</button>`
+  ).join('') : '';
+
+  const filtered = currentVaxPersonFilter === 'all' ? vaccines : vaccines.filter(v => v.person === currentVaxPersonFilter);
+  const listEl = document.getElementById('vaxList');
+  if (!filtered.length) {
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">💉</div><div class="empty-text">No vaccine records yet.</div></div>`;
+    return;
+  }
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const grouped = {};
+  filtered.forEach(v => { if (!grouped[v.person]) grouped[v.person] = []; grouped[v.person].push(v); });
+
+  let html = '';
+  Object.entries(grouped).forEach(([person, vaxList]) => {
+    html += `<div class="card" style="margin-bottom:14px;">
+      <div style="font-weight:700; font-size:14px; color:var(--lavender); margin-bottom:12px;">👤 ${person}</div>
+      ${vaxList.sort((a,b) => b.dateGiven.localeCompare(a.dateGiven)).map(v => {
+        let dueTag = '';
+        if (v.nextDue) {
+          const due = new Date(v.nextDue + 'T00:00:00');
+          const diff = Math.round((due - today) / 86400000);
+          if (diff < 0) dueTag = `<span class="overdue-tag">Overdue ${Math.abs(diff)}d</span>`;
+          else if (diff <= 30) dueTag = `<span class="due-soon-tag">Due in ${diff}d</span>`;
+          else dueTag = `<span style="font-size:11px; color:var(--text3);">Next: ${formatDate(v.nextDue)}</span>`;
+        }
+        return `<div class="vax-row">
+          <div style="font-size:20px;">💉</div>
+          <div style="flex:1;">
+            <div style="font-weight:600; font-size:13px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">${v.vaccine} ${dueTag}</div>
+            <div style="font-size:11px; color:var(--text3); margin-top:2px;">Given: ${formatDate(v.dateGiven)}${v.notes?' · '+v.notes:''}</div>
+          </div>
+          <button class="edit-btn" onclick="editVaccine('${v.id}')">${lc('pencil')}</button>
+          <button class="del-btn" onclick="deleteVaccine('${v.id}')">${lc('trash-2')}</button>
+        </div>`;
+      }).join('')}
+    </div>`;
+  });
+  listEl.innerHTML = html;
+}
+
+function filterVaxPerson(p) { currentVaxPersonFilter = p; renderVaccineTracker(); }
+
+function saveVaccine() {
+  const person = document.getElementById('vaxPerson').value.trim();
+  const vaccine = document.getElementById('vaxName').value.trim();
+  const dateGiven = document.getElementById('vaxDate').value;
+  if (!person || !vaccine || !dateGiven) { alert('Please fill in Person, Vaccine and Date Given'); return; }
+  const vax = {
+    id: editingId || uid(), person, vaccine, dateGiven,
+    nextDue: document.getElementById('vaxNextDue').value,
+    notes: document.getElementById('vaxNotes').value.trim()
+  };
+  if (editingId) db.medical.vaccines = db.medical.vaccines.map(v => v.id === editingId ? vax : v);
+  else db.medical.vaccines.push(vax);
+  editingId = null;
+  save(); closeModal('addVaccineModal'); resetVaxForm(); renderVaccineTracker(); toast('✓ Vaccine record saved!');
+}
+
+function resetVaxForm() {
+  ['vaxPerson','vaxName','vaxDate','vaxNextDue','vaxNotes'].forEach(id => document.getElementById(id).value = '');
+}
+
+function editVaccine(id) {
+  const v = db.medical.vaccines.find(v => v.id === id);
+  if (!v) return;
+  editingId = id;
+  document.getElementById('vaxPerson').value = v.person;
+  document.getElementById('vaxName').value = v.vaccine;
+  document.getElementById('vaxDate').value = v.dateGiven;
+  document.getElementById('vaxNextDue').value = v.nextDue || '';
+  document.getElementById('vaxNotes').value = v.notes || '';
+  openModal('addVaccineModal');
+}
+
+function deleteVaccine(id) {
+  if (!confirm('Delete this vaccine record?')) return;
+  db.medical.vaccines = db.medical.vaccines.filter(v => v.id !== id);
+  save(); renderVaccineTracker(); toast('🗑 Deleted');
+}
+
+// ========== SCHOOL TRACKER ==========
+const DAYS_ORDER = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+function renderSchool() {
+  if (!db.school) db.school = { childName: '', schedule: [], extracurriculars: [], events: [] };
+  const nameEl = document.getElementById('schoolChildName');
+  if (nameEl && db.school.childName) nameEl.value = db.school.childName;
+  const sub = document.getElementById('schoolSubTitle');
+  if (sub && db.school.childName) sub.textContent = `Tracking ${db.school.childName}'s schedule and activities`;
+
+  if (document.getElementById('school-view-schedule').classList.contains('active')) renderSchoolSchedule();
+  else if (document.getElementById('school-view-extra').classList.contains('active')) renderExtracurriculars();
+  else renderSchoolEvents();
+}
+
+function saveSchoolChildName(val) {
+  if (!db.school) db.school = { childName: '', schedule: [], extracurriculars: [], events: [] };
+  db.school.childName = val.trim();
+  save();
+  const sub = document.getElementById('schoolSubTitle');
+  if (sub) sub.textContent = val.trim() ? `Tracking ${val.trim()}'s schedule and activities` : 'Schedule, activities and events';
+}
+
+function showSchoolView(view) {
+  ['events','schedule','extra'].forEach(v => {
+    document.getElementById(`schoolSub${v.charAt(0).toUpperCase()+v.slice(1)}`).classList.toggle('active', v === view);
+    document.getElementById(`school-view-${v}`).classList.toggle('active', v === view);
+  });
+  if (view === 'schedule') renderSchoolSchedule();
+  else if (view === 'extra') renderExtracurriculars();
+  else renderSchoolEvents();
+}
+
+function renderSchoolEvents() {
+  const events = db.school.events || [];
+  const el = document.getElementById('schoolEventsList');
+  if (!events.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🎒</div><div class="empty-text">No school events yet.</div></div>`;
+    return;
+  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  const upcoming = events.filter(e => new Date(e.date + 'T00:00:00') >= today).sort((a,b) => a.date.localeCompare(b.date));
+  const past = events.filter(e => new Date(e.date + 'T00:00:00') < today).sort((a,b) => b.date.localeCompare(a.date));
+
+  function renderEvent(e) {
+    const d = new Date(e.date + 'T00:00:00');
+    const diff = Math.round((d - today) / 86400000);
+    let daysTag = '';
+    if (diff === 0) daysTag = `<span style="background:rgba(240,165,192,0.2); color:var(--pink); font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px;">TODAY</span>`;
+    else if (diff > 0 && diff <= 7) daysTag = `<span class="due-soon-tag">in ${diff}d</span>`;
+    else if (diff > 0) daysTag = `<span class="days-away">${diff}d away</span>`;
+    return `<div style="display:flex; gap:12px; align-items:flex-start; background:var(--glass); border:1px solid var(--glass-border); border-radius:13px; padding:13px 16px; margin-bottom:10px;">
+      <div style="font-size:26px; width:40px; text-align:center; flex-shrink:0;">${e.emoji || '🎒'}</div>
+      <div style="flex:1;">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:3px;">
+          <div style="font-weight:700; font-size:14px;">${e.title}</div>
+          ${daysTag}
+        </div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <span class="event-type-badge">${e.type}</span>
+          <span style="font-size:12px; color:var(--text3);">📅 ${formatDate(e.date)}</span>
+        </div>
+        ${e.desc ? `<div style="font-size:12px; color:var(--text2); margin-top:5px;">${e.desc}</div>` : ''}
+      </div>
+      <div style="display:flex; gap:6px;">
+        <button class="edit-btn" onclick="editSchoolEvent('${e.id}')">${lc('pencil')}</button>
+        <button class="del-btn" onclick="deleteSchoolEvent('${e.id}')">${lc('trash-2')}</button>
+      </div>
+    </div>`;
+  }
+
+  let html = '';
+  if (upcoming.length) html += `<div class="section-divider">UPCOMING</div>${upcoming.map(renderEvent).join('')}`;
+  if (past.length) html += `<div class="section-divider">PAST</div>${past.map(renderEvent).join('')}`;
+  el.innerHTML = html;
+}
+
+function saveSchoolEvent() {
+  const title = document.getElementById('schoolEvTitle').value.trim();
+  const date = document.getElementById('schoolEvDate').value;
+  if (!title || !date) { alert('Please enter a title and date'); return; }
+  const ev = {
+    id: editingId || uid(), title, date,
+    type: document.getElementById('schoolEvType').value,
+    emoji: document.getElementById('schoolEvEmoji').value.trim() || '🎒',
+    desc: document.getElementById('schoolEvDesc').value.trim()
+  };
+  if (editingId) db.school.events = db.school.events.map(e => e.id === editingId ? ev : e);
+  else db.school.events.push(ev);
+  editingId = null;
+  save(); closeModal('addSchoolEventModal');
+  ['schoolEvTitle','schoolEvDate','schoolEvEmoji','schoolEvDesc'].forEach(id => document.getElementById(id).value = '');
+  renderSchoolEvents(); toast('✓ Event saved!');
+}
+
+function editSchoolEvent(id) {
+  const e = db.school.events.find(e => e.id === id);
+  if (!e) return;
+  editingId = id;
+  document.getElementById('schoolEvTitle').value = e.title;
+  document.getElementById('schoolEvDate').value = e.date;
+  document.getElementById('schoolEvType').value = e.type;
+  document.getElementById('schoolEvEmoji').value = e.emoji || '';
+  document.getElementById('schoolEvDesc').value = e.desc || '';
+  openModal('addSchoolEventModal');
+}
+
+function deleteSchoolEvent(id) {
+  if (!confirm('Delete this event?')) return;
+  db.school.events = db.school.events.filter(e => e.id !== id);
+  save(); renderSchoolEvents(); toast('🗑 Deleted');
+}
+
+function renderSchoolSchedule() {
+  const items = db.school.schedule || [];
+  const el = document.getElementById('schoolScheduleList');
+  if (!items.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">📚</div><div class="empty-text">No classes added yet.</div></div>`;
+    return;
+  }
+  const grouped = {};
+  DAYS_ORDER.forEach(d => { grouped[d] = []; });
+  items.forEach(i => { if (!grouped[i.day]) grouped[i.day] = []; grouped[i.day].push(i); });
+
+  el.innerHTML = DAYS_ORDER.filter(d => grouped[d].length).map(day => `
+    <div class="day-header">${day}</div>
+    ${grouped[day].sort((a,b) => (a.timeStart||'').localeCompare(b.timeStart||'')).map(i => `
+      <div class="school-item">
+        <div class="school-time">${i.timeStart||''}${i.timeEnd?' – '+i.timeEnd:''}</div>
+        <div style="flex:1;">
+          <div style="font-weight:600; font-size:14px;">${i.subject}</div>
+          <div style="font-size:12px; color:var(--text3); display:flex; gap:8px; flex-wrap:wrap; margin-top:2px;">
+            ${i.teacher?`<span>👩‍🏫 ${i.teacher}</span>`:''}
+            ${i.room?`<span>📍 ${i.room}</span>`:''}
+          </div>
+        </div>
+        <button class="edit-btn" onclick="editScheduleItem('${i.id}')">${lc('pencil')}</button>
+        <button class="del-btn" onclick="deleteScheduleItem('${i.id}')">${lc('trash-2')}</button>
+      </div>`).join('')}`).join('');
+}
+
+function saveScheduleItem() {
+  const subject = document.getElementById('schedSubject').value.trim();
+  if (!subject) { alert('Please enter a subject'); return; }
+  const item = {
+    id: editingId || uid(),
+    day: document.getElementById('schedDay').value,
+    subject, timeStart: document.getElementById('schedStart').value,
+    timeEnd: document.getElementById('schedEnd').value,
+    teacher: document.getElementById('schedTeacher').value.trim(),
+    room: document.getElementById('schedRoom').value.trim()
+  };
+  if (editingId) db.school.schedule = db.school.schedule.map(i => i.id === editingId ? item : i);
+  else db.school.schedule.push(item);
+  editingId = null;
+  save(); closeModal('addScheduleModal');
+  ['schedSubject','schedStart','schedEnd','schedTeacher','schedRoom'].forEach(id => document.getElementById(id).value = '');
+  renderSchoolSchedule(); toast('✓ Class saved!');
+}
+
+function editScheduleItem(id) {
+  const i = db.school.schedule.find(i => i.id === id);
+  if (!i) return;
+  editingId = id;
+  document.getElementById('schedDay').value = i.day;
+  document.getElementById('schedSubject').value = i.subject;
+  document.getElementById('schedStart').value = i.timeStart || '';
+  document.getElementById('schedEnd').value = i.timeEnd || '';
+  document.getElementById('schedTeacher').value = i.teacher || '';
+  document.getElementById('schedRoom').value = i.room || '';
+  openModal('addScheduleModal');
+}
+
+function deleteScheduleItem(id) {
+  if (!confirm('Delete this class?')) return;
+  db.school.schedule = db.school.schedule.filter(i => i.id !== id);
+  save(); renderSchoolSchedule(); toast('🗑 Deleted');
+}
+
+function renderExtracurriculars() {
+  const items = db.school.extracurriculars || [];
+  const el = document.getElementById('schoolExtraList');
+  if (!items.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">⭐</div><div class="empty-text">No activities added yet.</div></div>`;
+    return;
+  }
+  const grouped = {};
+  DAYS_ORDER.forEach(d => { grouped[d] = []; });
+  items.forEach(i => { if (!grouped[i.day]) grouped[i.day] = []; grouped[i.day].push(i); });
+
+  el.innerHTML = DAYS_ORDER.filter(d => grouped[d].length).map(day => `
+    <div class="day-header">${day}</div>
+    ${grouped[day].sort((a,b) => (a.timeStart||'').localeCompare(b.timeStart||'')).map(i => `
+      <div class="school-item">
+        <div class="school-time">${i.timeStart||''}${i.timeEnd?' – '+i.timeEnd:''}</div>
+        <div style="flex:1;">
+          <div style="font-weight:600; font-size:14px;">${i.name}</div>
+          <div style="font-size:12px; color:var(--text3); display:flex; gap:8px; flex-wrap:wrap; margin-top:2px;">
+            ${i.venue?`<span>📍 ${i.venue}</span>`:''}
+            ${i.notes?`<span>${i.notes}</span>`:''}
+          </div>
+        </div>
+        <button class="edit-btn" onclick="editExtracurricular('${i.id}')">${lc('pencil')}</button>
+        <button class="del-btn" onclick="deleteExtracurricular('${i.id}')">${lc('trash-2')}</button>
+      </div>`).join('')}`).join('');
+}
+
+function saveExtracurricular() {
+  const name = document.getElementById('extraName').value.trim();
+  if (!name) { alert('Please enter an activity name'); return; }
+  const item = {
+    id: editingId || uid(), name,
+    day: document.getElementById('extraDay').value,
+    timeStart: document.getElementById('extraStart').value,
+    timeEnd: document.getElementById('extraEnd').value,
+    venue: document.getElementById('extraVenue').value.trim(),
+    notes: document.getElementById('extraNotes').value.trim()
+  };
+  if (editingId) db.school.extracurriculars = db.school.extracurriculars.map(i => i.id === editingId ? item : i);
+  else db.school.extracurriculars.push(item);
+  editingId = null;
+  save(); closeModal('addExtraModal');
+  ['extraName','extraStart','extraEnd','extraVenue','extraNotes'].forEach(id => document.getElementById(id).value = '');
+  renderExtracurriculars(); toast('✓ Activity saved!');
+}
+
+function editExtracurricular(id) {
+  const i = db.school.extracurriculars.find(i => i.id === id);
+  if (!i) return;
+  editingId = id;
+  document.getElementById('extraName').value = i.name;
+  document.getElementById('extraDay').value = i.day;
+  document.getElementById('extraStart').value = i.timeStart || '';
+  document.getElementById('extraEnd').value = i.timeEnd || '';
+  document.getElementById('extraVenue').value = i.venue || '';
+  document.getElementById('extraNotes').value = i.notes || '';
+  openModal('addExtraModal');
+}
+
+function deleteExtracurricular(id) {
+  if (!confirm('Delete this activity?')) return;
+  db.school.extracurriculars = db.school.extracurriculars.filter(i => i.id !== id);
+  save(); renderExtracurriculars(); toast('🗑 Deleted');
 }
 
 // ========== SUMMARY ==========
