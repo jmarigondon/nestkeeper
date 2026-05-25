@@ -233,6 +233,14 @@
   .month-chip.paid { background: var(--green); color: #0f1117; border-color: var(--green); }
   .month-chip.partial { background: var(--gold); color: #0f1117; border-color: var(--gold); }
   .avg-tag { font-size: 11px; color: var(--teal); background: rgba(125,211,200,0.1); padding: 2px 8px; border-radius: 20px; }
+  .bill-freq-badge { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; }
+  .bill-freq-badge.monthly { background: rgba(125,211,200,0.12); color: var(--teal); }
+  .bill-freq-badge.annual { background: rgba(245,199,126,0.15); color: var(--gold); }
+  .bill-group-hdr { font-size: 10.5px; font-weight: 700; letter-spacing: 0.09em; color: var(--text3); padding: 16px 2px 8px; display: flex; align-items: center; gap: 10px; }
+  .bill-group-hdr::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.06); }
+  .freq-toggle { display: flex; border: 1px solid var(--glass-border); border-radius: 10px; overflow: hidden; margin-top: 4px; }
+  .freq-btn { flex: 1; padding: 7px 14px; background: transparent; border: none; color: var(--text2); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.18s; font-family: 'Inter', sans-serif; }
+  .freq-btn.active { background: rgba(255,255,255,0.1); color: #fff; font-weight: 600; }
 
   /* Expenses */
   .expense-row {
@@ -913,9 +921,30 @@
         </div>
       </div>
     </div>
+    <div class="form-row">
+      <div>
+        <label>Frequency</label>
+        <div class="freq-toggle">
+          <button type="button" class="freq-btn active" id="freqMonthlyBtn" onclick="setBillFreq('monthly')">Monthly</button>
+          <button type="button" class="freq-btn" id="freqAnnualBtn" onclick="setBillFreq('annual')">Annual / Yearly</button>
+        </div>
+      </div>
+    </div>
     <div class="form-row cols2">
       <div><label>Typical Amount (₱)</label><input class="input" id="billTypical" type="number" placeholder="0.00"></div>
-      <div><label>Due Day of Month</label><input class="input" id="billDueDay" type="number" placeholder="15" min="1" max="31"></div>
+      <div id="billDueDayRow"><label>Due Day of Month</label><input class="input" id="billDueDay" type="number" placeholder="15" min="1" max="31"></div>
+      <div id="billDueMonthRow" style="display:none">
+        <label>Due Month</label>
+        <select class="select" id="billDueMonth">
+          <option value="">Select month...</option>
+          <option value="0">January</option><option value="1">February</option>
+          <option value="2">March</option><option value="3">April</option>
+          <option value="4">May</option><option value="5">June</option>
+          <option value="6">July</option><option value="7">August</option>
+          <option value="8">September</option><option value="9">October</option>
+          <option value="10">November</option><option value="11">December</option>
+        </select>
+      </div>
     </div>
     <div class="form-row">
       <div><label>Notes</label><input class="input" id="billNotes" placeholder="Any extra info..."></div>
@@ -1416,6 +1445,7 @@ let db = {
   bills: [], expenses: [], events: [], tasks: [], docs: [], books: [], savings: [], passwords: [], govaccounts: []
 };
 let selectedBillColor = '#f0a5c0';
+let selectedBillFreq = 'monthly';
 let currentBillRating = 0;
 let currentBookRating = 0;
 let currentExpenseFilter = 'all';
@@ -1634,15 +1664,27 @@ function initYearSelect() {
   document.getElementById('trackMonth').value = new Date().getMonth();
 }
 
+function setBillFreq(freq) {
+  selectedBillFreq = freq;
+  document.getElementById('freqMonthlyBtn').classList.toggle('active', freq === 'monthly');
+  document.getElementById('freqAnnualBtn').classList.toggle('active', freq === 'annual');
+  document.getElementById('billDueDayRow').style.display = freq === 'monthly' ? '' : 'none';
+  document.getElementById('billDueMonthRow').style.display = freq === 'annual' ? '' : 'none';
+}
+
 function saveBill() {
   const name = document.getElementById('billName').value.trim();
   if (!name) { alert('Please enter a bill name'); return; }
+  const freq = selectedBillFreq;
+  const dueMonthVal = document.getElementById('billDueMonth').value;
   const bill = {
     id: editingId || uid(),
     name, icon: document.getElementById('billIcon').value.trim() || '💡',
     color: selectedBillColor,
+    frequency: freq,
     typical: parseFloat(document.getElementById('billTypical').value) || 0,
-    dueDay: parseInt(document.getElementById('billDueDay').value) || null,
+    dueDay: freq === 'monthly' ? (parseInt(document.getElementById('billDueDay').value) || null) : null,
+    dueMonth: freq === 'annual' ? (dueMonthVal !== '' ? parseInt(dueMonthVal) : null) : null,
     notes: document.getElementById('billNotes').value.trim(),
     payments: editingId ? (db.bills.find(b=>b.id===editingId)||{payments:{}}).payments : {}
   };
@@ -1653,12 +1695,15 @@ function saveBill() {
 
 function resetBillForm() {
   ['billName','billIcon','billTypical','billDueDay','billNotes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('billDueMonth').value = '';
+  setBillFreq('monthly');
 }
 
 function renderBills() {
   const month = parseInt(document.getElementById('trackMonth').value);
   const year = parseInt(document.getElementById('trackYear').value);
-  const key = `${year}-${month}`;
+  const monthKey = `${year}-${month}`;
+  const annualKey = `annual-${year}`;
   const list = document.getElementById('billsList');
   const stats = document.getElementById('billStats');
 
@@ -1668,60 +1713,121 @@ function renderBills() {
     return;
   }
 
+  const monthlyBills = db.bills.filter(b => (b.frequency || 'monthly') === 'monthly');
+  const annualBills = db.bills.filter(b => b.frequency === 'annual');
+
   let paidCount = 0, totalAmount = 0, paidAmount = 0;
-  db.bills.forEach(b => {
-    const p = (b.payments[key] || {});
+  monthlyBills.forEach(b => {
+    const p = b.payments[monthKey] || {};
     if (p.status === 'paid' || p.status === 'partial') paidCount++;
-    const amt = p.amount || b.typical;
     totalAmount += b.typical || 0;
-    if (p.status === 'paid') paidAmount += amt;
+    if (p.status === 'paid') paidAmount += (p.amount || b.typical || 0);
   });
 
-  const pct = db.bills.length ? Math.round(paidCount/db.bills.length*100) : 0;
+  const annualTotal = annualBills.reduce((s, b) => s + (b.typical || 0), 0);
+  const annualPaidCount = annualBills.filter(b => {
+    const p = b.payments[annualKey] || {};
+    return p.status === 'paid' || p.status === 'partial';
+  }).length;
+
+  const pct = monthlyBills.length ? Math.round(paidCount / monthlyBills.length * 100) : 0;
   stats.innerHTML = `
-    <div class="stat-box"><div class="stat-val" style="color:var(--gold)">₱${fmt(totalAmount)}</div><div class="stat-lbl">Estimated Monthly Total</div></div>
-    <div class="stat-box"><div class="stat-val" style="color:var(--green)">${paidCount}/${db.bills.length}</div><div class="stat-lbl">Paid This Month<div class="progress-wrap"><div class="progress-bar" style="width:${pct}%"></div></div></div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--gold)">₱${fmt(totalAmount)}</div><div class="stat-lbl">Monthly Bills Total</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--green)">${paidCount}/${monthlyBills.length}</div><div class="stat-lbl">Paid This Month<div class="progress-wrap"><div class="progress-bar" style="width:${pct}%"></div></div></div></div>
     <div class="stat-box"><div class="stat-val" style="color:var(--pink)">₱${fmt(paidAmount)}</div><div class="stat-lbl">Amount Paid</div></div>
-    <div class="stat-box"><div class="stat-val" style="color:var(--lavender)">₱${fmt(totalAmount - paidAmount)}</div><div class="stat-lbl">Remaining</div></div>
+    ${annualBills.length
+      ? `<div class="stat-box"><div class="stat-val" style="color:var(--gold)">₱${fmt(annualTotal)}<span style="font-size:13px; color:var(--text3)">/yr</span></div><div class="stat-lbl">Annual Bills &middot; ${annualPaidCount}/${annualBills.length} paid ${year}</div></div>`
+      : `<div class="stat-box"><div class="stat-val" style="color:var(--lavender)">₱${fmt(totalAmount - paidAmount)}</div><div class="stat-lbl">Remaining</div></div>`
+    }
   `;
 
-  list.innerHTML = db.bills.map(b => {
-    const p = b.payments[key] || {};
-    const isPaid = p.status === 'paid';
-    const isPartial = p.status === 'partial';
-    const displayAmt = p.amount || b.typical;
-    const avg = calcBillAvg(b);
-    return `
-      <div class="bill-item" style="border-left: 3px solid ${b.color}40;">
-        <div class="bill-icon" style="color:${b.color}">${b.icon}</div>
-        <div class="bill-info" style="flex:1">
-          <div class="bill-name">${b.name}</div>
-          <div class="bill-due" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-            ${b.dueDay ? `Due: ${b.dueDay}th` : ''}
-            ${avg ? `<span class="avg-tag">avg ₱${fmt(avg)}</span>` : ''}
-            ${b.notes ? `<span style="color:var(--text3); font-size:11px">${b.notes}</span>` : ''}
+  let html = '';
+
+  if (monthlyBills.length > 0) {
+    if (annualBills.length > 0) html += `<div class="bill-group-hdr">MONTHLY BILLS</div>`;
+    html += monthlyBills.map(b => {
+      const p = b.payments[monthKey] || {};
+      const isPaid = p.status === 'paid';
+      const isPartial = p.status === 'partial';
+      const displayAmt = p.amount || b.typical;
+      const avg = calcBillAvg(b);
+      return `
+        <div class="bill-item" style="border-left: 3px solid ${b.color}40;">
+          <div class="bill-icon" style="color:${b.color}">${b.icon}</div>
+          <div class="bill-info" style="flex:1">
+            <div class="bill-name">${b.name}</div>
+            <div class="bill-due" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              ${b.dueDay ? `Due: ${b.dueDay}th` : ''}
+              ${avg ? `<span class="avg-tag">avg ₱${fmt(avg)}</span>` : ''}
+              ${b.notes ? `<span style="color:var(--text3); font-size:11px">${b.notes}</span>` : ''}
+            </div>
           </div>
-        </div>
-        <div style="text-align:right; margin-right:10px;">
-          <div class="bill-amount" style="color:${b.color}">₱${displayAmt ? fmt(displayAmt) : '---'}</div>
-          <div style="font-size:11px; color:${isPaid ? 'var(--green)' : isPartial ? 'var(--gold)' : 'var(--text3)'}">
-            ${isPaid ? '✓ Paid' : isPartial ? '⊘ Partial' : 'Unpaid'}
+          <div style="text-align:right; margin-right:10px;">
+            <div class="bill-amount" style="color:${b.color}">₱${displayAmt ? fmt(displayAmt) : '---'}</div>
+            <div style="font-size:11px; color:${isPaid ? 'var(--green)' : isPartial ? 'var(--gold)' : 'var(--text3)'}">
+              ${isPaid ? '✓ Paid' : isPartial ? '⊘ Partial' : 'Unpaid'}
+            </div>
           </div>
-        </div>
-        <div class="bill-actions">
-          <button class="btn btn-ghost btn-sm" onclick="openBillTrack('${b.id}')">Track</button>
-          <button class="edit-btn" onclick="editBill('${b.id}')">${lc('pencil')}</button>
-          <button class="del-btn" onclick="deleteBill('${b.id}')">${lc('trash-2')}</button>
-        </div>
-      </div>
-    `;
-  }).join('');
+          <div class="bill-actions">
+            <button class="btn btn-ghost btn-sm" onclick="openBillTrack('${b.id}')">Track</button>
+            <button class="edit-btn" onclick="editBill('${b.id}')">${lc('pencil')}</button>
+            <button class="del-btn" onclick="deleteBill('${b.id}')">${lc('trash-2')}</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  if (annualBills.length > 0) {
+    html += `<div class="bill-group-hdr">ANNUAL BILLS</div>`;
+    html += annualBills.map(b => {
+      const p = b.payments[annualKey] || {};
+      const isPaid = p.status === 'paid';
+      const isPartial = p.status === 'partial';
+      const displayAmt = p.amount || b.typical;
+      const dueMonthName = b.dueMonth != null ? MONTHS_FULL[b.dueMonth] : null;
+      const moEquiv = b.typical ? b.typical / 12 : null;
+      return `
+        <div class="bill-item" style="border-left: 3px solid ${b.color}; background: linear-gradient(135deg, rgba(245,199,126,0.04), var(--glass));">
+          <div class="bill-icon" style="color:${b.color}">${b.icon}</div>
+          <div class="bill-info" style="flex:1">
+            <div class="bill-name" style="display:flex; align-items:center; gap:7px;">
+              ${b.name}<span class="bill-freq-badge annual">ANNUAL</span>
+            </div>
+            <div class="bill-due" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              ${dueMonthName ? `Due: ${dueMonthName}${b.dueDay ? ' ' + b.dueDay : ''}` : ''}
+              ${moEquiv ? `<span class="avg-tag" style="background:rgba(245,199,126,0.1); color:var(--gold)">≈ ₱${fmt(moEquiv)}/mo</span>` : ''}
+              ${b.notes ? `<span style="color:var(--text3); font-size:11px">${b.notes}</span>` : ''}
+            </div>
+          </div>
+          <div style="text-align:right; margin-right:10px;">
+            <div class="bill-amount" style="color:${b.color}">₱${displayAmt ? fmt(displayAmt) : '---'}<span style="font-size:10px; color:var(--text3); font-weight:400">/yr</span></div>
+            <div style="font-size:11px; color:${isPaid ? 'var(--green)' : isPartial ? 'var(--gold)' : 'var(--text3)'}">
+              ${isPaid ? `✓ Paid ${year}` : isPartial ? `⊘ Partial ${year}` : `Unpaid ${year}`}
+            </div>
+          </div>
+          <div class="bill-actions">
+            <button class="btn btn-ghost btn-sm" onclick="openBillTrack('${b.id}')">Track</button>
+            <button class="edit-btn" onclick="editBill('${b.id}')">${lc('pencil')}</button>
+            <button class="del-btn" onclick="deleteBill('${b.id}')">${lc('trash-2')}</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  list.innerHTML = html;
 }
 
 function calcBillAvg(bill) {
+  if (bill.frequency === 'annual') {
+    const amounts = Object.entries(bill.payments)
+      .filter(([k]) => k.startsWith('annual-'))
+      .map(([, p]) => p.amount).filter(a => a > 0);
+    if (!amounts.length) return null;
+    return amounts.reduce((a, b) => a + b, 0) / amounts.length;
+  }
   const amounts = Object.values(bill.payments).filter(p => p.amount > 0).map(p => p.amount);
   if (!amounts.length) return null;
-  return amounts.reduce((a,b) => a+b, 0) / amounts.length;
+  return amounts.reduce((a, b) => a + b, 0) / amounts.length;
 }
 
 function openBillTrack(billId) {
@@ -1729,19 +1835,13 @@ function openBillTrack(billId) {
   if (!bill) return;
   const month = parseInt(document.getElementById('trackMonth').value);
   const year = parseInt(document.getElementById('trackYear').value);
-  const key = `${year}-${month}`;
+  const isAnnual = bill.frequency === 'annual';
+  const key = isAnnual ? `annual-${year}` : `${year}-${month}`;
   const p = bill.payments[key] || {};
 
   document.getElementById('billTrackTitle').textContent = `${bill.icon} ${bill.name}`;
-  document.getElementById('billTrackContent').innerHTML = `
-    <div style="margin-bottom:14px;">
-      <label>Status for ${MONTHS_FULL[month]} ${year}</label>
-      <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-        <button class="btn btn-sm ${p.status==='paid'?'btn-primary':'btn-ghost'}" onclick="setBillStatus('${billId}','${key}','paid')">✓ Paid</button>
-        <button class="btn btn-sm ${p.status==='partial'?'btn-primary':'btn-ghost'}" onclick="setBillStatus('${billId}','${key}','partial')">⊘ Partial</button>
-        <button class="btn btn-sm ${!p.status?'btn-primary':'btn-ghost'}" onclick="setBillStatus('${billId}','${key}','unpaid')">✗ Unpaid</button>
-      </div>
-    </div>
+
+  const sharedFields = `
     <div style="margin-bottom:14px;">
       <label>Amount Paid (₱)</label>
       <input class="input" id="billPayAmt" type="number" value="${p.amount||bill.typical||''}" placeholder="0.00">
@@ -1752,18 +1852,53 @@ function openBillTrack(billId) {
     </div>
     <div style="margin-top:16px; display:flex; gap:8px; justify-content:flex-end;">
       <button class="btn btn-primary btn-sm" onclick="saveBillPayment('${billId}','${key}')">Save</button>
-    </div>
-    <div style="margin-top:20px;">
-      <div style="font-size:12px; color:var(--text2); margin-bottom:8px; font-weight:600;">PAYMENT HISTORY</div>
-      <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:6px;">
-        ${MONTHS_FULL.map((m,i) => {
-          const k = `${year}-${i}`;
-          const pp = bill.payments[k] || {};
-          return `<div class="m-btn ${pp.status==='paid'?'paid':pp.status==='partial'?'partial':''}">${m.slice(0,3)}<br><span style="font-size:9px; opacity:0.8">${pp.amount ? '₱'+fmt(pp.amount) : pp.status||'—'}</span></div>`;
-        }).join('')}
+    </div>`;
+
+  if (isAnnual) {
+    const histYears = [year - 2, year - 1, year, year + 1];
+    document.getElementById('billTrackContent').innerHTML = `
+      <div style="margin-bottom:14px;">
+        <label>Payment Status for ${year}</label>
+        <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+          <button class="btn btn-sm ${p.status==='paid'?'btn-primary':'btn-ghost'}" onclick="setBillStatus('${billId}','${key}','paid')">✓ Paid</button>
+          <button class="btn btn-sm ${p.status==='partial'?'btn-primary':'btn-ghost'}" onclick="setBillStatus('${billId}','${key}','partial')">⊘ Partial</button>
+          <button class="btn btn-sm ${!p.status?'btn-primary':'btn-ghost'}" onclick="setBillStatus('${billId}','${key}','unpaid')">✗ Unpaid</button>
+        </div>
       </div>
-    </div>
-  `;
+      ${sharedFields}
+      <div style="margin-top:20px;">
+        <div style="font-size:12px; color:var(--text2); margin-bottom:8px; font-weight:600;">PAYMENT HISTORY (BY YEAR)</div>
+        <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:6px;">
+          ${histYears.map(y => {
+            const k = `annual-${y}`;
+            const pp = bill.payments[k] || {};
+            const isCurrentYear = y === year;
+            return `<div class="m-btn ${pp.status==='paid'?'paid':pp.status==='partial'?'partial':''}" style="${isCurrentYear?'outline:1px solid rgba(255,255,255,0.2);':''}">${y}<br><span style="font-size:9px; opacity:0.8">${pp.amount ? '₱'+fmt(pp.amount) : pp.status||'—'}</span></div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  } else {
+    document.getElementById('billTrackContent').innerHTML = `
+      <div style="margin-bottom:14px;">
+        <label>Status for ${MONTHS_FULL[month]} ${year}</label>
+        <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+          <button class="btn btn-sm ${p.status==='paid'?'btn-primary':'btn-ghost'}" onclick="setBillStatus('${billId}','${key}','paid')">✓ Paid</button>
+          <button class="btn btn-sm ${p.status==='partial'?'btn-primary':'btn-ghost'}" onclick="setBillStatus('${billId}','${key}','partial')">⊘ Partial</button>
+          <button class="btn btn-sm ${!p.status?'btn-primary':'btn-ghost'}" onclick="setBillStatus('${billId}','${key}','unpaid')">✗ Unpaid</button>
+        </div>
+      </div>
+      ${sharedFields}
+      <div style="margin-top:20px;">
+        <div style="font-size:12px; color:var(--text2); margin-bottom:8px; font-weight:600;">PAYMENT HISTORY</div>
+        <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:6px;">
+          ${MONTHS_FULL.map((m,i) => {
+            const k = `${year}-${i}`;
+            const pp = bill.payments[k] || {};
+            return `<div class="m-btn ${pp.status==='paid'?'paid':pp.status==='partial'?'partial':''}">${m.slice(0,3)}<br><span style="font-size:9px; opacity:0.8">${pp.amount ? '₱'+fmt(pp.amount) : pp.status||'—'}</span></div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }
   openModal('billTrackModal');
 }
 
@@ -1795,7 +1930,9 @@ function editBill(id) {
   document.getElementById('billIcon').value = b.icon;
   document.getElementById('billTypical').value = b.typical || '';
   document.getElementById('billDueDay').value = b.dueDay || '';
+  document.getElementById('billDueMonth').value = b.dueMonth != null ? b.dueMonth : '';
   document.getElementById('billNotes').value = b.notes || '';
+  setBillFreq(b.frequency || 'monthly');
   selectedBillColor = b.color;
   document.querySelectorAll('#billColorPicker .color-dot').forEach(d => {
     d.classList.toggle('sel', d.style.background === b.color || d.getAttribute('onclick').includes(b.color));
@@ -2735,16 +2872,24 @@ function renderSummary() {
   const year = parseInt(document.getElementById('summaryYear').value);
 
   // ---- Bills data ----
-  // For each bill, collect amounts paid per month this year
-  const billMonthTotals = Array(12).fill(0); // total bills per month
+  const billMonthTotals = Array(12).fill(0);
   const billRows = db.bills.map(b => {
+    if ((b.frequency || 'monthly') === 'annual') {
+      const paid = b.payments[`annual-${year}`];
+      const annualAmt = (paid && (paid.status === 'paid' || paid.status === 'partial') && paid.amount)
+        ? paid.amount : (b.typical || 0);
+      const monthly = annualAmt / 12;
+      const monthAmts = Array(12).fill(monthly);
+      monthAmts.forEach((a, i) => billMonthTotals[i] += a);
+      return { name: b.name, icon: b.icon, color: b.color, monthAmts, avg: monthly, annual: annualAmt, isAnnual: true };
+    }
     const monthAmts = MONTHS.map((_, i) => {
       const p = b.payments[`${year}-${i}`] || {};
       return (p.status === 'paid' || p.status === 'partial') ? (p.amount || b.typical || 0) : (b.typical || 0);
     });
     monthAmts.forEach((a, i) => billMonthTotals[i] += a);
     const avg = monthAmts.reduce((s, v) => s + v, 0) / 12;
-    return { name: b.name, icon: b.icon, color: b.color, monthAmts, avg, annual: avg * 12 };
+    return { name: b.name, icon: b.icon, color: b.color, monthAmts, avg, annual: avg * 12, isAnnual: false };
   });
 
   // ---- Expenses data ----
@@ -2803,12 +2948,18 @@ function renderSummary() {
       <div style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
         <div style="font-size:20px; width:32px; text-align:center;">${b.icon}</div>
         <div style="flex:1;">
-          <div style="font-size:13px; font-weight:600; margin-bottom:5px;">${b.name}</div>
+          <div style="font-size:13px; font-weight:600; margin-bottom:5px; display:flex; align-items:center; gap:6px;">
+            ${b.name}${b.isAnnual ? '<span class="bill-freq-badge annual">ANNUAL</span>' : ''}
+          </div>
           <div class="progress-wrap"><div class="progress-bar" style="width:${Math.round(b.avg/maxBillAvg*100)}%; background:linear-gradient(90deg,${b.color},${b.color}99);"></div></div>
         </div>
         <div style="text-align:right; min-width:110px;">
-          <div style="font-family:'Josefin Sans',sans-serif; font-weight:700; color:${b.color};">₱${fmt(b.avg)}<span style="font-size:10px; color:var(--text3);">/mo</span></div>
-          <div style="font-size:11px; color:var(--text3);">₱${fmt(b.annual)} /yr</div>
+          ${b.isAnnual
+            ? `<div style="font-weight:700; color:${b.color};">₱${fmt(b.annual)}<span style="font-size:10px; color:var(--text3);">/yr</span></div>
+               <div style="font-size:11px; color:var(--text3);">≈ ₱${fmt(b.avg)}/mo</div>`
+            : `<div style="font-weight:700; color:${b.color};">₱${fmt(b.avg)}<span style="font-size:10px; color:var(--text3);">/mo</span></div>
+               <div style="font-size:11px; color:var(--text3);">₱${fmt(b.annual)}/yr</div>`
+          }
         </div>
       </div>
     `).join('') + `
