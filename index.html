@@ -242,6 +242,30 @@
   .freq-btn { flex: 1; padding: 7px 14px; background: transparent; border: none; color: var(--text2); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.18s; font-family: 'Inter', sans-serif; }
   .freq-btn.active { background: rgba(255,255,255,0.1); color: #fff; font-weight: 600; }
 
+  /* Bills sub-nav */
+  .bills-subnav { display: flex; gap: 6px; margin-bottom: 24px; }
+  .bills-subbtn { padding: 7px 18px; border-radius: 22px; border: 1px solid var(--glass-border); background: transparent; color: var(--text2); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.18s; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 7px; }
+  .bills-subbtn:hover { background: var(--glass); color: var(--text); }
+  .bills-subbtn.active { background: linear-gradient(135deg, rgba(240,165,192,0.16), rgba(184,169,240,0.10)); border-color: rgba(240,165,192,0.28); color: #fff; font-weight: 600; }
+  .bills-subview { display: none; }
+  .bills-subview.active { display: block; }
+
+  /* Bills summary matrix */
+  .bsm-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .bsm-table th { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; color: var(--text3); padding: 6px 4px; text-align: center; white-space: nowrap; }
+  .bsm-table th.bsm-name { text-align: left; padding-left: 2px; min-width: 120px; }
+  .bsm-table td { padding: 5px 3px; text-align: center; vertical-align: middle; }
+  .bsm-table td.bsm-name { text-align: left; padding-left: 2px; }
+  .bsm-table tr:not(:last-child) td { border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .bsm-cell { width: 28px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; cursor: default; }
+  .bsm-cell.paid { background: rgba(125,210,160,0.22); color: var(--green); }
+  .bsm-cell.partial { background: rgba(245,199,126,0.2); color: var(--gold); }
+  .bsm-cell.unpaid { background: rgba(255,255,255,0.04); color: var(--text3); }
+  .bsm-cell.future { background: transparent; color: var(--text3); opacity: 0.35; }
+  .bsm-total { font-weight: 700; font-size: 12px; text-align: right; white-space: nowrap; padding-right: 2px; }
+  .bsm-bill-name { font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 7px; }
+  .bsm-rate { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
   /* Expenses */
   .expense-row {
     display: flex; align-items: center; gap: 12px; padding: 12px 0;
@@ -590,30 +614,53 @@
 
     <!-- ======== BILLS TAB ======== -->
     <div class="tab active" id="tab-bills">
-      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
         <div>
           <div class="section-title">House Bills</div>
-          <div class="section-sub">Track your recurring monthly bills and payment status</div>
+          <div class="section-sub">Track and review your recurring bills</div>
         </div>
         <button class="btn btn-primary" onclick="openModal('addBillModal')"><i data-lucide="plus" class="nb-icon"></i>Add Bill</button>
       </div>
 
-      <div class="stats-row" id="billStats"></div>
-
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
-        <label style="margin:0; font-size:13px; color:var(--text2);">Tracking month:</label>
-        <select class="select" id="trackMonth" style="width:auto; min-width:140px;" onchange="renderBills()">
-          <option value="0">January</option><option value="1">February</option>
-          <option value="2">March</option><option value="3">April</option>
-          <option value="4">May</option><option value="5">June</option>
-          <option value="6">July</option><option value="7">August</option>
-          <option value="8">September</option><option value="9">October</option>
-          <option value="10">November</option><option value="11">December</option>
-        </select>
-        <select class="select" id="trackYear" style="width:auto; min-width:100px;" onchange="renderBills()"></select>
+      <!-- Sub-nav -->
+      <div class="bills-subnav">
+        <button class="bills-subbtn active" id="billsSubTracker" onclick="showBillsView('tracker')">
+          <i data-lucide="list" class="nb-icon"></i>Bill Tracker
+        </button>
+        <button class="bills-subbtn" id="billsSubSummary" onclick="showBillsView('summary')">
+          <i data-lucide="bar-chart-2" class="nb-icon"></i>Summary Report
+        </button>
       </div>
 
-      <div id="billsList"></div>
+      <!-- Sub-view: Tracker -->
+      <div class="bills-subview active" id="bills-view-tracker">
+        <div class="stats-row" id="billStats"></div>
+
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+          <label style="margin:0; font-size:13px; color:var(--text2);">Tracking month:</label>
+          <select class="select" id="trackMonth" style="width:auto; min-width:140px;" onchange="renderBills()">
+            <option value="0">January</option><option value="1">February</option>
+            <option value="2">March</option><option value="3">April</option>
+            <option value="4">May</option><option value="5">June</option>
+            <option value="6">July</option><option value="7">August</option>
+            <option value="8">September</option><option value="9">October</option>
+            <option value="10">November</option><option value="11">December</option>
+          </select>
+          <select class="select" id="trackYear" style="width:auto; min-width:100px;" onchange="renderBills()"></select>
+        </div>
+
+        <div id="billsList"></div>
+      </div>
+
+      <!-- Sub-view: Summary Report -->
+      <div class="bills-subview" id="bills-view-summary">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+          <label style="margin:0; font-size:13px; color:var(--text2);">Year:</label>
+          <select class="select" id="billsSummaryYear" style="width:auto; min-width:100px;" onchange="renderBillsSummary()"></select>
+        </div>
+        <div class="stats-row" id="billsSummaryStats"></div>
+        <div id="billsSummaryContent"></div>
+      </div>
     </div>
 
     <!-- ======== EXPENSES TAB ======== -->
@@ -1959,6 +2006,201 @@ function deleteBill(id) {
   if (!confirm('Delete this bill?')) return;
   db.bills = db.bills.filter(b => b.id !== id);
   save(); renderBills(); toast('🗑 Deleted');
+}
+
+function showBillsView(view) {
+  document.getElementById('billsSubTracker').classList.toggle('active', view === 'tracker');
+  document.getElementById('billsSubSummary').classList.toggle('active', view === 'summary');
+  document.getElementById('bills-view-tracker').classList.toggle('active', view === 'tracker');
+  document.getElementById('bills-view-summary').classList.toggle('active', view === 'summary');
+  if (view === 'summary') renderBillsSummary();
+}
+
+function initBillsSummaryYear() {
+  const sel = document.getElementById('billsSummaryYear');
+  if (sel.options.length > 0) return;
+  const y = new Date().getFullYear();
+  for (let i = y - 2; i <= y + 1; i++) {
+    const o = document.createElement('option');
+    o.value = i; o.textContent = i;
+    if (i === y) o.selected = true;
+    sel.appendChild(o);
+  }
+}
+
+function renderBillsSummary() {
+  initBillsSummaryYear();
+  const sel = document.getElementById('billsSummaryYear');
+  const year = parseInt(sel.value) || new Date().getFullYear();
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+
+  const statsEl = document.getElementById('billsSummaryStats');
+  const contentEl = document.getElementById('billsSummaryContent');
+
+  if (!db.bills.length) {
+    statsEl.innerHTML = '';
+    contentEl.innerHTML = `<div class="empty"><div class="empty-icon">💡</div><div class="empty-text">No bills added yet.</div></div>`;
+    return;
+  }
+
+  const monthlyBills = db.bills.filter(b => (b.frequency || 'monthly') === 'monthly');
+  const annualBills = db.bills.filter(b => b.frequency === 'annual');
+
+  // ---- Stats ----
+  let totalEstimated = 0, totalPaid = 0, fullPaidCount = 0, totalExpected = 0;
+  monthlyBills.forEach(b => {
+    const monthsToCount = year < currentYear ? 12 : year > currentYear ? 0 : currentMonth + 1;
+    totalEstimated += (b.typical || 0) * 12;
+    totalExpected += (b.typical || 0) * monthsToCount;
+    let billPaid = 0, billFullMonths = 0;
+    for (let i = 0; i < 12; i++) {
+      const p = b.payments[`${year}-${i}`] || {};
+      if (p.status === 'paid') { billPaid += (p.amount || b.typical || 0); billFullMonths++; }
+      else if (p.status === 'partial') { billPaid += (p.amount || 0); }
+    }
+    totalPaid += billPaid;
+    if (billFullMonths === 12) fullPaidCount++;
+  });
+  annualBills.forEach(b => {
+    totalEstimated += (b.typical || 0);
+    totalExpected += (b.typical || 0);
+    const p = b.payments[`annual-${year}`] || {};
+    if (p.status === 'paid') { totalPaid += (p.amount || b.typical || 0); fullPaidCount++; }
+    else if (p.status === 'partial') { totalPaid += (p.amount || 0); }
+  });
+  const payRate = totalExpected > 0 ? Math.round(totalPaid / totalExpected * 100) : 0;
+
+  statsEl.innerHTML = `
+    <div class="stat-box"><div class="stat-val" style="color:var(--gold)">₱${fmt(totalEstimated)}</div><div class="stat-lbl">Est. Annual Total</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--green)">₱${fmt(totalPaid)}</div><div class="stat-lbl">Total Paid ${year}</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--teal)">${fullPaidCount}<span style="font-size:14px; color:var(--text3)">/${db.bills.length}</span></div><div class="stat-lbl">Fully Settled Bills</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:${payRate>=80?'var(--green)':payRate>=50?'var(--gold)':'var(--red)'}">${payRate}%</div><div class="stat-lbl">Payment Rate<div class="progress-wrap" style="margin-top:4px"><div class="progress-bar" style="width:${payRate}%"></div></div></div></div>
+  `;
+
+  // ---- Monthly bills matrix ----
+  let html = '';
+
+  if (monthlyBills.length > 0) {
+    const MON = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+    html += `
+      <div class="card" style="margin-bottom:18px; overflow-x:auto;">
+        <div class="card-title" style="margin-bottom:16px;">Monthly Bills — Payment Matrix</div>
+        <table class="bsm-table">
+          <thead>
+            <tr>
+              <th class="bsm-name">Bill</th>
+              ${MON.map((m, i) => `<th style="${year === currentYear && i > currentMonth ? 'opacity:0.4' : ''}">${m}</th>`).join('')}
+              <th style="text-align:right; padding-right:2px; white-space:nowrap">Paid / Est.</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${monthlyBills.map(b => {
+              let billPaid = 0;
+              const cells = Array.from({length: 12}, (_, i) => {
+                const p = b.payments[`${year}-${i}`] || {};
+                const isFuture = year > currentYear || (year === currentYear && i > currentMonth);
+                if (isFuture) return `<td><div class="bsm-cell future">·</div></td>`;
+                if (p.status === 'paid') { billPaid += (p.amount || b.typical || 0); return `<td><div class="bsm-cell paid" title="₱${fmt(p.amount || b.typical)}">✓</div></td>`; }
+                if (p.status === 'partial') { billPaid += (p.amount || 0); return `<td><div class="bsm-cell partial" title="₱${fmt(p.amount)} partial">⊘</div></td>`; }
+                return `<td><div class="bsm-cell unpaid">—</div></td>`;
+              });
+              const est = (b.typical || 0) * 12;
+              const pct = est > 0 ? Math.round(billPaid / est * 100) : 0;
+              return `
+                <tr>
+                  <td class="bsm-name">
+                    <div class="bsm-bill-name">
+                      <span style="font-size:18px">${b.icon}</span>
+                      <div>
+                        <div>${b.name}</div>
+                        <div class="bsm-rate">${pct}% · avg ₱${fmt(b.typical || 0)}/mo</div>
+                      </div>
+                    </div>
+                  </td>
+                  ${cells.join('')}
+                  <td class="bsm-total" style="color:var(--green)">
+                    ₱${fmt(billPaid)}<span style="font-size:10px; color:var(--text3); font-weight:400"> / ₱${fmt(est)}</span>
+                  </td>
+                </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+        <div style="margin-top:14px; display:flex; gap:12px; font-size:11px; color:var(--text3); flex-wrap:wrap;">
+          <span><span style="display:inline-block; width:12px; height:12px; border-radius:3px; background:rgba(125,210,160,0.22); vertical-align:middle; margin-right:4px"></span>Paid</span>
+          <span><span style="display:inline-block; width:12px; height:12px; border-radius:3px; background:rgba(245,199,126,0.2); vertical-align:middle; margin-right:4px"></span>Partial</span>
+          <span><span style="display:inline-block; width:12px; height:12px; border-radius:3px; background:rgba(255,255,255,0.04); vertical-align:middle; margin-right:4px"></span>Unpaid</span>
+        </div>
+      </div>`;
+  }
+
+  // ---- Annual bills ----
+  if (annualBills.length > 0) {
+    html += `
+      <div class="card" style="margin-bottom:18px;">
+        <div class="card-title" style="margin-bottom:16px;">Annual Bills — ${year} Status</div>
+        ${annualBills.map(b => {
+          const p = b.payments[`annual-${year}`] || {};
+          const isPaid = p.status === 'paid';
+          const isPartial = p.status === 'partial';
+          const dueLabel = b.dueMonth != null ? MONTHS_FULL[b.dueMonth] + (b.dueDay ? ' ' + b.dueDay : '') : '—';
+          const amtPaid = p.amount || (isPaid ? b.typical : 0);
+          return `
+            <div style="display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+              <div style="font-size:22px; width:36px; text-align:center;">${b.icon}</div>
+              <div style="flex:1">
+                <div style="font-weight:600; font-size:13px; display:flex; align-items:center; gap:7px;">${b.name}<span class="bill-freq-badge annual">ANNUAL</span></div>
+                <div style="font-size:12px; color:var(--text3); margin-top:2px;">Due: ${dueLabel} &nbsp;·&nbsp; Est. ₱${fmt(b.typical || 0)}/yr</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-weight:700; color:${isPaid ? 'var(--green)' : isPartial ? 'var(--gold)' : 'var(--text3)'}">
+                  ${isPaid ? '✓ Paid' : isPartial ? '⊘ Partial' : 'Unpaid'}
+                </div>
+                ${amtPaid ? `<div style="font-size:11px; color:var(--text3)">₱${fmt(amtPaid)} paid</div>` : ''}
+              </div>
+            </div>`;
+        }).join('')}
+      </div>`;
+  }
+
+  // ---- Monthly totals bar ----
+  if (monthlyBills.length > 0) {
+    const monthTotals = Array.from({length: 12}, (_, i) => {
+      return monthlyBills.reduce((s, b) => {
+        const p = b.payments[`${year}-${i}`] || {};
+        if (p.status === 'paid') return s + (p.amount || b.typical || 0);
+        if (p.status === 'partial') return s + (p.amount || 0);
+        return s;
+      }, 0);
+    });
+    const maxBar = Math.max(...monthTotals, 1);
+    const totalBillEst = monthlyBills.reduce((s, b) => s + (b.typical || 0), 0);
+
+    html += `
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px;">Monthly Totals — ${year}</div>
+        <div style="display:flex; align-items:flex-end; gap:6px; height:80px; margin-bottom:8px;">
+          ${monthTotals.map((v, i) => {
+            const isFuture = year > currentYear || (year === currentYear && i > currentMonth);
+            const h = isFuture ? 4 : Math.max(Math.round(v / maxBar * 72), v > 0 ? 4 : 2);
+            const clr = isFuture ? 'rgba(255,255,255,0.07)' : v >= totalBillEst * 0.9 ? 'var(--green)' : v > 0 ? 'var(--gold)' : 'rgba(255,255,255,0.08)';
+            return `<div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;">
+              <div style="font-size:9px; color:var(--text3)">${v > 0 && !isFuture ? '₱'+fmt(v) : ''}</div>
+              <div style="width:100%; height:${h}px; background:${clr}; border-radius:4px 4px 0 0; transition:height 0.3s;"></div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div style="display:flex; gap:6px;">
+          ${['J','F','M','A','M','J','J','A','S','O','N','D'].map((m, i) => {
+            const isCur = year === currentYear && i === currentMonth;
+            return `<div style="flex:1; text-align:center; font-size:10px; color:${isCur ? 'var(--pink)' : 'var(--text3)'}; font-weight:${isCur ? 700 : 400}">${m}</div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }
+
+  contentEl.innerHTML = html;
 }
 
 // ========== EXPENSES ==========
