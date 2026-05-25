@@ -665,7 +665,7 @@
 
     <!-- ======== EXPENSES TAB ======== -->
     <div class="tab" id="tab-expenses">
-      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
         <div>
           <div class="section-title">Other Expenses</div>
           <div class="section-sub">Log and analyze your spending</div>
@@ -673,12 +673,33 @@
         <button class="btn btn-primary" onclick="openModal('addExpenseModal')"><i data-lucide="plus" class="nb-icon"></i>Add Expense</button>
       </div>
 
-      <div class="stats-row" id="expenseStats"></div>
+      <!-- Sub-nav -->
+      <div class="bills-subnav">
+        <button class="bills-subbtn active" id="expSubTracker" onclick="showExpensesView('tracker')">
+          <i data-lucide="list" class="nb-icon"></i>Expense Log
+        </button>
+        <button class="bills-subbtn" id="expSubSummary" onclick="showExpensesView('summary')">
+          <i data-lucide="pie-chart" class="nb-icon"></i>Summary Report
+        </button>
+      </div>
 
-      <div class="tag-filter" id="expenseFilters"></div>
+      <!-- Sub-view: Tracker -->
+      <div class="bills-subview active" id="exp-view-tracker">
+        <div class="stats-row" id="expenseStats"></div>
+        <div class="tag-filter" id="expenseFilters"></div>
+        <div class="card">
+          <div id="expenseList"></div>
+        </div>
+      </div>
 
-      <div class="card">
-        <div id="expenseList"></div>
+      <!-- Sub-view: Summary -->
+      <div class="bills-subview" id="exp-view-summary">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+          <label style="margin:0; font-size:13px; color:var(--text2);">Year:</label>
+          <select class="select" id="expSummaryYear" style="width:auto; min-width:100px;" onchange="renderExpensesSummary()"></select>
+        </div>
+        <div class="stats-row" id="expSummaryStats"></div>
+        <div id="expSummaryContent"></div>
       </div>
     </div>
 
@@ -2281,6 +2302,142 @@ function deleteExpense(id) {
   if (!confirm('Delete this expense?')) return;
   db.expenses = db.expenses.filter(e => e.id !== id);
   save(); renderExpenses(); toast('🗑 Deleted');
+}
+
+function showExpensesView(view) {
+  document.getElementById('expSubTracker').classList.toggle('active', view === 'tracker');
+  document.getElementById('expSubSummary').classList.toggle('active', view === 'summary');
+  document.getElementById('exp-view-tracker').classList.toggle('active', view === 'tracker');
+  document.getElementById('exp-view-summary').classList.toggle('active', view === 'summary');
+  if (view === 'summary') renderExpensesSummary();
+}
+
+function initExpensesSummaryYear() {
+  const sel = document.getElementById('expSummaryYear');
+  if (sel.options.length > 0) return;
+  const y = new Date().getFullYear();
+  for (let i = y - 2; i <= y + 1; i++) {
+    const o = document.createElement('option');
+    o.value = i; o.textContent = i;
+    if (i === y) o.selected = true;
+    sel.appendChild(o);
+  }
+}
+
+function renderExpensesSummary() {
+  initExpensesSummaryYear();
+  const year = parseInt(document.getElementById('expSummaryYear').value) || new Date().getFullYear();
+  const statsEl = document.getElementById('expSummaryStats');
+  const contentEl = document.getElementById('expSummaryContent');
+
+  const yearExps = db.expenses.filter(e => e.date && e.date.startsWith(year));
+
+  if (!yearExps.length) {
+    statsEl.innerHTML = '';
+    contentEl.innerHTML = `<div class="empty"><div class="empty-icon">💸</div><div class="empty-text">No expenses recorded for ${year}.</div></div>`;
+    return;
+  }
+
+  // ---- Stats ----
+  const total = yearExps.reduce((s, e) => s + e.amount, 0);
+  const monthsWithData = new Set(yearExps.map(e => e.date.slice(0, 7))).size || 1;
+  const avgMonthly = total / monthsWithData;
+
+  const catTotals = {};
+  yearExps.forEach(e => { catTotals[e.cat] = (catTotals[e.cat] || 0) + e.amount; });
+  const topCat = Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0];
+
+  statsEl.innerHTML = `
+    <div class="stat-box"><div class="stat-val" style="color:var(--gold)">₱${fmt(total)}</div><div class="stat-lbl">Total ${year}</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--pink)">₱${fmt(avgMonthly)}</div><div class="stat-lbl">Monthly Average</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--teal); font-size:16px; letter-spacing:0">${topCat ? topCat[0] : '—'}</div><div class="stat-lbl">Top Category</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--lavender)">${yearExps.length}</div><div class="stat-lbl">Entries</div></div>
+  `;
+
+  // ---- Category breakdown ----
+  const sortedCats = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
+  const maxCat = sortedCats[0][1];
+  const catColors = ['var(--pink)','var(--teal)','var(--gold)','var(--lavender)','var(--green)','#f07878','#7db8f0','#f0c87a'];
+
+  let html = `
+    <div class="card" style="margin-bottom:18px;">
+      <div class="card-title" style="margin-bottom:16px;">Spending by Category</div>
+      ${sortedCats.map(([cat, amt], i) => {
+        const pct = Math.round(amt / total * 100);
+        const barW = Math.round(amt / maxCat * 100);
+        const clr = catColors[i % catColors.length];
+        const count = yearExps.filter(e => e.cat === cat).length;
+        return `
+          <div style="margin-bottom:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:5px;">
+              <div style="font-weight:600; font-size:13px;">${cat}
+                <span style="font-size:11px; color:var(--text3); font-weight:400; margin-left:6px;">${count} entr${count===1?'y':'ies'}</span>
+              </div>
+              <div style="text-align:right;">
+                <span style="font-weight:700; color:${clr}">₱${fmt(amt)}</span>
+                <span style="font-size:11px; color:var(--text3); margin-left:6px;">${pct}%</span>
+              </div>
+            </div>
+            <div class="progress-wrap"><div class="progress-bar" style="width:${barW}%; background:linear-gradient(90deg,${clr},${clr}99);"></div></div>
+          </div>`;
+      }).join('')}
+    </div>`;
+
+  // ---- Monthly trend ----
+  const monthTotals = Array(12).fill(0);
+  yearExps.forEach(e => {
+    const m = parseInt(e.date.split('-')[1]) - 1;
+    if (m >= 0 && m < 12) monthTotals[m] += e.amount;
+  });
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  const maxBar = Math.max(...monthTotals, 1);
+  const MON = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+
+  html += `
+    <div class="card" style="margin-bottom:18px;">
+      <div class="card-title" style="margin-bottom:16px;">Month-by-Month Spending — ${year}</div>
+      <div style="display:flex; align-items:flex-end; gap:6px; height:80px; margin-bottom:8px;">
+        ${monthTotals.map((v, i) => {
+          const isFuture = year > currentYear || (year === currentYear && i > currentMonth);
+          const h = isFuture ? 4 : Math.max(Math.round(v / maxBar * 72), v > 0 ? 4 : 2);
+          const clr = isFuture ? 'rgba(255,255,255,0.07)' : v > 0 ? 'var(--pink)' : 'rgba(255,255,255,0.08)';
+          return `<div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;">
+            <div style="font-size:9px; color:var(--text3); text-align:center;">${v > 0 && !isFuture ? '₱'+fmt(v) : ''}</div>
+            <div style="width:100%; height:${h}px; background:${clr}; border-radius:4px 4px 0 0; transition:height 0.3s;"></div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex; gap:6px;">
+        ${MON.map((m, i) => {
+          const isCur = year === currentYear && i === currentMonth;
+          return `<div style="flex:1; text-align:center; font-size:10px; color:${isCur ? 'var(--pink)' : 'var(--text3)'}; font-weight:${isCur ? 700 : 400}">${m}</div>`;
+        }).join('')}
+      </div>
+    </div>`;
+
+  // ---- Top expenses ----
+  const top = [...yearExps].sort((a, b) => b.amount - a.amount).slice(0, 10);
+  html += `
+    <div class="card">
+      <div class="card-title" style="margin-bottom:16px;">Top Expenses — ${year}</div>
+      ${top.map((e, i) => `
+        <div style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.04);">
+          <div style="font-size:12px; font-weight:700; color:var(--text3); width:18px; text-align:right;">${i + 1}</div>
+          <div style="flex:1;">
+            <div style="font-weight:600; font-size:13px;">${e.desc}</div>
+            <div style="display:flex; gap:8px; margin-top:2px; flex-wrap:wrap;">
+              <span class="cat-badge" style="background:rgba(255,255,255,0.07); color:var(--text2)">${e.cat}</span>
+              <span style="font-size:11px; color:var(--text3)">${formatDate(e.date)}</span>
+              ${e.notes ? `<span style="font-size:11px; color:var(--text3)">${e.notes}</span>` : ''}
+            </div>
+          </div>
+          <div style="font-weight:700; font-size:15px; color:var(--gold);">₱${fmt(e.amount)}</div>
+        </div>`).join('')}
+    </div>`;
+
+  contentEl.innerHTML = html;
 }
 
 // ========== EVENTS ==========
