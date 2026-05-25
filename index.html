@@ -558,6 +558,12 @@
   @media (max-width: 500px) { .user-name { display: none; } }
   .logout-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 12px; padding: 4px 8px; border-radius: 6px; transition: all 0.2s; font-family: 'Raleway', sans-serif; }
   .logout-btn:hover { color: var(--red); background: rgba(240,120,120,0.1); }
+  .sync-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--text3); transition: background 0.4s, box-shadow 0.4s; flex-shrink: 0; }
+  .sync-dot.status-ok { background: var(--green); box-shadow: 0 0 0 3px rgba(125,210,160,0.2); }
+  .sync-dot.status-error { background: var(--red); box-shadow: 0 0 0 3px rgba(240,120,120,0.2); }
+  .sync-dot.status-syncing { background: var(--gold); animation: syncPulse 1.1s ease-in-out infinite; }
+  .sync-dot.status-idle { background: var(--text3); }
+  @keyframes syncPulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.35; transform:scale(0.8); } }
   @media (max-width: 768px) { .login-card { margin: 16px; padding: 28px 22px; } }
 
   /* ========== MODERNIZATION: Inter font + refined styles ========== */
@@ -627,7 +633,7 @@
       </div>
     </div>
     <div style="display:flex; align-items:center; gap:14px;">
-      <span id="syncStatus" style="font-size:11px; color:var(--text3)">☁️ Loading…</span>
+      <span id="syncStatus" title="Loading…" style="display:flex;align-items:center;"><span class="sync-dot status-idle"></span></span>
       <div class="user-profile" id="userProfile" style="display:none;">
         <img class="user-avatar" id="userAvatar" src="" alt="" style="display:none;">
         <span class="user-name" id="userName"></span>
@@ -2059,9 +2065,9 @@ let isSyncing = false;
 function setSyncStatus(state, msg) {
   const el = document.getElementById('syncStatus');
   if (!el) return;
-  const icons = { idle: '☁️', syncing: '⏳', ok: '✅', error: '⚠️' };
-  el.textContent = (icons[state] || '☁️') + ' ' + msg;
-  el.style.color = state === 'error' ? 'var(--red)' : state === 'ok' ? 'var(--green)' : 'var(--text3)';
+  const dot = el.querySelector('.sync-dot');
+  if (dot) dot.className = 'sync-dot status-' + state;
+  el.title = msg;
 }
 
 async function save() {
