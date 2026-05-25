@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
   :root {
     --bg: #0f1117;
@@ -299,6 +300,12 @@
   .person-chip.active { background:rgba(240,165,192,0.15); border-color:rgba(240,165,192,0.3); color:var(--pink); font-weight:600; }
   .section-divider { font-size:10.5px; font-weight:700; letter-spacing:0.09em; color:var(--text3); padding:16px 2px 8px; display:flex; align-items:center; gap:10px; }
   .section-divider::after { content:''; flex:1; height:1px; background:rgba(255,255,255,0.06); }
+
+  /* Medical Docs */
+  .medoc-card { background:var(--glass); border:1px solid var(--glass-border); border-radius:13px; padding:14px 16px; margin-bottom:10px; display:flex; gap:14px; align-items:flex-start; }
+  .medoc-thumb { width:56px; height:56px; object-fit:cover; border-radius:8px; flex-shrink:0; border:1px solid var(--glass-border); }
+  .medoc-thumb-placeholder { width:56px; height:56px; border-radius:8px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+  .ocr-status { font-size:12px; margin-top:6px; }
 
   /* School */
   .day-header { font-size:11px; font-weight:700; letter-spacing:0.08em; color:var(--text3); padding:14px 0 8px; display:flex; align-items:center; gap:10px; }
@@ -815,6 +822,7 @@
       <div class="bills-subnav">
         <button class="bills-subbtn active" id="medSubAppt" onclick="showMedicalView('appointments')"><i data-lucide="calendar-clock" class="nb-icon"></i>Appointments</button>
         <button class="bills-subbtn" id="medSubVax" onclick="showMedicalView('vaccines')"><i data-lucide="syringe" class="nb-icon"></i>Vaccine Tracker</button>
+        <button class="bills-subbtn" id="medSubDocs" onclick="showMedicalView('docs')"><i data-lucide="file-scan" class="nb-icon"></i>Documents</button>
       </div>
       <div class="bills-subview active" id="med-view-appointments">
         <div style="display:flex; justify-content:flex-end; margin-bottom:14px;">
@@ -829,6 +837,13 @@
         </div>
         <div id="vaxPersonFilter" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;"></div>
         <div id="vaxList"></div>
+      </div>
+      <div class="bills-subview" id="med-view-docs">
+        <div style="display:flex; justify-content:flex-end; margin-bottom:14px;">
+          <button class="btn btn-primary" onclick="openMedDocModal()"><i data-lucide="plus" class="nb-icon"></i>Add Document</button>
+        </div>
+        <div id="medDocPersonFilter" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;"></div>
+        <div id="medDocList"></div>
       </div>
     </div>
 
@@ -1229,6 +1244,57 @@
     <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
       <button class="btn btn-ghost" onclick="closeModal('addVaccineModal')">Cancel</button>
       <button class="btn btn-primary" onclick="saveVaccine()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Medical Document -->
+<div class="modal-overlay" id="addMedDocModal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <div class="modal-title" id="medDocModalTitle">📄 Medical Document</div>
+      <button class="close-btn" onclick="closeModal('addMedDocModal')">×</button>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Person *</label><input class="input" id="medDocPerson" placeholder="e.g. Sofia"></div>
+      <div><label>Type *</label>
+        <select class="select" id="medDocType">
+          <option>Lab Result</option>
+          <option>Prescription</option>
+          <option>Checkup Report</option>
+          <option>X-Ray / Imaging</option>
+          <option>Vaccination Record</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Date *</label><input class="input" id="medDocDate" type="date"></div>
+      <div><label>Title / Label *</label><input class="input" id="medDocTitle" placeholder="e.g. Blood CBC Results"></div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label>Upload Image (optional — auto-scanned)</label>
+        <div style="display:flex; align-items:center; gap:12px; margin-top:6px;">
+          <label class="btn btn-ghost" style="cursor:pointer; margin:0; font-size:13px;">
+            📷 Choose Image
+            <input type="file" id="medDocFile" accept="image/*" style="display:none;" onchange="handleDocUpload(event)">
+          </label>
+          <img id="medDocThumb" src="" alt="" style="display:none; width:60px; height:60px; object-fit:cover; border-radius:8px; border:1px solid var(--glass-border);">
+        </div>
+        <div id="ocrStatus" class="ocr-status" style="display:none; color:var(--text3);"></div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label>Document Content</label>
+        <textarea class="input" id="medDocText" placeholder="Content will appear here after scanning — or type manually…" style="min-height:120px; resize:vertical;"></textarea>
+      </div>
+    </div>
+    <div class="form-row"><div><label>Notes</label><input class="input" id="medDocNotes" placeholder="Additional notes…"></div></div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('addMedDocModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveMedDoc()">Save Document</button>
     </div>
   </div>
 </div>
@@ -1897,7 +1963,7 @@ let db = {
   bills: [], expenses: [], events: [], tasks: [], docs: [], books: [], savings: [], passwords: [], govaccounts: [],
   budget: { incomes: [], categoryLimits: {}, savingsAllocations: {} },
   renovations: [],
-  medical: { appointments: [], vaccines: [] },
+  medical: { appointments: [], vaccines: [], docs: [] },
   school: { childName: '', schedule: [], extracurriculars: [], events: [] }
 };
 let selectedBillColor = '#f0a5c0';
@@ -2006,6 +2072,7 @@ async function load() {
     if (!db.medical) db.medical = { appointments: [], vaccines: [] };
     if (!db.medical.appointments) db.medical.appointments = [];
     if (!db.medical.vaccines) db.medical.vaccines = [];
+    if (!db.medical.docs) db.medical.docs = [];
     if (!db.school) db.school = { childName: '', schedule: [], extracurriculars: [], events: [] };
     if (!db.school.schedule) db.school.schedule = [];
     if (!db.school.extracurriculars) db.school.extracurriculars = [];
@@ -2029,6 +2096,7 @@ async function load() {
     if (!db.medical) db.medical = { appointments: [], vaccines: [] };
     if (!db.medical.appointments) db.medical.appointments = [];
     if (!db.medical.vaccines) db.medical.vaccines = [];
+    if (!db.medical.docs) db.medical.docs = [];
     if (!db.school) db.school = { childName: '', schedule: [], extracurriculars: [], events: [] };
     if (!db.school.schedule) db.school.schedule = [];
     if (!db.school.extracurriculars) db.school.extracurriculars = [];
@@ -4210,20 +4278,21 @@ let currentMedPersonFilter = 'all';
 let currentVaxPersonFilter = 'all';
 
 function renderMedical() {
-  if (document.getElementById('med-view-vaccines').classList.contains('active')) {
-    renderVaccineTracker();
-  } else {
-    renderAppointments();
-  }
+  if (document.getElementById('med-view-vaccines').classList.contains('active')) renderVaccineTracker();
+  else if (document.getElementById('med-view-docs').classList.contains('active')) renderMedDocs();
+  else renderAppointments();
 }
 
 function showMedicalView(view) {
   document.getElementById('medSubAppt').classList.toggle('active', view === 'appointments');
   document.getElementById('medSubVax').classList.toggle('active', view === 'vaccines');
+  document.getElementById('medSubDocs').classList.toggle('active', view === 'docs');
   document.getElementById('med-view-appointments').classList.toggle('active', view === 'appointments');
   document.getElementById('med-view-vaccines').classList.toggle('active', view === 'vaccines');
+  document.getElementById('med-view-docs').classList.toggle('active', view === 'docs');
   if (view === 'appointments') renderAppointments();
-  else renderVaccineTracker();
+  else if (view === 'vaccines') renderVaccineTracker();
+  else renderMedDocs();
 }
 
 function renderAppointments() {
@@ -4431,6 +4500,172 @@ function deleteVaccine(id) {
   if (!confirm('Delete this vaccine record?')) return;
   db.medical.vaccines = db.medical.vaccines.filter(v => v.id !== id);
   save(); renderVaccineTracker(); toast('🗑 Deleted');
+}
+
+// ========== MEDICAL DOCUMENTS ==========
+let currentMedDocPersonFilter = 'all';
+
+function renderMedDocs() {
+  const docs = db.medical.docs || [];
+  const persons = [...new Set(docs.map(d => d.person))].filter(Boolean);
+  const filterEl = document.getElementById('medDocPersonFilter');
+  filterEl.innerHTML = persons.length > 1 ? ['all', ...persons].map(p =>
+    `<button class="person-chip ${currentMedDocPersonFilter===p?'active':''}" onclick="filterMedDoc('${p}')">${p==='all'?'All':p}</button>`
+  ).join('') : '';
+
+  const filtered = currentMedDocPersonFilter === 'all' ? docs : docs.filter(d => d.person === currentMedDocPersonFilter);
+  const listEl = document.getElementById('medDocList');
+  if (!filtered.length) {
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">📄</div><div class="empty-text">No documents yet. Tap "Add Document" to upload and scan a lab result, prescription, or checkup report.</div></div>`;
+    return;
+  }
+
+  const sorted = [...filtered].sort((a,b) => b.date.localeCompare(a.date));
+  const byType = {};
+  sorted.forEach(d => { (byType[d.type] = byType[d.type] || []).push(d); });
+
+  let html = '';
+  Object.entries(byType).forEach(([type, items]) => {
+    html += `<div class="section-divider">${type.toUpperCase()}</div>`;
+    html += items.map(d => {
+      const preview = d.text ? d.text.substring(0, 140).replace(/\n/g, ' ') + (d.text.length > 140 ? '…' : '') : '';
+      return `<div class="medoc-card">
+        ${d.thumbnail ? `<img class="medoc-thumb" src="${d.thumbnail}" alt="">` : `<div class="medoc-thumb-placeholder">📄</div>`}
+        <div style="flex:1; min-width:0;">
+          <div style="font-weight:700; font-size:14px; margin-bottom:4px;">${d.title}</div>
+          <div style="font-size:12px; color:var(--text3); display:flex; gap:8px; flex-wrap:wrap; margin-bottom:5px;">
+            <span style="color:var(--lavender); font-weight:600;">${d.person}</span>
+            <span>📅 ${formatDate(d.date)}</span>
+          </div>
+          ${preview ? `<div style="font-size:11px; color:var(--text2); line-height:1.55; word-break:break-word;">${preview}</div>` : ''}
+          ${d.notes ? `<div style="font-size:11px; color:var(--text3); margin-top:4px;">${d.notes}</div>` : ''}
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
+          <button class="edit-btn" onclick="editMedDoc('${d.id}')">${lc('pencil')}</button>
+          <button class="del-btn" onclick="deleteMedDoc('${d.id}')">${lc('trash-2')}</button>
+        </div>
+      </div>`;
+    }).join('');
+  });
+  listEl.innerHTML = html;
+}
+
+function filterMedDoc(p) { currentMedDocPersonFilter = p; renderMedDocs(); }
+
+function openMedDocModal() {
+  editingId = null;
+  window._pendingDocThumb = null;
+  resetMedDocForm();
+  document.getElementById('medDocDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('medDocModalTitle').textContent = '📄 Add Medical Document';
+  openModal('addMedDocModal');
+}
+
+async function handleDocUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('ocrStatus');
+  statusEl.style.display = 'block';
+  statusEl.style.color = 'var(--text3)';
+  statusEl.textContent = 'Reading image…';
+  document.getElementById('medDocText').value = '';
+
+  const thumb = await compressThumbnail(file);
+  const thumbEl = document.getElementById('medDocThumb');
+  thumbEl.src = thumb; thumbEl.style.display = 'block';
+  window._pendingDocThumb = thumb;
+
+  statusEl.textContent = 'Scanning document (this may take a moment)…';
+  try {
+    const { data: { text } } = await Tesseract.recognize(file, 'eng', {
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          statusEl.textContent = `Scanning… ${Math.round(m.progress * 100)}%`;
+        }
+      }
+    });
+    document.getElementById('medDocText').value = text.trim();
+    statusEl.style.color = 'var(--green)';
+    statusEl.textContent = '✓ Scan complete — review and edit the text below.';
+  } catch(e) {
+    statusEl.style.color = 'var(--red)';
+    statusEl.textContent = '⚠ Scan failed — you can type or paste the content manually.';
+  }
+}
+
+async function compressThumbnail(file) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 300;
+        let w = img.width, h = img.height;
+        if (w > h && w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+        else if (h >= w && h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.6));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function saveMedDoc() {
+  const person = document.getElementById('medDocPerson').value.trim();
+  const date = document.getElementById('medDocDate').value;
+  const title = document.getElementById('medDocTitle').value.trim();
+  if (!person || !date || !title) { alert('Please fill in Person, Date and Title'); return; }
+  const existing = editingId ? (db.medical.docs.find(d => d.id === editingId) || {}) : {};
+  const doc = {
+    id: editingId || uid(), person, date, title,
+    type: document.getElementById('medDocType').value,
+    text: document.getElementById('medDocText').value.trim(),
+    thumbnail: window._pendingDocThumb || existing.thumbnail || null,
+    notes: document.getElementById('medDocNotes').value.trim()
+  };
+  if (editingId) db.medical.docs = db.medical.docs.map(d => d.id === editingId ? doc : d);
+  else db.medical.docs.push(doc);
+  editingId = null; window._pendingDocThumb = null;
+  save(); closeModal('addMedDocModal'); resetMedDocForm(); renderMedDocs(); toast('✓ Document saved!');
+}
+
+function resetMedDocForm() {
+  ['medDocPerson','medDocDate','medDocTitle','medDocText','medDocNotes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('medDocType').value = 'Lab Result';
+  const thumbEl = document.getElementById('medDocThumb');
+  thumbEl.src = ''; thumbEl.style.display = 'none';
+  const statusEl = document.getElementById('ocrStatus');
+  statusEl.style.display = 'none'; statusEl.textContent = '';
+  document.getElementById('medDocFile').value = '';
+}
+
+function editMedDoc(id) {
+  const d = db.medical.docs.find(d => d.id === id);
+  if (!d) return;
+  editingId = id;
+  window._pendingDocThumb = d.thumbnail || null;
+  document.getElementById('medDocPerson').value = d.person;
+  document.getElementById('medDocDate').value = d.date;
+  document.getElementById('medDocTitle').value = d.title;
+  document.getElementById('medDocType').value = d.type;
+  document.getElementById('medDocText').value = d.text || '';
+  document.getElementById('medDocNotes').value = d.notes || '';
+  const thumbEl = document.getElementById('medDocThumb');
+  if (d.thumbnail) { thumbEl.src = d.thumbnail; thumbEl.style.display = 'block'; }
+  else { thumbEl.src = ''; thumbEl.style.display = 'none'; }
+  document.getElementById('ocrStatus').style.display = 'none';
+  document.getElementById('medDocModalTitle').textContent = '📄 Edit Medical Document';
+  openModal('addMedDocModal');
+}
+
+function deleteMedDoc(id) {
+  if (!confirm('Delete this document?')) return;
+  db.medical.docs = db.medical.docs.filter(d => d.id !== id);
+  save(); renderMedDocs(); toast('🗑 Deleted');
 }
 
 // ========== SCHOOL TRACKER ==========
