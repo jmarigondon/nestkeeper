@@ -44,7 +44,7 @@
   }
 
   .logo { display: flex; align-items: center; gap: 10px; }
-  .logo-icon { font-size: 24px; }
+  .logo-icon { display:flex; align-items:center; flex-shrink:0; }
   .logo-text { font-family: 'Josefin Sans', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: linear-gradient(135deg, var(--pink), var(--lavender)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
   .logo-sub { font-size: 10px; color: var(--text3); margin-top: -2px; }
 
@@ -544,7 +544,7 @@
     backdrop-filter: blur(20px);
     animation: slideUp 0.3s ease;
   }
-  .login-app-logo { font-size: 44px; margin-bottom: 10px; }
+  .login-app-logo { margin-bottom: 14px; display:flex; justify-content:center; }
   .login-app-title { font-family: 'Josefin Sans', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: linear-gradient(135deg, var(--pink), var(--lavender)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 4px; }
   .login-app-sub { font-size: 13px; color: var(--text3); margin-bottom: 32px; }
   .login-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
@@ -608,7 +608,18 @@
     <div style="display:flex; align-items:center; gap:12px;">
       <button class="hamburger" onclick="toggleSidenav()">☰</button>
       <div class="logo">
-        <span class="logo-icon">🏡</span>
+        <span class="logo-icon">
+          <svg width="32" height="32" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="30" height="30" rx="8" fill="url(#nkHGrad)"/>
+            <path d="M15 6L24 13.5H22V24H17V18.5H13V24H8V13.5H6L15 6Z" fill="white"/>
+            <defs>
+              <linearGradient id="nkHGrad" x1="0" y1="0" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#f0a5c0"/>
+                <stop offset="1" stop-color="#9480e8"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </span>
         <div>
           <div class="logo-text">Nestkeeper</div>
           <div class="logo-sub">your home, organized</div>
@@ -1066,7 +1077,18 @@
 <!-- ========== LOGIN OVERLAY ========== -->
 <div class="login-overlay" id="loginOverlay">
   <div class="login-card">
-    <div class="login-app-logo">🏡</div>
+    <div class="login-app-logo">
+      <svg width="64" height="64" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 4px 16px rgba(240,165,192,0.35))">
+        <rect width="30" height="30" rx="8" fill="url(#nkLGrad)"/>
+        <path d="M15 6L24 13.5H22V24H17V18.5H13V24H8V13.5H6L15 6Z" fill="white"/>
+        <defs>
+          <linearGradient id="nkLGrad" x1="0" y1="0" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#f0a5c0"/>
+            <stop offset="1" stop-color="#9480e8"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
     <div class="login-app-title">Nestkeeper</div>
     <div class="login-app-sub">your home, organized</div>
 
