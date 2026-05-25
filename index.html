@@ -562,24 +562,24 @@
 
       <div class="sidenav-section">
         <div class="sidenav-label">Finance</div>
-        <button class="nav-btn active" onclick="showTab('bills', this)"><i data-lucide="zap" class="nb-icon"></i>House Bills</button>
-        <button class="nav-btn" onclick="showTab('expenses', this)"><i data-lucide="receipt" class="nb-icon"></i>Other Expenses</button>
-        <button class="nav-btn" onclick="showTab('savings', this)"><i data-lucide="piggy-bank" class="nb-icon"></i>Savings Goals</button>
-        <button class="nav-btn" onclick="showTab('summary', this)"><i data-lucide="bar-chart-2" class="nb-icon"></i>Bills & Expenses Summary</button>
+        <button class="nav-btn active" onclick="showTab('bills')"><i data-lucide="zap" class="nb-icon"></i>House Bills</button>
+        <button class="nav-btn" onclick="showTab('expenses')"><i data-lucide="receipt" class="nb-icon"></i>Other Expenses</button>
+        <button class="nav-btn" onclick="showTab('savings')"><i data-lucide="piggy-bank" class="nb-icon"></i>Savings Goals</button>
+        <button class="nav-btn" onclick="showTab('summary')"><i data-lucide="bar-chart-2" class="nb-icon"></i>Bills & Expenses Summary</button>
       </div>
 
       <div class="sidenav-section">
         <div class="sidenav-label">Home & Life</div>
-        <button class="nav-btn" onclick="showTab('events', this)"><i data-lucide="calendar-days" class="nb-icon"></i>Important Events</button>
-        <button class="nav-btn" onclick="showTab('tasks', this)"><i data-lucide="check-square" class="nb-icon"></i>Tasks</button>
+        <button class="nav-btn" onclick="showTab('events')"><i data-lucide="calendar-days" class="nb-icon"></i>Important Events</button>
+        <button class="nav-btn" onclick="showTab('tasks')"><i data-lucide="check-square" class="nb-icon"></i>Tasks</button>
       </div>
 
       <div class="sidenav-section">
         <div class="sidenav-label">Personal</div>
-        <button class="nav-btn" onclick="showTab('docs', this)"><i data-lucide="paperclip" class="nb-icon"></i>Docs & Links</button>
-        <button class="nav-btn" onclick="showTab('books', this)"><i data-lucide="book-open" class="nb-icon"></i>Books Tracker</button>
-        <button class="nav-btn" onclick="showTab('passwords', this)"><i data-lucide="lock" class="nb-icon"></i>Passwords</button>
-        <button class="nav-btn" onclick="showTab('govaccounts', this)"><i data-lucide="landmark" class="nb-icon"></i>Government Accounts</button>
+        <button class="nav-btn" onclick="showTab('docs')"><i data-lucide="paperclip" class="nb-icon"></i>Docs & Links</button>
+        <button class="nav-btn" onclick="showTab('books')"><i data-lucide="book-open" class="nb-icon"></i>Books Tracker</button>
+        <button class="nav-btn" onclick="showTab('passwords')"><i data-lucide="lock" class="nb-icon"></i>Passwords</button>
+        <button class="nav-btn" onclick="showTab('govaccounts')"><i data-lucide="landmark" class="nb-icon"></i>Government Accounts</button>
       </div>
 
 
@@ -1596,24 +1596,39 @@ function toggleSidenav() {
 }
 
 // ========== TABS ==========
-function showTab(name, btn) {
+// ========== ROUTING ==========
+const VALID_TABS = new Set(['bills','expenses','savings','summary','events','tasks','docs','books','passwords','govaccounts']);
+
+function _activateTab(name) {
+  if (!VALID_TABS.has(name)) name = 'bills';
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  if (btn) btn.classList.add('active');
-  // Close sidenav on mobile after selecting
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    b.classList.toggle('active', !!b.getAttribute('onclick')?.includes(`'${name}'`));
+  });
+  const tabEl = document.getElementById('tab-' + name);
+  if (tabEl) tabEl.classList.add('active');
   document.getElementById('sidenav').classList.remove('open');
   document.getElementById('sidenavOverlay').classList.remove('open');
-  if (name === 'bills') renderBills();
-  if (name === 'expenses') renderExpenses();
-  if (name === 'savings') renderSavings();
-  if (name === 'passwords') renderPasswords();
-  if (name === 'govaccounts') renderGovAccounts();
-  if (name === 'events') renderEvents();
-  if (name === 'tasks') renderTasks();
-  if (name === 'docs') renderDocs();
-  if (name === 'books') renderBooks();
+  const renders = {
+    bills: renderBills, expenses: renderExpenses, savings: renderSavings,
+    summary: renderSummary, passwords: renderPasswords, govaccounts: renderGovAccounts,
+    events: renderEvents, tasks: renderTasks, docs: renderDocs, books: renderBooks
+  };
+  if (renders[name]) renders[name]();
 }
+
+function showTab(name) {
+  _activateTab(name);
+  history.pushState({ tab: name }, '', '#' + name);
+}
+
+window.addEventListener('hashchange', () => {
+  _activateTab(location.hash.slice(1) || 'bills');
+});
+
+window.addEventListener('popstate', (e) => {
+  _activateTab((e.state?.tab) || location.hash.slice(1) || 'bills');
+});
 
 // ========== MODALS ==========
 function openModal(id) {
@@ -3221,7 +3236,7 @@ async function loadAppData() {
   const saved = CONFIG_SCRIPT_URL || localStorage.getItem('nestkeeper_script_url') || '';
   if (saved) document.getElementById('scriptUrlInput').value = saved;
   await load();
-  renderBills();
+  _activateTab(location.hash.slice(1) || 'bills');
   if (!SCRIPT_URL && !db.bills.length && !db.expenses.length && !db.events.length) {
     db.bills = [
       { id:uid(), name:'Meralco', icon:'⚡', color:'#f5c77e', typical:3500, dueDay:20, notes:'', payments:{} },
