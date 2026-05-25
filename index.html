@@ -935,12 +935,17 @@
 
     <!-- ======== TASKS TAB ======== -->
     <div class="tab" id="tab-tasks">
-      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:12px;">
         <div>
           <div class="section-title">Other Tasks</div>
           <div class="section-sub">Your personal Trello board</div>
         </div>
         <button class="btn btn-primary" onclick="openModal('addTaskModal')"><i data-lucide="plus" class="nb-icon"></i>Add Task</button>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px; font-size:12px; color:var(--text3);">
+        <span>Sync new tasks to Google Tasks:</span>
+        <button id="gTasksToggleBtn" onclick="toggleGTasksSync()" style="padding:3px 12px; border-radius:20px; border:1px solid var(--glass-border); background:transparent; font-size:12px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; color:var(--text2); transition:all 0.18s;">Off</button>
+        <span id="gTasksSyncStatus" style="font-size:11px; color:var(--text3);"></span>
       </div>
       <div class="kanban">
         <div class="kanban-col">
@@ -3041,10 +3046,11 @@ function saveTask() {
   ['taskTitle','taskDesc','taskDue'].forEach(id => document.getElementById(id).value = '');
   editingId = null;
   renderTasks(); toast('✓ Task saved!');
-  if (isNew) syncTaskToGoogle(task);
+  if (isNew && gTasksSyncEnabled()) syncTaskToGoogle(task);
 }
 
 function renderTasks() {
+  updateGTasksToggleUI();
   const cols = { todo: document.getElementById('col-todo'), inprogress: document.getElementById('col-inprogress'), done: document.getElementById('col-done') };
   Object.values(cols).forEach(c => c.innerHTML = '');
 
@@ -5316,6 +5322,34 @@ function lc(name, size = 14) {
 // ========== GOOGLE TASKS INTEGRATION ==========
 let gTasksTokenClient = null;
 let gTasksAccessToken = null;
+
+function gTasksSyncEnabled() {
+  return localStorage.getItem('nestkeeper_gtasks_sync') === 'true';
+}
+
+function toggleGTasksSync() {
+  const nowEnabled = !gTasksSyncEnabled();
+  localStorage.setItem('nestkeeper_gtasks_sync', nowEnabled ? 'true' : 'false');
+  updateGTasksToggleUI();
+  if (nowEnabled) {
+    toast('📋 Google Tasks sync ON — new tasks will sync. Make sure your Google Cloud OAuth is set up.');
+  } else {
+    gTasksAccessToken = null;
+    toast('Google Tasks sync OFF');
+  }
+}
+
+function updateGTasksToggleUI() {
+  const btn = document.getElementById('gTasksToggleBtn');
+  const status = document.getElementById('gTasksSyncStatus');
+  if (!btn) return;
+  const on = gTasksSyncEnabled();
+  btn.textContent = on ? 'On' : 'Off';
+  btn.style.background = on ? 'rgba(125,210,160,0.15)' : 'transparent';
+  btn.style.borderColor = on ? 'rgba(125,210,160,0.4)' : 'var(--glass-border)';
+  btn.style.color = on ? 'var(--green)' : 'var(--text2)';
+  if (status) status.textContent = on ? 'New tasks will be added to your Google Tasks list.' : '';
+}
 
 function initTasksTokenClient() {
   if (!GOOGLE_CLIENT_ID) return;
