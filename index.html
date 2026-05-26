@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'><defs><linearGradient id='g' x1='0' y1='0' x2='30' y2='30' gradientUnits='userSpaceOnUse'><stop stop-color='%23f0a5c0'/><stop offset='1' stop-color='%239480e8'/></linearGradient></defs><rect width='30' height='30' rx='8' fill='url(%23g)'/><path d='M15 6L24 13.5H22V24H17V18.5H13V24H8V13.5H6L15 6Z' fill='white'/></svg>">
 <title>Nestkeeper 🏡</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
@@ -558,6 +559,8 @@
   @media (max-width: 500px) { .user-name { display: none; } }
   .logout-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 12px; padding: 4px 8px; border-radius: 6px; transition: all 0.2s; font-family: 'Raleway', sans-serif; }
   .logout-btn:hover { color: var(--red); background: rgba(240,120,120,0.1); }
+  .vault-lock-screen { text-align:center; padding:60px 20px 40px; }
+  .vault-pin-input { text-align:center !important; letter-spacing:0.35em !important; font-size:20px !important; }
   .sync-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--text3); transition: background 0.4s, box-shadow 0.4s; flex-shrink: 0; }
   .sync-dot.status-ok { background: var(--green); box-shadow: 0 0 0 3px rgba(125,210,160,0.2); }
   .sync-dot.status-error { background: var(--red); box-shadow: 0 0 0 3px rgba(240,120,120,0.2); }
@@ -1036,20 +1039,16 @@
           <div class="section-title">Passwords</div>
           <div class="section-sub">Keep your logins organized and easy to find</div>
         </div>
-        <button class="btn btn-primary" onclick="openModal('addPasswordModal')"><i data-lucide="plus" class="nb-icon"></i>Add Login</button>
+        <button id="pwAddBtn" class="btn btn-primary" style="display:none;" onclick="openModal('addPasswordModal')"><i data-lucide="plus" class="nb-icon"></i>Add Login</button>
       </div>
 
-      <!-- Warning banner -->
-      <div style="background:rgba(245,199,126,0.08); border:1px solid rgba(245,199,126,0.25); border-radius:12px; padding:12px 16px; margin-bottom:20px; display:flex; align-items:flex-start; gap:10px;">
-        <span style="font-size:16px;">⚠️</span>
-        <div style="font-size:12px; color:var(--gold); line-height:1.6;">Passwords here are <strong>not encrypted</strong>. Best for low-risk accounts (streaming, apps, loyalty cards). Avoid storing banking or email passwords here.</div>
+      <!-- Search & filter (hidden when vault locked) -->
+      <div id="pwControls" style="display:none;">
+        <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+          <input class="input" id="pwSearch" placeholder="🔍  Search by name or username…" oninput="renderPasswords()" style="max-width:300px;">
+        </div>
+        <div class="tag-filter" id="pwFilters"></div>
       </div>
-
-      <!-- Search & filter -->
-      <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
-        <input class="input" id="pwSearch" placeholder="🔍  Search by name or username…" oninput="renderPasswords()" style="max-width:300px;">
-      </div>
-      <div class="tag-filter" id="pwFilters"></div>
 
       <!-- Password grid -->
       <div id="passwordsList"></div>
@@ -1062,7 +1061,7 @@
           <div class="section-title">Government Accounts</div>
           <div class="section-sub">All your IDs, numbers, and account details in one place</div>
         </div>
-        <button class="btn btn-primary" onclick="openModal('addGovModal')"><i data-lucide="plus" class="nb-icon"></i>Add Account</button>
+        <button id="govAddBtn" class="btn btn-primary" style="display:none;" onclick="openModal('addGovModal')"><i data-lucide="plus" class="nb-icon"></i>Add Account</button>
       </div>
 
       <!-- Quick reference cards (pre-built PH gov accounts) -->
@@ -1992,7 +1991,8 @@ let db = {
   budget: { incomes: [], categoryLimits: {}, savingsAllocations: {} },
   renovations: [],
   medical: { appointments: [], vaccines: [], docs: [] },
-  school: { childName: '', schedule: [], extracurriculars: [], events: [] }
+  school: { childName: '', schedule: [], extracurriculars: [], events: [] },
+  vaultSalt: null, vaultVerify: null
 };
 let selectedBillColor = '#f0a5c0';
 let selectedBillFreq = 'monthly';
@@ -2105,6 +2105,8 @@ async function load() {
     if (!db.school.schedule) db.school.schedule = [];
     if (!db.school.extracurriculars) db.school.extracurriculars = [];
     if (!db.school.events) db.school.events = [];
+    if (db.vaultSalt === undefined) db.vaultSalt = null;
+    if (db.vaultVerify === undefined) db.vaultVerify = null;
   } catch(e) {}
 
   if (!SCRIPT_URL) { setSyncStatus('error', 'Not connected — click ⚙️ Setup'); return; }
@@ -2129,6 +2131,8 @@ async function load() {
     if (!db.school.schedule) db.school.schedule = [];
     if (!db.school.extracurriculars) db.school.extracurriculars = [];
     if (!db.school.events) db.school.events = [];
+    if (db.vaultSalt === undefined) db.vaultSalt = null;
+    if (db.vaultVerify === undefined) db.vaultVerify = null;
       localStorage.setItem('nestkeeper_v2', JSON.stringify(db));
       setSyncStatus('ok', 'Loaded from Google Sheets');
       setTimeout(() => setSyncStatus('idle', 'Connected'), 2500);
@@ -3874,20 +3878,23 @@ const GOV_CAT_COLORS = {
   '🌐 Other': 'rgba(255,255,255,0.3)'
 };
 
-function saveGovAccount() {
+async function saveGovAccount() {
+  if (!isVaultUnlocked()) { toast('🔒 Unlock vault first'); return; }
   const name = document.getElementById('govName').value.trim();
   if (!name) { alert('Please enter an account or agency name'); return; }
+  const existing = editingId ? db.govaccounts.find(a => a.id === editingId) : null;
+  const passVal = document.getElementById('govPass').value;
+  const pinVal = document.getElementById('govPin').value;
   const acc = {
-    id: editingId || uid(),
-    name,
+    id: editingId || uid(), name,
     icon: document.getElementById('govIcon').value.trim() || '🏛️',
     cat: document.getElementById('govCat').value,
     idNum: document.getElementById('govIdNum').value.trim(),
     idNum2: document.getElementById('govIdNum2').value.trim(),
     url: document.getElementById('govUrl').value.trim(),
     user: document.getElementById('govUser').value.trim(),
-    pass: document.getElementById('govPass').value,
-    pin: document.getElementById('govPin').value,
+    encPass: passVal ? await encryptField(passVal, vaultKey) : (existing ? existing.encPass : null),
+    encPin: pinVal ? await encryptField(pinVal, vaultKey) : (existing ? existing.encPin : null),
     expiry: document.getElementById('govExpiry').value,
     renewal: document.getElementById('govRenewal').value,
     address: document.getElementById('govAddress').value.trim(),
@@ -3904,6 +3911,7 @@ function saveGovAccount() {
   });
   editingId = null;
   renderGovAccounts(); toast('✓ Account saved!');
+  resetVaultTimer();
 }
 
 function getExpiryStatus(dateStr) {
@@ -3919,6 +3927,13 @@ function getExpiryStatus(dateStr) {
 function renderGovAccounts() {
   if (!db.govaccounts) db.govaccounts = [];
   const listEl = document.getElementById('govAccountsList');
+  const govCtrl = document.getElementById('govFilters');
+  const govAddBtn = document.getElementById('govAddBtn');
+  const show = (el, v) => { if (el) el.style.display = v ? '' : 'none'; };
+  if (!currentUser) { show(govCtrl, false); show(govAddBtn, false); listEl.innerHTML = vaultGuestScreen(); return; }
+  if (!hasVaultPin() || !isVaultUnlocked()) { show(govCtrl, false); show(govAddBtn, false); listEl.innerHTML = vaultLockScreen(); return; }
+  show(govCtrl, true); show(govAddBtn, true);
+  resetVaultTimer();
   const filtersEl = document.getElementById('govFilters');
 
   const cats = [...new Set(db.govaccounts.map(a => a.cat))];
@@ -3991,20 +4006,20 @@ function renderGovAccounts() {
             <button class="copy-btn" onclick="copyToClipboard('${acc.user.replace(/'/g,"\\'")}','Username')" title="Copy">${lc('copy')}</button>
           </div>` : ''}
 
-          ${acc.pass ? `
+          ${acc.encPass ? `
           <div class="gov-field">
             <span class="gov-field-label">Password</span>
             <span class="gov-field-value pw-masked" id="gpass-${acc.id}">••••••••</span>
-            <button class="eye-btn" onclick="toggleField('gpass-${acc.id}','${acc.pass.replace(/'/g,"\\'")}',this)">${lc('eye')}</button>
-            <button class="copy-btn" onclick="copyToClipboard('${acc.pass.replace(/'/g,"\\'")}','Password')">${lc('copy')}</button>
+            <button class="eye-btn" onclick="revealField('gov','${acc.id}','pass','gpass-${acc.id}',this)">${lc('eye')}</button>
+            <button class="copy-btn" onclick="copyDecryptedField('gov','${acc.id}','pass')">${lc('copy')}</button>
           </div>` : ''}
 
-          ${acc.pin ? `
+          ${acc.encPin ? `
           <div class="gov-field">
             <span class="gov-field-label">PIN</span>
             <span class="gov-field-value pw-masked" id="gpin-${acc.id}">••••</span>
-            <button class="eye-btn" onclick="toggleField('gpin-${acc.id}','${acc.pin.replace(/'/g,"\\'")}',this)">${lc('eye')}</button>
-            <button class="copy-btn" onclick="copyToClipboard('${acc.pin.replace(/'/g,"\\'")}','PIN')">${lc('copy')}</button>
+            <button class="eye-btn" onclick="revealField('gov','${acc.id}','pin','gpin-${acc.id}',this)">${lc('eye')}</button>
+            <button class="copy-btn" onclick="copyDecryptedField('gov','${acc.id}','pin')">${lc('copy')}</button>
           </div>` : ''}
 
           ${acc.address ? `
@@ -4030,7 +4045,7 @@ function renderGovAccounts() {
         </div>
       </div>
     `;
-  }).join('')}</div>${paginationHTML('passwords', pwP, pwTotal, pwTotalCount)}`;
+  }).join('')}</div>${paginationHTML('govaccounts', govP, govTotalPages, govTotal)}`;
 }
 
 function filterGov(cat, el) {
@@ -4041,17 +4056,18 @@ function filterGov(cat, el) {
   renderGovAccounts();
 }
 
-function editGovAccount(id) {
+async function editGovAccount(id) {
+  if (!isVaultUnlocked()) { toast('🔒 Unlock vault first'); return; }
   const acc = db.govaccounts.find(a => a.id === id);
   if (!acc) return;
   editingId = id;
   document.getElementById('govModalTitle').textContent = '✏️ Edit Account';
-  const fields = { govName:'name', govIcon:'icon', govCat:'cat', govIdNum:'idNum', govIdNum2:'idNum2', govUrl:'url', govUser:'user', govPass:'pass', govPin:'pin', govExpiry:'expiry', govRenewal:'renewal', govAddress:'address', govContact:'contact', govNotes:'notes' };
-  Object.entries(fields).forEach(([elId, key]) => {
-    const el = document.getElementById(elId);
-    if (el) el.value = acc[key] || '';
-  });
+  const fields = { govName:'name', govIcon:'icon', govCat:'cat', govIdNum:'idNum', govIdNum2:'idNum2', govUrl:'url', govUser:'user', govExpiry:'expiry', govRenewal:'renewal', govAddress:'address', govContact:'contact', govNotes:'notes' };
+  Object.entries(fields).forEach(([elId, key]) => { const el = document.getElementById(elId); if (el) el.value = acc[key] || ''; });
+  document.getElementById('govPass').value = acc.encPass ? await decryptField(acc.encPass, vaultKey) : '';
+  document.getElementById('govPin').value = acc.encPin ? await decryptField(acc.encPin, vaultKey) : '';
   openModal('addGovModal');
+  resetVaultTimer();
 }
 
 function deleteGovAccount(id) {
@@ -4060,21 +4076,208 @@ function deleteGovAccount(id) {
   save(); renderGovAccounts(); toast('🗑 Deleted');
 }
 
+// ========== VAULT ENCRYPTION ==========
+let vaultKey = null;
+let vaultLockTimer = null;
+const VAULT_TIMEOUT_MS = 5 * 60 * 1000;
+
+function isVaultUnlocked() { return vaultKey !== null; }
+function hasVaultPin() { return !!(db.vaultSalt && db.vaultVerify); }
+
+function resetVaultTimer() {
+  clearTimeout(vaultLockTimer);
+  vaultLockTimer = setTimeout(() => { lockVault(); }, VAULT_TIMEOUT_MS);
+}
+
+function lockVault() {
+  vaultKey = null;
+  clearTimeout(vaultLockTimer);
+  const t = location.hash.slice(1);
+  if (t === 'passwords') renderPasswords();
+  if (t === 'govaccounts') renderGovAccounts();
+  toast('🔒 Vault locked');
+}
+
+async function deriveVaultKey(pin, saltB64) {
+  const salt = Uint8Array.from(atob(saltB64), c => c.charCodeAt(0));
+  const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(pin), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 200000, hash: 'SHA-256' },
+    km, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+  );
+}
+
+async function encryptField(text, key) {
+  if (!text) return null;
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(text));
+  return { iv: btoa(String.fromCharCode(...iv)), ct: btoa(String.fromCharCode(...new Uint8Array(ct))) };
+}
+
+async function decryptField(enc, key) {
+  if (!enc) return '';
+  const iv = Uint8Array.from(atob(enc.iv), c => c.charCodeAt(0));
+  const ct = Uint8Array.from(atob(enc.ct), c => c.charCodeAt(0));
+  const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+  return new TextDecoder().decode(plain);
+}
+
+async function submitVaultSetup() {
+  const pin = (document.getElementById('vaultNewPin') || {}).value || '';
+  const confirm = (document.getElementById('vaultConfirmPin') || {}).value || '';
+  const errEl = document.getElementById('vaultSetupErr');
+  if (pin.length < 4) { if (errEl) errEl.textContent = 'PIN must be at least 4 characters.'; return; }
+  if (pin !== confirm) { if (errEl) errEl.textContent = 'PINs do not match.'; return; }
+  const saltBytes = crypto.getRandomValues(new Uint8Array(16));
+  const saltB64 = btoa(String.fromCharCode(...saltBytes));
+  const key = await deriveVaultKey(pin, saltB64);
+  const verify = await encryptField('nestkeeper-vault-ok', key);
+  db.vaultSalt = saltB64;
+  db.vaultVerify = verify;
+  vaultKey = key;
+  await migrateExistingToVault(key);
+  resetVaultTimer();
+  save();
+  renderPasswords();
+  toast('🔐 Vault PIN set — passwords are now encrypted!');
+}
+
+async function attemptVaultUnlock() {
+  const pin = (document.getElementById('vaultPinInput') || {}).value || '';
+  const errEl = document.getElementById('vaultUnlockErr');
+  if (!pin) return;
+  try {
+    const key = await deriveVaultKey(pin, db.vaultSalt);
+    const test = await decryptField(db.vaultVerify, key);
+    if (test === 'nestkeeper-vault-ok') {
+      vaultKey = key;
+      resetVaultTimer();
+      renderPasswords();
+      renderGovAccounts();
+    } else {
+      if (errEl) errEl.textContent = 'Incorrect PIN. Try again.';
+    }
+  } catch(e) {
+    if (errEl) errEl.textContent = 'Incorrect PIN. Try again.';
+  }
+}
+
+async function migrateExistingToVault(key) {
+  for (const pw of db.passwords) {
+    if (pw.pass !== undefined && !pw.encPass) { pw.encPass = await encryptField(pw.pass, key); delete pw.pass; }
+    if (pw.pin !== undefined && !pw.encPin) { pw.encPin = await encryptField(pw.pin, key); delete pw.pin; }
+  }
+  for (const acc of db.govaccounts) {
+    if (acc.pass !== undefined && !acc.encPass) { acc.encPass = await encryptField(acc.pass, key); delete acc.pass; }
+    if (acc.pin !== undefined && !acc.encPin) { acc.encPin = await encryptField(acc.pin, key); delete acc.pin; }
+  }
+}
+
+async function copyDecryptedField(type, id, field) {
+  if (!isVaultUnlocked()) { toast('🔒 Unlock the vault first'); return; }
+  const arr = type === 'pw' ? db.passwords : db.govaccounts;
+  const record = arr.find(r => r.id === id);
+  if (!record) return;
+  const enc = field === 'pass' ? record.encPass : record.encPin;
+  if (!enc) { toast('Nothing to copy'); return; }
+  try {
+    const text = await decryptField(enc, vaultKey);
+    await navigator.clipboard.writeText(text).catch(() => {
+      const ta = document.createElement('textarea'); ta.value = text;
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    });
+    toast('✓ Copied!');
+    resetVaultTimer();
+  } catch(e) { toast('⚠️ Failed to decrypt'); }
+}
+
+async function revealField(type, id, field, elId, btn) {
+  if (!isVaultUnlocked()) { toast('🔒 Unlock the vault first'); return; }
+  const arr = type === 'pw' ? db.passwords : db.govaccounts;
+  const record = arr.find(r => r.id === id);
+  if (!record) return;
+  const enc = field === 'pass' ? record.encPass : record.encPin;
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (el.dataset.revealed === 'true') {
+    el.textContent = field === 'pin' ? '••••' : '••••••••';
+    el.dataset.revealed = 'false';
+    el.classList.add('pw-masked');
+    if (btn) btn.style.color = '';
+    return;
+  }
+  if (!enc) return;
+  try {
+    const text = await decryptField(enc, vaultKey);
+    el.textContent = text;
+    el.dataset.revealed = 'true';
+    el.classList.remove('pw-masked');
+    if (btn) btn.style.color = 'var(--pink)';
+    resetVaultTimer();
+    setTimeout(() => {
+      if (el.dataset.revealed === 'true') {
+        el.textContent = field === 'pin' ? '••••' : '••••••••';
+        el.dataset.revealed = 'false';
+        el.classList.add('pw-masked');
+        if (btn) btn.style.color = '';
+      }
+    }, 15000);
+  } catch(e) { toast('⚠️ Failed to decrypt'); }
+}
+
+function vaultLockScreen() {
+  return `<div class="vault-lock-screen">
+    <div style="font-size:48px; margin-bottom:14px;">🔒</div>
+    <div style="font-size:18px; font-weight:700; margin-bottom:6px;">Vault Locked</div>
+    <div style="font-size:13px; color:var(--text2); margin-bottom:28px; line-height:1.5;">Enter your vault PIN to access your passwords</div>
+    <div style="max-width:260px; margin:0 auto; display:flex; flex-direction:column; gap:10px;">
+      <input class="input vault-pin-input" id="vaultPinInput" type="password" inputmode="numeric" placeholder="Enter PIN" onkeydown="if(event.key==='Enter')attemptVaultUnlock()">
+      <button class="btn btn-primary" style="width:100%;" onclick="attemptVaultUnlock()">Unlock Vault</button>
+      <div id="vaultUnlockErr" style="color:var(--red); font-size:12px; min-height:16px;"></div>
+    </div>
+  </div>`;
+}
+
+function vaultSetupScreen() {
+  return `<div class="vault-lock-screen">
+    <div style="font-size:48px; margin-bottom:14px;">🔐</div>
+    <div style="font-size:18px; font-weight:700; margin-bottom:6px;">Set Up Vault Encryption</div>
+    <div style="font-size:13px; color:var(--text2); margin-bottom:28px; line-height:1.5;">Create a PIN to encrypt your passwords with AES-256.<br>This PIN is never stored — if lost, passwords cannot be recovered.</div>
+    <div style="max-width:260px; margin:0 auto; display:flex; flex-direction:column; gap:10px;">
+      <input class="input vault-pin-input" id="vaultNewPin" type="password" inputmode="numeric" placeholder="Create PIN">
+      <input class="input vault-pin-input" id="vaultConfirmPin" type="password" inputmode="numeric" placeholder="Confirm PIN" onkeydown="if(event.key==='Enter')submitVaultSetup()">
+      <button class="btn btn-primary" style="width:100%;" onclick="submitVaultSetup()">Set PIN &amp; Encrypt</button>
+      <div id="vaultSetupErr" style="color:var(--red); font-size:12px; min-height:16px;"></div>
+    </div>
+  </div>`;
+}
+
+function vaultGuestScreen() {
+  return `<div class="vault-lock-screen">
+    <div style="font-size:48px; margin-bottom:14px;">🔒</div>
+    <div style="font-size:18px; font-weight:700; margin-bottom:6px;">Sign In Required</div>
+    <div style="font-size:13px; color:var(--text2); margin-bottom:28px; line-height:1.5;">Passwords and accounts are only accessible to signed-in users.</div>
+  </div>`;
+}
+
 // ========== PASSWORDS ==========
 let currentPwFilter = 'all';
 
-function savePassword() {
+async function savePassword() {
+  if (!isVaultUnlocked()) { toast('🔒 Unlock vault first'); return; }
   const name = document.getElementById('pwName').value.trim();
   if (!name) { alert('Please enter a site or app name'); return; }
+  const existing = editingId ? db.passwords.find(p => p.id === editingId) : null;
+  const passVal = document.getElementById('pwPass').value;
+  const pinVal = document.getElementById('pwPin').value;
   const pw = {
-    id: editingId || uid(),
-    name,
+    id: editingId || uid(), name,
     icon: document.getElementById('pwIcon').value.trim() || '🌐',
     cat: document.getElementById('pwCat').value,
     url: document.getElementById('pwUrl').value.trim(),
     user: document.getElementById('pwUser').value.trim(),
-    pass: document.getElementById('pwPass').value,
-    pin: document.getElementById('pwPin').value,
+    encPass: passVal ? await encryptField(passVal, vaultKey) : (existing ? existing.encPass : null),
+    encPin: pinVal ? await encryptField(pinVal, vaultKey) : (existing ? existing.encPin : null),
     recovery: document.getElementById('pwRecovery').value.trim(),
     notes: document.getElementById('pwNotes').value.trim(),
     updated: new Date().toLocaleDateString()
@@ -4088,16 +4291,34 @@ function savePassword() {
   });
   editingId = null;
   renderPasswords(); toast('✓ Login saved!');
+  resetVaultTimer();
 }
 
 function renderPasswords() {
-  if (!db.passwords) db.passwords = [];
   const listEl = document.getElementById('passwordsList');
+  const ctrl = document.getElementById('pwControls');
+  const addBtn = document.getElementById('pwAddBtn');
+  const show = (el, v) => { if (el) el.style.display = v ? '' : 'none'; };
+
+  if (!currentUser) {
+    show(ctrl, false); show(addBtn, false);
+    listEl.innerHTML = vaultGuestScreen(); return;
+  }
+  if (!hasVaultPin()) {
+    show(ctrl, false); show(addBtn, false);
+    listEl.innerHTML = vaultSetupScreen(); return;
+  }
+  if (!isVaultUnlocked()) {
+    show(ctrl, false); show(addBtn, false);
+    listEl.innerHTML = vaultLockScreen(); return;
+  }
+  show(ctrl, true); show(addBtn, true);
+  resetVaultTimer();
+
+  if (!db.passwords) db.passwords = [];
   const search = (document.getElementById('pwSearch').value || '').toLowerCase();
-  // Reset to page 1 when search changes
   if (renderPasswords._lastSearch !== search) { pages.passwords = 1; renderPasswords._lastSearch = search; }
 
-  // Category filters
   const cats = [...new Set(db.passwords.map(p => p.cat))];
   const filtersEl = document.getElementById('pwFilters');
   filtersEl.innerHTML = `<span class="tag-f ${currentPwFilter==='all'?'active':''}" onclick="filterPasswords('all',this)">All (${db.passwords.length})</span>` +
@@ -4107,14 +4328,14 @@ function renderPasswords() {
   if (search) filtered = filtered.filter(p => p.name.toLowerCase().includes(search) || (p.user||'').toLowerCase().includes(search));
 
   if (!filtered.length) {
-    listEl.innerHTML = `<div class="empty"><div class="empty-icon">🔐</div><div class="empty-text">${db.passwords.length ? 'No results found' : 'No logins yet. Add your first one!'}</div></div>`;
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">🔐</div><div class="empty-text">${db.passwords.length ? 'No results found' : 'No logins saved yet.'}</div></div>`;
     return;
   }
 
   const { slice: pwSlice, p: pwP, totalPages: pwTotal, total: pwTotalCount } = paginate(filtered, pages.passwords);
   listEl.innerHTML = `<div class="pw-grid">${pwSlice.map(pw => {
-    const hasPass = !!pw.pass;
-    const hasPin = !!pw.pin;
+    const hasPass = !!pw.encPass;
+    const hasPin = !!pw.encPin;
     return `
       <div class="pw-card">
         <div class="pw-card-header">
@@ -4129,62 +4350,49 @@ function renderPasswords() {
             <button class="del-btn" onclick="deletePassword('${pw.id}')" title="Delete">${lc('trash-2')}</button>
           </div>
         </div>
-
         ${pw.user ? `
         <div class="pw-field">
           <span class="pw-field-label">User</span>
           <span class="pw-field-value">${pw.user}</span>
-          <button class="copy-btn" onclick="copyToClipboard('${pw.user.replace(/'/g,"\\'")}', 'Username')" title="Copy">${lc('copy')}</button>
+          <button class="copy-btn" onclick="copyToClipboard('${pw.user.replace(/'/g,"\\'")}','Username')" title="Copy">${lc('copy')}</button>
         </div>` : ''}
-
         ${hasPass ? `
         <div class="pw-field">
           <span class="pw-field-label">Password</span>
           <span class="pw-field-value pw-masked" id="pass-${pw.id}">••••••••</span>
-          <button class="eye-btn" onclick="toggleField('pass-${pw.id}', '${pw.pass.replace(/'/g,"\\'")}', this)" title="Show/Hide">${lc('eye')}</button>
-          <button class="copy-btn" onclick="copyToClipboard('${pw.pass.replace(/'/g,"\\'")}', 'Password')" title="Copy">${lc('copy')}</button>
+          <button class="eye-btn" onclick="revealField('pw','${pw.id}','pass','pass-${pw.id}',this)" title="Show/Hide">${lc('eye')}</button>
+          <button class="copy-btn" onclick="copyDecryptedField('pw','${pw.id}','pass')" title="Copy">${lc('copy')}</button>
         </div>` : ''}
-
         ${hasPin ? `
         <div class="pw-field">
           <span class="pw-field-label">PIN</span>
           <span class="pw-field-value pw-masked" id="pin-${pw.id}">••••</span>
-          <button class="eye-btn" onclick="toggleField('pin-${pw.id}', '${pw.pin.replace(/'/g,"\\'")}', this)" title="Show/Hide">${lc('eye')}</button>
-          <button class="copy-btn" onclick="copyToClipboard('${pw.pin.replace(/'/g,"\\'")}', 'PIN')" title="Copy">${lc('copy')}</button>
+          <button class="eye-btn" onclick="revealField('pw','${pw.id}','pin','pin-${pw.id}',this)" title="Show/Hide">${lc('eye')}</button>
+          <button class="copy-btn" onclick="copyDecryptedField('pw','${pw.id}','pin')" title="Copy">${lc('copy')}</button>
         </div>` : ''}
-
         ${pw.recovery ? `
         <div class="pw-field">
           <span class="pw-field-label">Recovery</span>
           <span class="pw-field-value" style="font-size:12px;">${pw.recovery}</span>
-          <button class="copy-btn" onclick="copyToClipboard('${pw.recovery.replace(/'/g,"\\'")}', 'Recovery email')" title="Copy">${lc('copy')}</button>
+          <button class="copy-btn" onclick="copyToClipboard('${pw.recovery.replace(/'/g,"\\'")}','Recovery email')" title="Copy">${lc('copy')}</button>
         </div>` : ''}
-
         ${pw.notes ? `
         <div class="pw-field">
           <span class="pw-field-label">Notes</span>
           <span class="pw-field-value" style="font-size:12px; color:var(--text3);">${pw.notes}</span>
         </div>` : ''}
-
         <div style="font-size:10px; color:var(--text3); text-align:right; margin-top:8px;">Updated ${pw.updated||''}</div>
       </div>
     `;
-  }).join('')}</div>${paginationHTML('govaccounts', govP, govTotalPages, govTotal)}`;
+  }).join('')}</div>${paginationHTML('passwords', pwP, pwTotal, pwTotalCount)}`;
 }
 
 function toggleField(elId, value, btn) {
   const el = document.getElementById(elId);
   if (!el) return;
   const isHidden = el.classList.contains('pw-masked');
-  if (isHidden) {
-    el.textContent = value;
-    el.classList.remove('pw-masked');
-    btn.style.color = 'var(--pink)';
-  } else {
-    el.textContent = elId.includes('pin') ? '••••' : '••••••••';
-    el.classList.add('pw-masked');
-    btn.style.color = '';
-  }
+  if (isHidden) { el.textContent = value; el.classList.remove('pw-masked'); btn.style.color = 'var(--pink)'; }
+  else { el.textContent = elId.includes('pin') ? '••••' : '••••••••'; el.classList.add('pw-masked'); btn.style.color = ''; }
 }
 
 function togglePwVisible(inputId, btn) {
@@ -4210,21 +4418,23 @@ function filterPasswords(cat, el) {
   renderPasswords();
 }
 
-function editPassword(id) {
+async function editPassword(id) {
+  if (!isVaultUnlocked()) { toast('🔒 Unlock vault first'); return; }
   const pw = db.passwords.find(p => p.id === id);
   if (!pw) return;
   editingId = id;
-  document.getElementById('pwModalTitle').textContent = '✏️ Edit Login';
   document.getElementById('pwName').value = pw.name;
-  document.getElementById('pwIcon').value = pw.icon;
-  document.getElementById('pwCat').value = pw.cat;
+  document.getElementById('pwIcon').value = pw.icon || '🌐';
+  document.getElementById('pwCat').value = pw.cat || '';
   document.getElementById('pwUrl').value = pw.url || '';
   document.getElementById('pwUser').value = pw.user || '';
-  document.getElementById('pwPass').value = pw.pass || '';
-  document.getElementById('pwPin').value = pw.pin || '';
   document.getElementById('pwRecovery').value = pw.recovery || '';
   document.getElementById('pwNotes').value = pw.notes || '';
+  document.getElementById('pwPass').value = pw.encPass ? await decryptField(pw.encPass, vaultKey) : '';
+  document.getElementById('pwPin').value = pw.encPin ? await decryptField(pw.encPin, vaultKey) : '';
+  document.getElementById('pwModalTitle').textContent = '✏️ Edit Login';
   openModal('addPasswordModal');
+  resetVaultTimer();
 }
 
 function deletePassword(id) {
