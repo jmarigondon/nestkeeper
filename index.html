@@ -959,11 +959,6 @@
         </div>
         <button class="btn btn-primary" onclick="openModal('addTaskModal')"><i data-lucide="plus" class="nb-icon"></i>Add Task</button>
       </div>
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px; font-size:12px; color:var(--text3);">
-        <span>Sync new tasks to Google Tasks:</span>
-        <button id="gTasksToggleBtn" onclick="toggleGTasksSync()" style="padding:3px 12px; border-radius:20px; border:1px solid var(--glass-border); background:transparent; font-size:12px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; color:var(--text2); transition:all 0.18s;">Off</button>
-        <span id="gTasksSyncStatus" style="font-size:11px; color:var(--text3);"></span>
-      </div>
       <div class="kanban">
         <div class="kanban-col">
           <div class="kanban-col-title"><span class="dot" style="background:var(--text3)"></span>To Do</div>
@@ -1589,7 +1584,7 @@
 <div class="modal-overlay" id="addTaskModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">✅ Add Task</div>
+      <div class="modal-title" id="taskModalTitle">✅ Add Task</div>
       <button class="close-btn" onclick="closeModal('addTaskModal')">×</button>
     </div>
     <div class="form-row">
@@ -3051,6 +3046,18 @@ function buildApptGCalUrl(a) {
   return url;
 }
 
+function buildTaskGCalUrl(task) {
+  const d = task.due.replace(/-/g,'');
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(task.title)}&dates=${d}/${d}&details=${encodeURIComponent(task.desc||'')}`;
+}
+
+function syncTaskToGCal(id) {
+  const t = db.tasks.find(t => t.id === id);
+  if (!t || !t.due) return;
+  window.open(buildTaskGCalUrl(t), '_blank');
+  if (!t.gcalSynced) { t.gcalSynced = true; save(); renderTasks(); }
+}
+
 function syncEventToGCal(id) {
   const ev = db.events.find(e => e.id === id);
   if (!ev) return;
@@ -3082,26 +3089,40 @@ function deleteEvent(id) {
 function saveTask() {
   const title = document.getElementById('taskTitle').value.trim();
   if (!title) { alert('Please enter a task title'); return; }
-  const isNew = !editingId;
+  const existing = editingId ? db.tasks.find(t => t.id === editingId) : null;
+  const newDue = document.getElementById('taskDue').value;
   const task = {
     id: editingId || uid(), title,
     desc: document.getElementById('taskDesc').value.trim(),
     status: document.getElementById('taskStatus').value,
     priority: document.getElementById('taskPriority').value,
-    due: document.getElementById('taskDue').value,
-    created: new Date().toISOString()
+    due: newDue,
+    created: existing ? existing.created : new Date().toISOString(),
+    gcalSynced: existing && existing.gcalSynced && existing.due === newDue ? true : false
   };
   if (editingId) db.tasks = db.tasks.map(t => t.id === editingId ? task : t);
   else db.tasks.push(task);
   save(); closeModal('addTaskModal');
   ['taskTitle','taskDesc','taskDue'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('taskModalTitle').textContent = '✅ Add Task';
   editingId = null;
   renderTasks(); toast('✓ Task saved!');
-  if (isNew && gTasksSyncEnabled()) syncTaskToGoogle(task);
+}
+
+function editTask(id) {
+  const t = db.tasks.find(t => t.id === id);
+  if (!t) return;
+  editingId = id;
+  document.getElementById('taskTitle').value = t.title;
+  document.getElementById('taskDesc').value = t.desc || '';
+  document.getElementById('taskStatus').value = t.status || 'todo';
+  document.getElementById('taskPriority').value = t.priority || 'med';
+  document.getElementById('taskDue').value = t.due || '';
+  document.getElementById('taskModalTitle').textContent = '✅ Edit Task';
+  openModal('addTaskModal');
 }
 
 function renderTasks() {
-  updateGTasksToggleUI();
   const cols = { todo: document.getElementById('col-todo'), inprogress: document.getElementById('col-inprogress'), done: document.getElementById('col-done') };
   Object.values(cols).forEach(c => c.innerHTML = '');
 
@@ -3125,8 +3146,10 @@ function renderTasks() {
         <span class="priority-badge ${pColors[task.priority]}">${pLabels[task.priority]}</span>
         ${task.due ? `<span style="font-size:10px; color:var(--text3)">📅 ${formatDate(task.due)}</span>` : ''}
       </div>
+      ${task.due ? `<div style="margin-top:6px;">${task.gcalSynced ? `<button onclick="syncTaskToGCal('${task.id}')" style="font-size:11px; color:var(--green); background:none; border:none; padding:0; cursor:pointer; font-family:'Inter',sans-serif;">✓ Added to Google Calendar</button>` : `<button onclick="syncTaskToGCal('${task.id}')" style="font-size:11px; color:var(--teal); background:none; border:none; padding:0; cursor:pointer; font-family:'Inter',sans-serif; text-decoration:underline;">📆 Add to Google Calendar</button>`}</div>` : ''}
       <div style="display:flex; gap:4px; margin-top:8px; justify-content:flex-end; align-items:center;">
         ${statOrder[task.status||'todo'].map(s => `<button class="task-move-btn" onclick="moveTask('${task.id}','${s}')">→ ${s==='todo'?'To Do':s==='inprogress'?'In Progress':'Done'}</button>`).join('')}
+        <button class="edit-btn" onclick="editTask('${task.id}')">${lc('pencil')}</button>
         <button class="del-btn" style="font-size:13px;" onclick="deleteTask('${task.id}')">${lc('trash-2')}</button>
       </div>
     `;
@@ -3139,7 +3162,6 @@ function moveTask(id, status) {
   if (!t) return;
   t.status = status;
   save(); renderTasks(); toast('✓ Moved!');
-  if (t.googleTaskId) updateGoogleTaskStatus(t, status === 'done' ? 'completed' : 'needsAction');
 }
 
 function deleteTask(id) {
@@ -5281,7 +5303,6 @@ function showApp() {
     if (profile) profile.style.display = 'flex';
     if (avatar && currentUser.picture) { avatar.src = currentUser.picture; avatar.style.display = ''; }
     if (nameEl) nameEl.textContent = currentUser.name ? currentUser.name.split(' ')[0] : currentUser.email;
-    initTasksTokenClient();
   }
   loadAppData();
 }
@@ -5368,125 +5389,6 @@ function lc(name, size = 14) {
     copy:     '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
   };
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p[name]||''}</svg>`;
-}
-
-// ========== GOOGLE TASKS INTEGRATION ==========
-let gTasksTokenClient = null;
-let gTasksAccessToken = null;
-
-function gTasksSyncEnabled() {
-  return localStorage.getItem('nestkeeper_gtasks_sync') === 'true';
-}
-
-function toggleGTasksSync() {
-  const nowEnabled = !gTasksSyncEnabled();
-  localStorage.setItem('nestkeeper_gtasks_sync', nowEnabled ? 'true' : 'false');
-  updateGTasksToggleUI();
-  if (nowEnabled) {
-    toast('📋 Google Tasks sync ON — new tasks will sync. Make sure your Google Cloud OAuth is set up.');
-  } else {
-    gTasksAccessToken = null;
-    toast('Google Tasks sync OFF');
-  }
-}
-
-function updateGTasksToggleUI() {
-  const btn = document.getElementById('gTasksToggleBtn');
-  const status = document.getElementById('gTasksSyncStatus');
-  if (!btn) return;
-  const on = gTasksSyncEnabled();
-  btn.textContent = on ? 'On' : 'Off';
-  btn.style.background = on ? 'rgba(125,210,160,0.15)' : 'transparent';
-  btn.style.borderColor = on ? 'rgba(125,210,160,0.4)' : 'var(--glass-border)';
-  btn.style.color = on ? 'var(--green)' : 'var(--text2)';
-  if (status) status.textContent = on ? 'New tasks will be added to your Google Tasks list.' : '';
-}
-
-function initTasksTokenClient() {
-  if (!GOOGLE_CLIENT_ID) return;
-  const tryInit = (attempts) => {
-    if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
-      try {
-        gTasksTokenClient = google.accounts.oauth2.initTokenClient({
-          client_id: GOOGLE_CLIENT_ID,
-          scope: 'https://www.googleapis.com/auth/tasks',
-          callback: (r) => { if (r && !r.error) gTasksAccessToken = r.access_token; }
-        });
-      } catch(e) {}
-    } else if (attempts > 0) {
-      setTimeout(() => tryInit(attempts - 1), 400);
-    }
-  };
-  tryInit(10);
-}
-
-// Shared helper — resolves with a valid access token or null
-function getTasksToken() {
-  return new Promise((resolve) => {
-    if (!GOOGLE_CLIENT_ID || !currentUser) { resolve(null); return; }
-    if (!gTasksTokenClient) {
-      if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) { resolve(null); return; }
-      initTasksTokenClient();
-      if (!gTasksTokenClient) { resolve(null); return; }
-    }
-    if (gTasksAccessToken) { resolve(gTasksAccessToken); return; }
-    gTasksTokenClient.callback = (r) => {
-      if (r.error) { resolve(null); return; }
-      gTasksAccessToken = r.access_token;
-      resolve(r.access_token);
-    };
-    gTasksTokenClient.requestAccessToken({ prompt: '' });
-  });
-}
-
-async function syncTaskToGoogle(task) {
-  if (!currentUser) return;
-  const token = await getTasksToken();
-  if (!token) return;
-  try {
-    const body = { title: task.title, notes: task.desc || '', status: 'needsAction' };
-    if (task.due) body.due = new Date(task.due + 'T00:00:00').toISOString();
-    const res = await fetch('https://tasks.googleapis.com/tasks/v1/lists/@default/tasks', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      const msg = err.error?.message || '';
-      if (msg.includes('disabled') || msg.includes('not been used')) toast('⚠️ Enable the Google Tasks API in Cloud Console first');
-      else if (res.status === 401) { gTasksAccessToken = null; toast('⚠️ Google Tasks session expired — will retry next time'); }
-      else toast('⚠️ Google Tasks sync failed');
-      return;
-    }
-    const result = await res.json();
-    // Store the Google Task ID so we can update its status later
-    const t = db.tasks.find(t => t.id === task.id);
-    if (t) { t.googleTaskId = result.id; save(); }
-    toast('📋 Also added to Google Tasks!');
-  } catch(e) {
-    toast('⚠️ Google Tasks sync failed');
-  }
-}
-
-async function updateGoogleTaskStatus(task, googleStatus) {
-  if (!currentUser || !task.googleTaskId) return;
-  const token = await getTasksToken();
-  if (!token) return;
-  try {
-    const body = { status: googleStatus };
-    if (googleStatus === 'completed') body.completed = new Date().toISOString();
-    const res = await fetch(
-      `https://tasks.googleapis.com/tasks/v1/lists/@default/tasks/${encodeURIComponent(task.googleTaskId)}`,
-      {
-        method: 'PATCH',
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      }
-    );
-    if (!res.ok) { if (res.status === 401) gTasksAccessToken = null; return; }
-    toast(googleStatus === 'completed' ? '✅ Marked done in Google Tasks!' : '↩️ Reopened in Google Tasks');
-  } catch(e) {}
 }
 
 // ========== INIT ==========
