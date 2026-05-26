@@ -3014,7 +3014,9 @@ function renderEvents() {
           </div>
           ${ev.desc ? `<div style="font-size:12px; color:var(--text2); margin-top:4px;">${ev.desc}</div>` : ''}
           <div style="margin-top:6px;">
-            <a href="${gcalUrl}" target="_blank" style="font-size:11px; color:var(--teal); text-decoration:none;">📆 Add to Google Calendar</a>
+            ${ev.gcalSynced
+              ? `<button onclick="syncEventToGCal('${ev.id}')" style="font-size:11px; color:var(--green); background:none; border:none; padding:0; cursor:pointer; font-family:'Inter',sans-serif;">✓ Added to Google Calendar</button>`
+              : `<button onclick="syncEventToGCal('${ev.id}')" style="font-size:11px; color:var(--teal); background:none; border:none; padding:0; cursor:pointer; font-family:'Inter',sans-serif; text-decoration:underline;">📆 Add to Google Calendar</button>`}
           </div>
         </div>
         <div style="display:flex; gap:6px;">
@@ -3047,6 +3049,27 @@ function buildApptGCalUrl(a) {
   if (details) url += `&details=${encodeURIComponent(details)}`;
   if (a.clinic) url += `&location=${encodeURIComponent(a.clinic)}`;
   return url;
+}
+
+function syncEventToGCal(id) {
+  const ev = db.events.find(e => e.id === id);
+  if (!ev) return;
+  window.open(buildGCalUrl(ev), '_blank');
+  if (!ev.gcalSynced) { ev.gcalSynced = true; save(); renderEvents(); }
+}
+
+function syncApptToGCal(id) {
+  const a = db.medical.appointments.find(a => a.id === id);
+  if (!a) return;
+  window.open(buildApptGCalUrl(a), '_blank');
+  if (!a.gcalSynced) { a.gcalSynced = true; save(); renderAppointments(); }
+}
+
+function syncSchoolEventToGCal(id) {
+  const e = db.school.events.find(e => e.id === id);
+  if (!e) return;
+  window.open(buildGCalUrl(e), '_blank');
+  if (!e.gcalSynced) { e.gcalSynced = true; save(); renderSchoolEvents(); }
 }
 
 function deleteEvent(id) {
@@ -4377,7 +4400,7 @@ function renderAppointments() {
           ${a.reason ? `<div style="font-size:12px; color:var(--text2); margin-top:4px;">${a.reason}</div>` : ''}
           ${a.followUp ? `<div style="font-size:11px; color:var(--gold); margin-top:3px;">↪ Follow-up: ${formatDate(a.followUp)}</div>` : ''}
           ${a.notes ? `<div style="font-size:11px; color:var(--text3); margin-top:3px;">${a.notes}</div>` : ''}
-          ${a.status === 'upcoming' ? `<div style="margin-top:6px;"><a href="${buildApptGCalUrl(a)}" target="_blank" style="font-size:11px; color:var(--teal); text-decoration:none;">📆 Add to Google Calendar</a></div>` : ''}
+          ${a.status === 'upcoming' ? `<div style="margin-top:6px;">${a.gcalSynced ? `<button onclick="syncApptToGCal('${a.id}')" style="font-size:11px; color:var(--green); background:none; border:none; padding:0; cursor:pointer; font-family:'Inter',sans-serif;">✓ Added to Google Calendar</button>` : `<button onclick="syncApptToGCal('${a.id}')" style="font-size:11px; color:var(--teal); background:none; border:none; padding:0; cursor:pointer; font-family:'Inter',sans-serif; text-decoration:underline;">📆 Add to Google Calendar</button>`}</div>` : ''}
         </div>
         <div style="display:flex; gap:6px; align-items:center;">
           ${a.status === 'upcoming' ? `<button class="btn btn-ghost btn-sm" onclick="markApptDone('${a.id}')">✓ Done</button>` : `<span style="font-size:11px; color:${statusClr}; font-weight:600;">${statusDot} ${a.status}</span>`}
@@ -4765,7 +4788,7 @@ function renderSchoolEvents() {
           <span style="font-size:12px; color:var(--text3);">📅 ${formatDate(e.date)}</span>
         </div>
         ${e.desc ? `<div style="font-size:12px; color:var(--text2); margin-top:5px;">${e.desc}</div>` : ''}
-        ${diff >= 0 ? `<div style="margin-top:6px;"><a href="${buildGCalUrl(e)}" target="_blank" style="font-size:11px; color:var(--teal); text-decoration:none;">📆 Add to Google Calendar</a></div>` : ''}
+        ${diff >= 0 ? `<div style="margin-top:6px;">${e.gcalSynced ? `<button onclick="syncSchoolEventToGCal('${e.id}')" style="font-size:11px; color:var(--green); background:none; border:none; padding:0; cursor:pointer; font-family:'Inter',sans-serif;">✓ Added to Google Calendar</button>` : `<button onclick="syncSchoolEventToGCal('${e.id}')" style="font-size:11px; color:var(--teal); background:none; border:none; padding:0; cursor:pointer; font-family:'Inter',sans-serif; text-decoration:underline;">📆 Add to Google Calendar</button>`}</div>` : ''}
       </div>
       <div style="display:flex; gap:6px;">
         <button class="edit-btn" onclick="editSchoolEvent('${e.id}')">${lc('pencil')}</button>
