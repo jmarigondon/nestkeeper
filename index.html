@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'><defs><linearGradient id='g' x1='0' y1='0' x2='30' y2='30' gradientUnits='userSpaceOnUse'><stop stop-color='%23f0a5c0'/><stop offset='1' stop-color='%239480e8'/></linearGradient></defs><rect width='30' height='30' rx='8' fill='url(%23g)'/><path d='M15 6L24 13.5H22V24H17V18.5H13V24H8V13.5H6L15 6Z' fill='white'/></svg>">
-<title>Nestkeeper 🏡</title>
+<title>Nestkeeper</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -1120,7 +1120,7 @@
 <div class="modal-overlay" id="googleLoginModal">
   <div class="modal" style="max-width:580px;">
     <div class="modal-header">
-      <div class="modal-title">🔑 Set Up Google Login</div>
+      <div class="modal-title">Set Up Google Login</div>
       <button class="close-btn" onclick="closeModal('googleLoginModal')">×</button>
     </div>
 
@@ -1177,7 +1177,7 @@
 <div class="modal-overlay" id="addRenovationModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">🔨 Renovation Project</div>
+      <div class="modal-title">Renovation Project</div>
       <button class="close-btn" onclick="closeModal('addRenovationModal')">×</button>
     </div>
     <div class="form-row"><div><label>Project Name *</label><input class="input" id="renoName" placeholder="e.g. Kitchen Cabinet Repaint"></div></div>
@@ -1221,7 +1221,7 @@
 <div class="modal-overlay" id="addAppointmentModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">🩺 Medical Appointment</div>
+      <div class="modal-title">Medical Appointment</div>
       <button class="close-btn" onclick="closeModal('addAppointmentModal')">×</button>
     </div>
     <div class="form-row cols2">
@@ -1256,7 +1256,7 @@
 <div class="modal-overlay" id="addVaccineModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">💉 Vaccine Record</div>
+      <div class="modal-title">Vaccine Record</div>
       <button class="close-btn" onclick="closeModal('addVaccineModal')">×</button>
     </div>
     <div class="form-row cols2">
@@ -1279,7 +1279,7 @@
 <div class="modal-overlay" id="addMedDocModal">
   <div class="modal" style="max-width:520px;">
     <div class="modal-header">
-      <div class="modal-title" id="medDocModalTitle">📄 Medical Document</div>
+      <div class="modal-title" id="medDocModalTitle">Medical Document</div>
       <button class="close-btn" onclick="closeModal('addMedDocModal')">×</button>
     </div>
     <div class="form-row cols2">
@@ -1330,7 +1330,7 @@
 <div class="modal-overlay" id="addScheduleModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">📚 Class / Subject</div>
+      <div class="modal-title">Class / Subject</div>
       <button class="close-btn" onclick="closeModal('addScheduleModal')">×</button>
     </div>
     <div class="form-row cols2">
@@ -1394,14 +1394,14 @@
 <div class="modal-overlay" id="addSchoolEventModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">🎒 School Event</div>
+      <div class="modal-title">School Event</div>
       <button class="close-btn" onclick="closeModal('addSchoolEventModal')">×</button>
     </div>
     <div class="form-row cols2">
       <div><label>Title *</label><input class="input" id="schoolEvTitle" placeholder="e.g. Science Fair"></div>
       <div><label>Date *</label><input class="input" id="schoolEvDate" type="date"></div>
     </div>
-    <div class="form-row cols2">
+    <div class="form-row">
       <div><label>Type</label>
         <select class="select" id="schoolEvType">
           <option value="Exam">Exam / Test</option><option value="Quiz">Quiz</option>
@@ -1411,7 +1411,6 @@
           <option value="Other">Other</option>
         </select>
       </div>
-      <div><label>Emoji</label><input class="input" id="schoolEvEmoji" placeholder="🎓" maxlength="4"></div>
     </div>
     <div class="form-row"><div><label>Description</label><input class="input" id="schoolEvDesc" placeholder="Details, reminders…"></div></div>
     <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
@@ -1425,15 +1424,14 @@
 <div class="modal-overlay" id="addIncomeModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">💰 Income Source</div>
+      <div class="modal-title">Income Source</div>
       <button class="close-btn" onclick="closeModal('addIncomeModal')">×</button>
     </div>
     <div class="form-row">
       <div><label>Label *</label><input class="input" id="incomeName" placeholder="e.g. Jona — Salary"></div>
     </div>
-    <div class="form-row cols2">
+    <div class="form-row">
       <div><label>Monthly Amount (₱) *</label><input class="input" id="incomeAmount" type="number" placeholder="0.00" min="0"></div>
-      <div><label>Icon</label><input class="input" id="incomeIcon" placeholder="💼" maxlength="4"></div>
     </div>
     <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
       <button class="btn btn-ghost" onclick="closeModal('addIncomeModal')">Cancel</button>
@@ -1446,14 +1444,13 @@
 <div class="modal-overlay" id="addBillModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">💡 Add New Bill</div>
+      <div class="modal-title">Add New Bill</div>
       <button class="close-btn" onclick="closeModal('addBillModal')">×</button>
     </div>
     <div class="form-row">
       <div><label>Bill Name *</label><input class="input" id="billName" placeholder="e.g. Meralco, PLDT..."></div>
     </div>
-    <div class="form-row cols2">
-      <div><label>Icon / Emoji</label><input class="input" id="billIcon" placeholder="💡" maxlength="4"></div>
+    <div class="form-row">
       <div>
         <label>Color</label>
         <div class="color-dots" id="billColorPicker">
@@ -1519,7 +1516,7 @@
 <div class="modal-overlay" id="addExpenseModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">💸 Add Expense</div>
+      <div class="modal-title">Add Expense</div>
       <button class="close-btn" onclick="closeModal('addExpenseModal')">×</button>
     </div>
     <div class="form-row">
@@ -1550,7 +1547,7 @@
 <div class="modal-overlay" id="addEventModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">📅 Add Event</div>
+      <div class="modal-title">Add Event</div>
       <button class="close-btn" onclick="closeModal('addEventModal')">×</button>
     </div>
     <div class="form-row">
@@ -1563,8 +1560,7 @@
     <div class="form-row">
       <div><label>Description</label><textarea class="textarea" id="evDesc" placeholder="Any details..."></textarea></div>
     </div>
-    <div class="form-row cols2">
-      <div><label>Category / Emoji</label><input class="input" id="evEmoji" placeholder="🎂 Birthday, 💉 Checkup..."></div>
+    <div class="form-row">
       <div><label>Repeat?</label>
         <select class="select" id="evRepeat">
           <option value="none">No repeat</option>
@@ -1583,7 +1579,7 @@
 <div class="modal-overlay" id="addTaskModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title" id="taskModalTitle">✅ Add Task</div>
+      <div class="modal-title" id="taskModalTitle">Add Task</div>
       <button class="close-btn" onclick="closeModal('addTaskModal')">×</button>
     </div>
     <div class="form-row">
@@ -1602,9 +1598,9 @@
       </div>
       <div><label>Priority</label>
         <select class="select" id="taskPriority">
-          <option value="low">🟢 Low</option>
-          <option value="med">🟡 Medium</option>
-          <option value="high">🔴 High</option>
+          <option value="low">Low</option>
+          <option value="med">Medium</option>
+          <option value="high">High</option>
         </select>
       </div>
       <div><label>Due Date</label><input class="input" id="taskDue" type="date"></div>
@@ -1620,19 +1616,18 @@
 <div class="modal-overlay" id="addDocModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">📎 Add Document / Link</div>
+      <div class="modal-title">Add Document / Link</div>
       <button class="close-btn" onclick="closeModal('addDocModal')">×</button>
     </div>
     <div class="form-row">
       <div><label>Title *</label><input class="input" id="docTitle" placeholder="e.g. SSS Account, Pag-IBIG Card..."></div>
     </div>
-    <div class="form-row cols2">
-      <div><label>Icon / Emoji</label><input class="input" id="docIcon" placeholder="📄" maxlength="4"></div>
+    <div class="form-row">
       <div><label>Category</label>
         <select class="select" id="docCat">
-          <option>🏛️ Government</option><option>🏦 Banking</option><option>🏥 Health</option>
-          <option>🏠 Home</option><option>📚 School</option><option>💼 Work</option>
-          <option>🔐 Passwords</option><option>🌐 Other</option>
+          <option>Government</option><option>Banking</option><option>Health</option>
+          <option>Home</option><option>School</option><option>Work</option>
+          <option>Passwords</option><option>Other</option>
         </select>
       </div>
     </div>
@@ -1653,15 +1648,14 @@
 <div class="modal-overlay" id="addBookModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">📚 Add Book</div>
+      <div class="modal-title">Add Book</div>
       <button class="close-btn" onclick="closeModal('addBookModal')">×</button>
     </div>
     <div class="form-row">
       <div><label>Book Title *</label><input class="input" id="bookTitle" placeholder="e.g. Atomic Habits"></div>
     </div>
-    <div class="form-row cols2">
+    <div class="form-row">
       <div><label>Author</label><input class="input" id="bookAuthor" placeholder="James Clear"></div>
-      <div><label>Cover Emoji</label><input class="input" id="bookEmoji" placeholder="📗" maxlength="4"></div>
     </div>
     <div class="form-row cols2">
       <div><label>Status</label>
@@ -1697,14 +1691,13 @@
 <div class="modal-overlay" id="addSavingsModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title" id="savingsModalTitle">🐷 Add Savings Goal</div>
+      <div class="modal-title" id="savingsModalTitle">Add Savings Goal</div>
       <button class="close-btn" onclick="closeModal('addSavingsModal')">×</button>
     </div>
     <div class="form-row">
       <div><label>Goal Name *</label><input class="input" id="sgName" placeholder="e.g. Emergency Fund, Vacation, New Laptop..."></div>
     </div>
-    <div class="form-row cols2">
-      <div><label>Icon / Emoji</label><input class="input" id="sgIcon" placeholder="🎯" maxlength="4"></div>
+    <div class="form-row">
       <div>
         <label>Color</label>
         <div class="color-dots" id="sgColorPicker">
@@ -1735,14 +1728,14 @@
 <div class="modal-overlay" id="depositModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title" id="depositModalTitle">💰 Log Transaction</div>
+      <div class="modal-title" id="depositModalTitle">Log Transaction</div>
       <button class="close-btn" onclick="closeModal('depositModal')">×</button>
     </div>
     <div class="form-row cols2">
       <div><label>Type</label>
         <select class="select" id="depositType">
-          <option value="deposit">➕ Deposit / Add</option>
-          <option value="withdraw">➖ Withdraw / Use</option>
+          <option value="deposit">Deposit / Add</option>
+          <option value="withdraw">Withdraw / Use</option>
         </select>
       </div>
       <div><label>Amount (₱) *</label><input class="input" id="depositAmount" type="number" placeholder="0.00"></div>
@@ -1762,24 +1755,23 @@
 <div class="modal-overlay" id="addPasswordModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title" id="pwModalTitle">🔐 Add Login</div>
+      <div class="modal-title" id="pwModalTitle">Add Login</div>
       <button class="close-btn" onclick="closeModal('addPasswordModal')">×</button>
     </div>
     <div class="form-row">
       <div><label>Site / App Name *</label><input class="input" id="pwName" placeholder="e.g. Netflix, Gmail, Shopee…"></div>
     </div>
-    <div class="form-row cols2">
-      <div><label>Icon / Emoji</label><input class="input" id="pwIcon" placeholder="🌐" maxlength="4"></div>
+    <div class="form-row">
       <div><label>Category</label>
         <select class="select" id="pwCat">
-          <option>🎬 Streaming</option>
-          <option>🛒 Shopping</option>
-          <option>💼 Work</option>
-          <option>📱 Social Media</option>
-          <option>🏛️ Government</option>
-          <option>🏥 Health</option>
-          <option>🎮 Gaming</option>
-          <option>🌐 Other</option>
+          <option>Streaming</option>
+          <option>Shopping</option>
+          <option>Work</option>
+          <option>Social Media</option>
+          <option>Government</option>
+          <option>Health</option>
+          <option>Gaming</option>
+          <option>Other</option>
         </select>
       </div>
     </div>
@@ -1816,7 +1808,7 @@
 <div class="modal-overlay" id="addGovModal">
   <div class="modal" style="max-width:520px;">
     <div class="modal-header">
-      <div class="modal-title" id="govModalTitle">🏛️ Add Government Account</div>
+      <div class="modal-title" id="govModalTitle">Add Government Account</div>
       <button class="close-btn" onclick="closeModal('addGovModal')">×</button>
     </div>
 
@@ -1825,18 +1817,17 @@
         <input class="input" id="govName" placeholder="e.g. SSS, PhilHealth, Pag-IBIG, BIR…">
       </div>
     </div>
-    <div class="form-row cols2">
-      <div><label>Icon / Emoji</label><input class="input" id="govIcon" placeholder="🏛️" maxlength="4"></div>
+    <div class="form-row">
       <div><label>Category</label>
         <select class="select" id="govCat">
-          <option>💼 Social Security</option>
-          <option>🏥 Health</option>
-          <option>🏠 Housing</option>
-          <option>💰 Tax</option>
-          <option>🪪 ID / Identification</option>
-          <option>📋 Permits & Licenses</option>
-          <option>🎓 Education</option>
-          <option>🌐 Other</option>
+          <option>Social Security</option>
+          <option>Health</option>
+          <option>Housing</option>
+          <option>Tax</option>
+          <option>ID / Identification</option>
+          <option>Permits & Licenses</option>
+          <option>Education</option>
+          <option>Other</option>
         </select>
       </div>
     </div>
@@ -1894,7 +1885,7 @@
 <div class="modal-overlay" id="setupModal">
   <div class="modal" style="max-width:560px;">
     <div class="modal-header">
-      <div class="modal-title">⚙️ Connect to Google Sheets</div>
+      <div class="modal-title">Connect to Google Sheets</div>
       <button class="close-btn" onclick="closeModal('setupModal')">×</button>
     </div>
 
@@ -2275,7 +2266,7 @@ function saveBill() {
   const dueMonthVal = document.getElementById('billDueMonth').value;
   const bill = {
     id: editingId || uid(),
-    name, icon: document.getElementById('billIcon').value.trim() || '💡',
+    name,
     color: selectedBillColor,
     frequency: freq,
     typical: parseFloat(document.getElementById('billTypical').value) || 0,
@@ -2290,7 +2281,7 @@ function saveBill() {
 }
 
 function resetBillForm() {
-  ['billName','billIcon','billTypical','billDueDay','billNotes'].forEach(id => document.getElementById(id).value = '');
+  ['billName','billTypical','billDueDay','billNotes'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('billDueMonth').value = '';
   setBillFreq('monthly');
 }
@@ -2523,7 +2514,6 @@ function editBill(id) {
   if (!b) return;
   editingId = id;
   document.getElementById('billName').value = b.name;
-  document.getElementById('billIcon').value = b.icon;
   document.getElementById('billTypical').value = b.typical || '';
   document.getElementById('billDueDay').value = b.dueDay || '';
   document.getElementById('billDueMonth').value = b.dueMonth != null ? b.dueMonth : '';
@@ -2962,14 +2952,13 @@ function saveEvent() {
     id: editingId || uid(), title, date,
     time: document.getElementById('evTime').value,
     desc: document.getElementById('evDesc').value.trim(),
-    emoji: document.getElementById('evEmoji').value.trim() || '📅',
     repeat: document.getElementById('evRepeat').value
   };
   if (editingId) db.events = db.events.map(e => e.id === editingId ? ev : e);
   else db.events.push(ev);
   db.events.sort((a,b) => a.date.localeCompare(b.date));
   save(); closeModal('addEventModal');
-  ['evTitle','evDate','evTime','evDesc','evEmoji'].forEach(id => document.getElementById(id).value = '');
+  ['evTitle','evDate','evTime','evDesc'].forEach(id => document.getElementById(id).value = '');
   editingId = null;
   renderEvents(); toast('✓ Event saved!');
 }
@@ -3005,7 +2994,7 @@ function renderEvents() {
           <div class="mon">${MONTHS[d.getMonth()]}</div>
         </div>
         <div class="event-info" style="flex:1">
-          <div class="etitle">${ev.emoji} ${ev.title}</div>
+          <div class="etitle">${ev.emoji ? ev.emoji + ' ' : ''}${ev.title}</div>
           <div class="edesc" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:4px;">
             ${daysLabel}
             ${ev.time ? `<span style="font-size:11px; color:var(--text3)">⏰ ${ev.time}</span>` : ''}
@@ -3108,7 +3097,7 @@ function saveTask() {
   else db.tasks.push(task);
   save(); closeModal('addTaskModal');
   ['taskTitle','taskDesc','taskDue'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('taskModalTitle').textContent = '✅ Add Task';
+  document.getElementById('taskModalTitle').textContent = 'Add Task';
   editingId = null;
   renderTasks(); toast('✓ Task saved!');
 }
@@ -3122,7 +3111,7 @@ function editTask(id) {
   document.getElementById('taskStatus').value = t.status || 'todo';
   document.getElementById('taskPriority').value = t.priority || 'med';
   document.getElementById('taskDue').value = t.due || '';
-  document.getElementById('taskModalTitle').textContent = '✅ Edit Task';
+  document.getElementById('taskModalTitle').textContent = 'Edit Task';
   openModal('addTaskModal');
 }
 
@@ -3180,7 +3169,6 @@ function saveDoc() {
   if (!title) { alert('Please enter a title'); return; }
   const doc = {
     id: editingId || uid(), title,
-    icon: document.getElementById('docIcon').value.trim() || '📄',
     cat: document.getElementById('docCat').value,
     link: document.getElementById('docLink').value.trim(),
     notes: document.getElementById('docNotes').value.trim(),
@@ -3189,7 +3177,7 @@ function saveDoc() {
   if (editingId) db.docs = db.docs.map(d => d.id === editingId ? doc : d);
   else db.docs.push(doc);
   save(); closeModal('addDocModal');
-  ['docTitle','docIcon','docLink','docNotes'].forEach(id => document.getElementById(id).value = '');
+  ['docTitle','docLink','docNotes'].forEach(id => document.getElementById(id).value = '');
   editingId = null;
   renderDocs(); toast('✓ Document saved!');
 }
@@ -3247,7 +3235,6 @@ function saveBook() {
   const book = {
     id: editingId || uid(), title,
     author: document.getElementById('bookAuthor').value.trim(),
-    emoji: document.getElementById('bookEmoji').value.trim() || '📖',
     status: document.getElementById('bookStatus').value,
     genre: document.getElementById('bookGenre').value.trim(),
     rating: currentBookRating,
@@ -3257,7 +3244,7 @@ function saveBook() {
   if (editingId) db.books = db.books.map(b => b.id === editingId ? book : b);
   else db.books.push(book);
   save(); closeModal('addBookModal');
-  ['bookTitle','bookAuthor','bookEmoji','bookGenre','bookNotes'].forEach(id => document.getElementById(id).value = '');
+  ['bookTitle','bookAuthor','bookGenre','bookNotes'].forEach(id => document.getElementById(id).value = '');
   currentBookRating = 0;
   document.querySelectorAll('#ratingInput .star').forEach(s => s.classList.remove('on'));
   editingId = null;
@@ -3311,7 +3298,7 @@ function saveSavingsGoal() {
   if (!name || !target) { alert('Please enter a goal name and target amount'); return; }
   const goal = {
     id: editingId || uid(),
-    name, icon: document.getElementById('sgIcon').value.trim() || '🎯',
+    name,
     color: selectedSgColor,
     target,
     targetDate: document.getElementById('sgDate').value,
@@ -3322,7 +3309,7 @@ function saveSavingsGoal() {
   if (editingId) db.savings = db.savings.map(g => g.id === editingId ? goal : g);
   else db.savings.push(goal);
   save(); closeModal('addSavingsModal');
-  ['sgName','sgIcon','sgTarget','sgDate','sgNotes'].forEach(id => document.getElementById(id).value = '');
+  ['sgName','sgTarget','sgDate','sgNotes'].forEach(id => document.getElementById(id).value = '');
   editingId = null;
   renderSavings(); toast('✓ Goal saved!');
 }
@@ -3330,7 +3317,7 @@ function saveSavingsGoal() {
 function openDepositModal(goalId) {
   currentDepositGoalId = goalId;
   const goal = db.savings.find(g => g.id === goalId);
-  document.getElementById('depositModalTitle').textContent = `💰 Log for: ${goal.icon} ${goal.name}`;
+  document.getElementById('depositModalTitle').textContent = `Log Transaction: ${goal.name}`;
   document.getElementById('depositDate').value = new Date().toISOString().split('T')[0];
   document.getElementById('depositAmount').value = '';
   document.getElementById('depositNote').value = '';
@@ -3453,7 +3440,6 @@ function editSavingsGoal(id) {
   if (!g) return;
   editingId = id;
   document.getElementById('sgName').value = g.name;
-  document.getElementById('sgIcon').value = g.icon;
   document.getElementById('sgTarget').value = g.target;
   document.getElementById('sgDate').value = g.targetDate || '';
   document.getElementById('sgNotes').value = g.notes || '';
@@ -3820,12 +3806,12 @@ function saveIncome() {
   const amount = parseFloat(document.getElementById('incomeAmount').value);
   if (!label || !amount) { alert('Please enter a label and amount.'); return; }
   initBudget();
-  const inc = { id: editingId || uid(), label, amount, icon: document.getElementById('incomeIcon').value.trim() || '💼' };
+  const inc = { id: editingId || uid(), label, amount };
   if (editingId) db.budget.incomes = db.budget.incomes.map(i => i.id === editingId ? inc : i);
   else db.budget.incomes.push(inc);
   editingId = null;
   save(); closeModal('addIncomeModal');
-  ['incomeName','incomeAmount','incomeIcon'].forEach(id => document.getElementById(id).value = '');
+  ['incomeName','incomeAmount'].forEach(id => document.getElementById(id).value = '');
   renderBudgetPlan(); toast('✓ Income saved!');
 }
 
@@ -3836,7 +3822,6 @@ function editIncome(id) {
   editingId = id;
   document.getElementById('incomeName').value = inc.label;
   document.getElementById('incomeAmount').value = inc.amount;
-  document.getElementById('incomeIcon').value = inc.icon || '';
   openModal('addIncomeModal');
 }
 
@@ -3887,7 +3872,6 @@ async function saveGovAccount() {
   const pinVal = document.getElementById('govPin').value;
   const acc = {
     id: editingId || uid(), name,
-    icon: document.getElementById('govIcon').value.trim() || '🏛️',
     cat: document.getElementById('govCat').value,
     idNum: document.getElementById('govIdNum').value.trim(),
     idNum2: document.getElementById('govIdNum2').value.trim(),
@@ -3906,7 +3890,7 @@ async function saveGovAccount() {
   else db.govaccounts.push(acc);
   db.govaccounts.sort((a, b) => a.name.localeCompare(b.name));
   save(); closeModal('addGovModal');
-  ['govName','govIcon','govUrl','govUser','govPass','govPin','govIdNum','govIdNum2','govExpiry','govRenewal','govAddress','govContact','govNotes'].forEach(id => {
+  ['govName','govUrl','govUser','govPass','govPin','govIdNum','govIdNum2','govExpiry','govRenewal','govAddress','govContact','govNotes'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   editingId = null;
@@ -4061,8 +4045,8 @@ async function editGovAccount(id) {
   const acc = db.govaccounts.find(a => a.id === id);
   if (!acc) return;
   editingId = id;
-  document.getElementById('govModalTitle').textContent = '✏️ Edit Account';
-  const fields = { govName:'name', govIcon:'icon', govCat:'cat', govIdNum:'idNum', govIdNum2:'idNum2', govUrl:'url', govUser:'user', govExpiry:'expiry', govRenewal:'renewal', govAddress:'address', govContact:'contact', govNotes:'notes' };
+  document.getElementById('govModalTitle').textContent = 'Edit Account';
+  const fields = { govName:'name', govCat:'cat', govIdNum:'idNum', govIdNum2:'idNum2', govUrl:'url', govUser:'user', govExpiry:'expiry', govRenewal:'renewal', govAddress:'address', govContact:'contact', govNotes:'notes' };
   Object.entries(fields).forEach(([elId, key]) => { const el = document.getElementById(elId); if (el) el.value = acc[key] || ''; });
   document.getElementById('govPass').value = acc.encPass ? await decryptField(acc.encPass, vaultKey) : '';
   document.getElementById('govPin').value = acc.encPin ? await decryptField(acc.encPin, vaultKey) : '';
@@ -4272,7 +4256,6 @@ async function savePassword() {
   const pinVal = document.getElementById('pwPin').value;
   const pw = {
     id: editingId || uid(), name,
-    icon: document.getElementById('pwIcon').value.trim() || '🌐',
     cat: document.getElementById('pwCat').value,
     url: document.getElementById('pwUrl').value.trim(),
     user: document.getElementById('pwUser').value.trim(),
@@ -4286,7 +4269,7 @@ async function savePassword() {
   else db.passwords.push(pw);
   db.passwords.sort((a, b) => a.name.localeCompare(b.name));
   save(); closeModal('addPasswordModal');
-  ['pwName','pwIcon','pwUrl','pwUser','pwPass','pwPin','pwRecovery','pwNotes'].forEach(id => {
+  ['pwName','pwUrl','pwUser','pwPass','pwPin','pwRecovery','pwNotes'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   editingId = null;
@@ -4424,7 +4407,6 @@ async function editPassword(id) {
   if (!pw) return;
   editingId = id;
   document.getElementById('pwName').value = pw.name;
-  document.getElementById('pwIcon').value = pw.icon || '🌐';
   document.getElementById('pwCat').value = pw.cat || '';
   document.getElementById('pwUrl').value = pw.url || '';
   document.getElementById('pwUser').value = pw.user || '';
@@ -4432,7 +4414,7 @@ async function editPassword(id) {
   document.getElementById('pwNotes').value = pw.notes || '';
   document.getElementById('pwPass').value = pw.encPass ? await decryptField(pw.encPass, vaultKey) : '';
   document.getElementById('pwPin').value = pw.encPin ? await decryptField(pw.encPin, vaultKey) : '';
-  document.getElementById('pwModalTitle').textContent = '✏️ Edit Login';
+  document.getElementById('pwModalTitle').textContent = 'Edit Login';
   openModal('addPasswordModal');
   resetVaultTimer();
 }
@@ -4846,7 +4828,7 @@ function openMedDocModal() {
   window._pendingDocThumb = null;
   resetMedDocForm();
   document.getElementById('medDocDate').value = new Date().toISOString().slice(0,10);
-  document.getElementById('medDocModalTitle').textContent = '📄 Add Medical Document';
+  document.getElementById('medDocModalTitle').textContent = 'Add Medical Document';
   openModal('addMedDocModal');
 }
 
@@ -4947,7 +4929,7 @@ function editMedDoc(id) {
   if (d.thumbnail) { thumbEl.src = d.thumbnail; thumbEl.style.display = 'block'; }
   else { thumbEl.src = ''; thumbEl.style.display = 'none'; }
   document.getElementById('ocrStatus').style.display = 'none';
-  document.getElementById('medDocModalTitle').textContent = '📄 Edit Medical Document';
+  document.getElementById('medDocModalTitle').textContent = 'Edit Medical Document';
   openModal('addMedDocModal');
 }
 
@@ -5009,7 +4991,7 @@ function renderSchoolEvents() {
     else if (diff > 0 && diff <= 7) daysTag = `<span class="due-soon-tag">in ${diff}d</span>`;
     else if (diff > 0) daysTag = `<span class="days-away">${diff}d away</span>`;
     return `<div style="display:flex; gap:12px; align-items:flex-start; background:var(--glass); border:1px solid var(--glass-border); border-radius:13px; padding:13px 16px; margin-bottom:10px;">
-      <div style="font-size:26px; width:40px; text-align:center; flex-shrink:0;">${e.emoji || '🎒'}</div>
+      ${e.emoji ? `<div style="font-size:26px; width:40px; text-align:center; flex-shrink:0;">${e.emoji}</div>` : ''}
       <div style="flex:1;">
         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:3px;">
           <div style="font-weight:700; font-size:14px;">${e.title}</div>
@@ -5042,14 +5024,13 @@ function saveSchoolEvent() {
   const ev = {
     id: editingId || uid(), title, date,
     type: document.getElementById('schoolEvType').value,
-    emoji: document.getElementById('schoolEvEmoji').value.trim() || '🎒',
     desc: document.getElementById('schoolEvDesc').value.trim()
   };
   if (editingId) db.school.events = db.school.events.map(e => e.id === editingId ? ev : e);
   else db.school.events.push(ev);
   editingId = null;
   save(); closeModal('addSchoolEventModal');
-  ['schoolEvTitle','schoolEvDate','schoolEvEmoji','schoolEvDesc'].forEach(id => document.getElementById(id).value = '');
+  ['schoolEvTitle','schoolEvDate','schoolEvDesc'].forEach(id => document.getElementById(id).value = '');
   renderSchoolEvents(); toast('✓ Event saved!');
 }
 
@@ -5060,7 +5041,6 @@ function editSchoolEvent(id) {
   document.getElementById('schoolEvTitle').value = e.title;
   document.getElementById('schoolEvDate').value = e.date;
   document.getElementById('schoolEvType').value = e.type;
-  document.getElementById('schoolEvEmoji').value = e.emoji || '';
   document.getElementById('schoolEvDesc').value = e.desc || '';
   openModal('addSchoolEventModal');
 }
