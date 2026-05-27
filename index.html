@@ -607,6 +607,19 @@
 
   /* Login card */
   .login-app-title { font-size: 26px; }
+
+/* Grocery */
+.grocery-list-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px 18px; margin-bottom: 12px; }
+.grocery-item-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.grocery-item-row:last-child { border-bottom: none; }
+.grocery-item-check { width: 20px; height: 20px; accent-color: var(--green); cursor: pointer; flex-shrink: 0; }
+.grocery-item-name { flex: 1; font-size: 14px; font-weight: 500; }
+.grocery-item-name.done { text-decoration: line-through; color: var(--text3); }
+.grocery-price-input { width: 90px; padding: 6px 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; color: var(--text); font-size: 13px; text-align: right; font-family: 'Inter', sans-serif; }
+.grocery-price-input:focus { outline: none; border-color: var(--pink); }
+.grocery-total-bar { background: linear-gradient(135deg, rgba(125,210,160,0.12), rgba(125,210,160,0.04)); border: 1px solid rgba(125,210,160,0.22); border-radius: 14px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+.grocery-scan-btn { background: rgba(184,169,240,0.12); border: 1px solid rgba(184,169,240,0.2); color: var(--lavender); border-radius: 8px; padding: 5px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-size: 11px; flex-shrink: 0; }
+.grocery-scan-btn:hover { background: rgba(184,169,240,0.2); }
 </style>
 </head>
 <body>
@@ -659,6 +672,7 @@
         <button class="nav-btn" onclick="showTab('savings')"><i data-lucide="piggy-bank" class="nb-icon"></i>Savings Goals</button>
         <button class="nav-btn" onclick="showTab('budget')"><i data-lucide="wallet" class="nb-icon"></i>Budget Planner</button>
         <button class="nav-btn" onclick="showTab('summary')"><i data-lucide="bar-chart-2" class="nb-icon"></i>Bills & Expenses Summary</button>
+        <button class="nav-btn" onclick="showTab('grocery')"><i data-lucide="shopping-cart" class="nb-icon"></i>Grocery Lists</button>
       </div>
 
       <div class="sidenav-section">
@@ -1070,8 +1084,95 @@
       <div id="govAccountsList"></div>
     </div>
 
+    <!-- ======== GROCERY TAB ======== -->
+    <div class="tab" id="tab-grocery">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+        <div>
+          <div class="section-title">Grocery Lists</div>
+          <div class="section-sub">Plan your shopping, track actual spend, and record expenses</div>
+        </div>
+        <button class="btn btn-primary" onclick="openNewGroceryList()"><i data-lucide="plus" class="nb-icon"></i>New List</button>
+      </div>
+      <div class="bills-subnav" id="grocerySubnav">
+        <button class="bills-subbtn active" id="gSubLists" onclick="switchGroceryView('lists')">My Lists</button>
+        <button class="bills-subbtn" id="gSubShop" onclick="switchGroceryView('shop')">Shopping</button>
+      </div>
+      <div class="bills-subview active" id="grocery-view-lists">
+        <div id="groceryListsEl"></div>
+      </div>
+      <div class="bills-subview" id="grocery-view-shop">
+        <div id="groceryShopEl"></div>
+      </div>
+    </div>
+
   </main>
   </div><!-- end body-wrap -->
+</div>
+
+<!-- New / Edit Grocery List Modal -->
+<div class="modal-overlay" id="addGroceryListModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="groceryListModalTitle">New Grocery List</div>
+      <button class="close-btn" onclick="closeModal('addGroceryListModal')">×</button>
+    </div>
+    <div class="form-row">
+      <div><label>List Name *</label><input class="input" id="glName" placeholder="e.g. SM Weekly, Weekend Market..."></div>
+    </div>
+    <div class="form-row">
+      <div><label>Date</label><input class="input" id="glDate" type="date"></div>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('addGroceryListModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveGroceryList()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add / Edit Grocery Item Modal -->
+<div class="modal-overlay" id="addGroceryItemModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="groceryItemModalTitle">Add Item</div>
+      <button class="close-btn" onclick="closeModal('addGroceryItemModal')">×</button>
+    </div>
+    <div class="form-row">
+      <div><label>Item Name *</label><input class="input" id="giName" placeholder="e.g. Eggs, Rice, Milk..."></div>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Qty</label><input class="input" id="giQty" type="number" placeholder="1" min="0.01" step="0.01"></div>
+      <div><label>Unit</label><input class="input" id="giUnit" placeholder="pcs, kg, L..."></div>
+    </div>
+    <div class="form-row">
+      <div><label>Est. Price per unit (₱)</label><input class="input" id="giEstPrice" type="number" placeholder="0.00" min="0"></div>
+    </div>
+    <input type="hidden" id="giBarcode">
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('addGroceryItemModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveGroceryItem()">Save Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- Barcode Scanner Modal -->
+<div class="modal-overlay" id="barcodeScanModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Scan Barcode</div>
+      <button class="close-btn" onclick="closeBarcodeScanner()">×</button>
+    </div>
+    <div style="text-align:center; padding:8px 0;">
+      <video id="barcodeVideo" autoplay playsinline style="width:100%; max-height:280px; border-radius:12px; background:#000; display:none; object-fit:cover;"></video>
+      <div id="barcodeScanStatus" style="font-size:13px; color:var(--text2); margin-top:12px; min-height:20px;"></div>
+      <div style="margin-top:16px;">
+        <div style="font-size:12px; color:var(--text3); margin-bottom:8px;">Or enter barcode manually:</div>
+        <div style="display:flex; gap:8px;">
+          <input class="input" id="barcodeManualInput" type="text" inputmode="numeric" placeholder="Barcode number..." style="flex:1;">
+          <button class="btn btn-primary btn-sm" onclick="submitManualBarcode()">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ========== LOGIN OVERLAY ========== -->
@@ -1983,7 +2084,8 @@ let db = {
   renovations: [],
   medical: { appointments: [], vaccines: [], docs: [] },
   school: { childName: '', schedule: [], extracurriculars: [], events: [] },
-  vaultSalt: null, vaultVerify: null
+  vaultSalt: null, vaultVerify: null,
+  groceryLists: []
 };
 let selectedBillColor = '#f0a5c0';
 let selectedBillFreq = 'monthly';
@@ -2098,6 +2200,7 @@ async function load() {
     if (!db.school.events) db.school.events = [];
     if (db.vaultSalt === undefined) db.vaultSalt = null;
     if (db.vaultVerify === undefined) db.vaultVerify = null;
+    if (!db.groceryLists) db.groceryLists = [];
     migrateStripIcons();
   } catch(e) {}
 
@@ -2125,6 +2228,7 @@ async function load() {
     if (!db.school.events) db.school.events = [];
     if (db.vaultSalt === undefined) db.vaultSalt = null;
     if (db.vaultVerify === undefined) db.vaultVerify = null;
+    if (!db.groceryLists) db.groceryLists = [];
     migrateStripIcons();
       localStorage.setItem('nestkeeper_v2', JSON.stringify(db));
       setSyncStatus('ok', 'Loaded from Google Sheets');
@@ -2170,7 +2274,7 @@ function toggleSidenav() {
 
 // ========== TABS ==========
 // ========== ROUTING ==========
-const VALID_TABS = new Set(['bills','expenses','savings','budget','summary','events','tasks','renovations','medical','school','docs','books','passwords','govaccounts']);
+const VALID_TABS = new Set(['bills','expenses','savings','budget','summary','events','tasks','renovations','medical','school','docs','books','passwords','govaccounts','grocery']);
 
 function _activateTab(name) {
   if (!VALID_TABS.has(name)) name = 'bills';
@@ -2186,7 +2290,7 @@ function _activateTab(name) {
     bills: renderBills, expenses: renderExpenses, savings: renderSavings,
     budget: renderBudget, summary: renderSummary, passwords: renderPasswords, govaccounts: renderGovAccounts,
     events: renderEvents, tasks: renderTasks, renovations: renderRenovations, medical: renderMedical, school: renderSchool,
-    docs: renderDocs, books: renderBooks
+    docs: renderDocs, books: renderBooks, grocery: renderGrocery
   };
   if (renders[name]) renders[name]();
 }
@@ -5572,6 +5676,374 @@ async function loadAppData() {
   }
 }
 
+// ========== GROCERY LISTS ==========
+let currentGroceryListId = null;
+let barcodeStream = null;
+let barcodeAnimFrame = null;
+let editingGroceryItemId = null;
+
+function switchGroceryView(view) {
+  document.querySelectorAll('#grocerySubnav .bills-subbtn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#tab-grocery .bills-subview').forEach(v => v.classList.remove('active'));
+  const capView = view.charAt(0).toUpperCase() + view.slice(1);
+  const btn = document.getElementById('gSub' + capView);
+  if (btn) btn.classList.add('active');
+  const panel = document.getElementById('grocery-view-' + view);
+  if (panel) panel.classList.add('active');
+  if (view === 'shop') {
+    if (currentGroceryListId) renderGroceryShop(currentGroceryListId);
+    else {
+      document.getElementById('groceryShopEl').innerHTML = '<div class="empty"><div class="empty-text">Select a list from My Lists to start shopping.</div></div>';
+    }
+  } else {
+    renderGroceryLists();
+  }
+}
+
+function renderGrocery() {
+  if (!db.groceryLists) db.groceryLists = [];
+  const isShop = document.getElementById('grocery-view-shop') && document.getElementById('grocery-view-shop').classList.contains('active');
+  if (isShop && currentGroceryListId) renderGroceryShop(currentGroceryListId);
+  else renderGroceryLists();
+}
+
+function openNewGroceryList() {
+  editingId = null;
+  document.getElementById('glName').value = '';
+  document.getElementById('glDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('groceryListModalTitle').textContent = 'New Grocery List';
+  openModal('addGroceryListModal');
+}
+
+function saveGroceryList() {
+  const name = document.getElementById('glName').value.trim();
+  if (!name) { alert('Please enter a list name'); return; }
+  if (editingId) {
+    db.groceryLists = db.groceryLists.map(l => l.id === editingId ? { ...l, name, date: document.getElementById('glDate').value } : l);
+  } else {
+    db.groceryLists.push({ id: uid(), name, date: document.getElementById('glDate').value || new Date().toISOString().split('T')[0], status: 'active', items: [], expenseId: null });
+  }
+  editingId = null;
+  save(); closeModal('addGroceryListModal'); renderGroceryLists(); toast('List saved!');
+}
+
+function editGroceryList(id) {
+  const list = db.groceryLists.find(l => l.id === id);
+  if (!list) return;
+  editingId = id;
+  document.getElementById('glName').value = list.name;
+  document.getElementById('glDate').value = list.date || '';
+  document.getElementById('groceryListModalTitle').textContent = 'Edit List';
+  openModal('addGroceryListModal');
+}
+
+function deleteGroceryList(id) {
+  if (!confirm('Delete this grocery list?')) return;
+  db.groceryLists = db.groceryLists.filter(l => l.id !== id);
+  if (currentGroceryListId === id) currentGroceryListId = null;
+  save(); renderGroceryLists(); toast('Deleted');
+}
+
+function openGroceryList(listId) {
+  currentGroceryListId = listId;
+  switchGroceryView('shop');
+}
+
+function renderGroceryLists() {
+  const el = document.getElementById('groceryListsEl');
+  if (!el) return;
+  if (!db.groceryLists.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🛒</div><div class="empty-text">No grocery lists yet. Create your first list to start planning!</div></div>`;
+    return;
+  }
+  el.innerHTML = db.groceryLists.slice().reverse().map(list => {
+    const actual = list.items.reduce((s, i) => i.checked ? s + (parseFloat(i.actualPrice) || 0) * (parseFloat(i.qty) || 1) : s, 0);
+    const est = list.items.reduce((s, i) => s + (parseFloat(i.estPrice) || 0) * (parseFloat(i.qty) || 1), 0);
+    const checked = list.items.filter(i => i.checked).length;
+    const statusColor = list.status === 'done' ? 'var(--green)' : 'var(--teal)';
+    return `<div class="grocery-list-card">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:0;">
+          <div style="font-family:'Josefin Sans',sans-serif; font-size:16px; font-weight:700; margin-bottom:4px;">${list.name}</div>
+          <div style="font-size:12px; color:var(--text3); display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <span>${formatDate(list.date)}</span>
+            <span>${list.items.length} item${list.items.length !== 1 ? 's' : ''}</span>
+            <span style="color:${statusColor}; font-weight:600;">${list.status === 'done' ? 'Completed' : 'Active'}</span>
+          </div>
+          <div style="margin-top:8px; display:flex; gap:16px; flex-wrap:wrap;">
+            ${est > 0 ? `<span style="font-size:12px; color:var(--text2);">Est: <strong style="color:var(--gold);">₱${fmt(est)}</strong></span>` : ''}
+            ${actual > 0 ? `<span style="font-size:12px; color:var(--text2);">Actual: <strong style="color:var(--green);">₱${fmt(actual)}</strong></span>` : ''}
+            ${list.items.length > 0 ? `<span style="font-size:12px; color:var(--text3);">${checked}/${list.items.length} checked</span>` : ''}
+          </div>
+        </div>
+        <div style="display:flex; gap:6px; flex-shrink:0; align-items:flex-start;">
+          <button class="btn btn-primary btn-sm" onclick="openGroceryList('${list.id}')">${list.status === 'done' ? 'View' : 'Shop'}</button>
+          <button class="edit-btn" onclick="editGroceryList('${list.id}')">${lc('pencil')}</button>
+          <button class="del-btn" onclick="deleteGroceryList('${list.id}')">${lc('trash-2')}</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderGroceryShop(listId) {
+  const el = document.getElementById('groceryShopEl');
+  if (!el) return;
+  const list = db.groceryLists.find(l => l.id === listId);
+  if (!list) { el.innerHTML = '<div class="empty"><div class="empty-text">List not found.</div></div>'; return; }
+
+  const actualTotal = list.items.reduce((s, i) => i.checked ? s + (parseFloat(i.actualPrice) || 0) * (parseFloat(i.qty) || 1) : s, 0);
+  const estTotal = list.items.reduce((s, i) => s + (parseFloat(i.estPrice) || 0) * (parseFloat(i.qty) || 1), 0);
+  const pending = list.items.filter(i => !i.checked);
+  const done = list.items.filter(i => i.checked);
+
+  const renderItem = (item) => `
+    <div class="grocery-item-row" id="grow-${item.id}">
+      <input type="checkbox" class="grocery-item-check" ${item.checked ? 'checked' : ''}
+        onchange="toggleGroceryCheck('${listId}','${item.id}',this.checked)">
+      <div style="flex:1; min-width:0;">
+        <div class="grocery-item-name ${item.checked ? 'done' : ''}">${item.name}</div>
+        <div style="font-size:11px; color:var(--text3);">${(parseFloat(item.qty) !== 1 || item.unit) ? (item.qty || 1) + (item.unit ? ' ' + item.unit : '') : ''}${item.estPrice ? ((parseFloat(item.qty) !== 1 || item.unit ? ' · ' : '') + 'Est ₱' + fmt(item.estPrice)) : ''}</div>
+      </div>
+      <input class="grocery-price-input" type="number" min="0" step="0.01"
+        value="${item.actualPrice > 0 ? item.actualPrice : ''}" placeholder="₱"
+        onchange="updateGroceryPrice('${listId}','${item.id}',this.value)">
+      <button class="grocery-scan-btn" onclick="openBarcodeScanner('${listId}','${item.id}')" title="Scan barcode to link">${lc('barcode',13)}</button>
+      <button class="del-btn" onclick="deleteGroceryItem('${listId}','${item.id}')">${lc('trash-2')}</button>
+    </div>`;
+
+  el.innerHTML = `
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="switchGroceryView('lists')">${lc('arrow-left',13)} Lists</button>
+      <div style="flex:1; font-family:'Josefin Sans',sans-serif; font-size:17px; font-weight:700;">${list.name}</div>
+      <span style="font-size:12px; color:var(--text3);">${formatDate(list.date)}</span>
+    </div>
+
+    <div class="grocery-total-bar">
+      <div>
+        <div style="font-size:11px; color:var(--text3); font-weight:700; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:2px;">Running Total</div>
+        <div style="font-family:'Josefin Sans',sans-serif; font-size:26px; font-weight:700; color:var(--green);" id="groceryRunningTotal">₱${fmt(actualTotal)}</div>
+        ${estTotal ? `<div style="font-size:11px; color:var(--text3);">Est: ₱${fmt(estTotal)}</div>` : ''}
+      </div>
+      <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
+        ${list.status === 'active' ? `<button class="btn btn-primary btn-sm" onclick="completeGroceryTrip('${listId}')">Record Expense</button>` : `<span style="font-size:12px; color:var(--green); font-weight:600;">Expense recorded</span>`}
+        <div style="display:flex; gap:6px;">
+          <button class="grocery-scan-btn" style="font-size:12px; padding:6px 10px;" onclick="openBarcodeScanner('${listId}',null)">${lc('barcode',13)} Scan Item</button>
+          <button class="btn btn-ghost btn-sm" onclick="openAddGroceryItem('${listId}')">${lc('plus',13)} Add Item</button>
+        </div>
+      </div>
+    </div>
+
+    ${pending.length ? `
+      <div style="font-size:11px; color:var(--text3); font-weight:700; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:8px;">${pending.length} TO GET</div>
+      <div style="background:var(--glass); border:1px solid var(--glass-border); border-radius:14px; padding:4px 14px; margin-bottom:16px;">
+        ${pending.map(renderItem).join('')}
+      </div>` : ''}
+
+    ${done.length ? `
+      <div style="font-size:11px; color:var(--text3); font-weight:700; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:8px;">${done.length} IN CART</div>
+      <div style="background:var(--glass); border:1px solid var(--glass-border); border-radius:14px; padding:4px 14px; margin-bottom:16px; opacity:0.8;">
+        ${done.map(renderItem).join('')}
+      </div>` : ''}
+
+    ${list.items.length === 0 ? `<div class="empty" style="margin-top:8px;"><div class="empty-text">No items yet. Tap "Add Item" to start building your list!</div></div>` : ''}
+  `;
+}
+
+function openAddGroceryItem(listId) {
+  currentGroceryListId = listId;
+  editingGroceryItemId = null;
+  document.getElementById('giName').value = '';
+  document.getElementById('giQty').value = '1';
+  document.getElementById('giUnit').value = '';
+  document.getElementById('giEstPrice').value = '';
+  document.getElementById('giBarcode').value = '';
+  document.getElementById('groceryItemModalTitle').textContent = 'Add Item';
+  openModal('addGroceryItemModal');
+}
+
+function editGroceryItem(listId, itemId) {
+  const list = db.groceryLists.find(l => l.id === listId);
+  if (!list) return;
+  const item = list.items.find(i => i.id === itemId);
+  if (!item) return;
+  currentGroceryListId = listId;
+  editingGroceryItemId = itemId;
+  document.getElementById('giName').value = item.name;
+  document.getElementById('giQty').value = item.qty || 1;
+  document.getElementById('giUnit').value = item.unit || '';
+  document.getElementById('giEstPrice').value = item.estPrice || '';
+  document.getElementById('giBarcode').value = item.barcode || '';
+  document.getElementById('groceryItemModalTitle').textContent = 'Edit Item';
+  openModal('addGroceryItemModal');
+}
+
+function saveGroceryItem() {
+  const name = document.getElementById('giName').value.trim();
+  if (!name) { alert('Please enter an item name'); return; }
+  const list = db.groceryLists.find(l => l.id === currentGroceryListId);
+  if (!list) return;
+  if (editingGroceryItemId) {
+    const item = list.items.find(i => i.id === editingGroceryItemId);
+    if (item) {
+      item.name = name;
+      item.qty = parseFloat(document.getElementById('giQty').value) || 1;
+      item.unit = document.getElementById('giUnit').value.trim();
+      item.estPrice = parseFloat(document.getElementById('giEstPrice').value) || 0;
+      item.barcode = document.getElementById('giBarcode').value.trim() || null;
+    }
+  } else {
+    list.items.push({
+      id: uid(), name,
+      qty: parseFloat(document.getElementById('giQty').value) || 1,
+      unit: document.getElementById('giUnit').value.trim(),
+      estPrice: parseFloat(document.getElementById('giEstPrice').value) || 0,
+      actualPrice: 0, checked: false,
+      barcode: document.getElementById('giBarcode').value.trim() || null
+    });
+  }
+  editingGroceryItemId = null;
+  save(); closeModal('addGroceryItemModal'); renderGroceryShop(currentGroceryListId); toast('Item saved!');
+}
+
+function toggleGroceryCheck(listId, itemId, checked) {
+  const list = db.groceryLists.find(l => l.id === listId);
+  if (!list) return;
+  const item = list.items.find(i => i.id === itemId);
+  if (item) item.checked = checked;
+  save(); renderGroceryShop(listId);
+}
+
+function updateGroceryPrice(listId, itemId, value) {
+  const list = db.groceryLists.find(l => l.id === listId);
+  if (!list) return;
+  const item = list.items.find(i => i.id === itemId);
+  if (!item) return;
+  item.actualPrice = parseFloat(value) || 0;
+  if (item.actualPrice > 0 && !item.checked) item.checked = true;
+  save();
+  const actual = list.items.reduce((s, i) => i.checked ? s + (i.actualPrice || 0) * (i.qty || 1) : s, 0);
+  const tot = document.getElementById('groceryRunningTotal');
+  if (tot) tot.textContent = '₱' + fmt(actual);
+}
+
+function deleteGroceryItem(listId, itemId) {
+  const list = db.groceryLists.find(l => l.id === listId);
+  if (!list) return;
+  list.items = list.items.filter(i => i.id !== itemId);
+  save(); renderGroceryShop(listId);
+}
+
+function completeGroceryTrip(listId) {
+  const list = db.groceryLists.find(l => l.id === listId);
+  if (!list) return;
+  const total = list.items.reduce((s, i) => i.checked ? s + (parseFloat(i.actualPrice) || 0) * (parseFloat(i.qty) || 1) : s, 0);
+  const itemCount = list.items.filter(i => i.checked).length;
+  if (total <= 0 && !confirm('Total is ₱0 — record anyway?')) return;
+  const expense = {
+    id: uid(),
+    desc: list.name,
+    amount: total,
+    date: list.date || new Date().toISOString().split('T')[0],
+    cat: 'Groceries',
+    notes: `${itemCount} item${itemCount !== 1 ? 's' : ''}`
+  };
+  db.expenses.push(expense);
+  list.status = 'done';
+  list.expenseId = expense.id;
+  save(); renderGroceryShop(listId);
+  toast(`₱${fmt(total)} recorded in expenses!`);
+}
+
+// Barcode scanner
+async function openBarcodeScanner(listId, itemId) {
+  currentGroceryListId = listId;
+  openModal('barcodeScanModal');
+  document.getElementById('barcodeManualInput').value = '';
+  document.getElementById('barcodeVideo').style.display = 'none';
+  const statusEl = document.getElementById('barcodeScanStatus');
+
+  if (!('BarcodeDetector' in window)) {
+    statusEl.textContent = 'Camera scanning not supported — use manual entry below.';
+    return;
+  }
+  statusEl.textContent = 'Starting camera...';
+  try {
+    barcodeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
+    const video = document.getElementById('barcodeVideo');
+    video.srcObject = barcodeStream;
+    video.style.display = '';
+    await video.play();
+    const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39'] });
+    statusEl.textContent = 'Point camera at a barcode...';
+    const scan = async () => {
+      if (!barcodeStream) return;
+      try {
+        const codes = await detector.detect(video);
+        if (codes.length > 0) {
+          const code = codes[0].rawValue;
+          stopBarcodeScanner();
+          closeModal('barcodeScanModal');
+          handleBarcodeResult(listId, itemId, code);
+          return;
+        }
+      } catch(e) {}
+      if (barcodeStream) barcodeAnimFrame = requestAnimationFrame(scan);
+    };
+    barcodeAnimFrame = requestAnimationFrame(scan);
+  } catch(e) {
+    statusEl.textContent = 'Camera access denied — use manual entry below.';
+    if (barcodeStream) { barcodeStream.getTracks().forEach(t => t.stop()); barcodeStream = null; }
+  }
+}
+
+function stopBarcodeScanner() {
+  if (barcodeAnimFrame) { cancelAnimationFrame(barcodeAnimFrame); barcodeAnimFrame = null; }
+  if (barcodeStream) { barcodeStream.getTracks().forEach(t => t.stop()); barcodeStream = null; }
+  const v = document.getElementById('barcodeVideo');
+  if (v) { v.srcObject = null; v.style.display = 'none'; }
+}
+
+function closeBarcodeScanner() {
+  stopBarcodeScanner();
+  closeModal('barcodeScanModal');
+}
+
+function submitManualBarcode() {
+  const code = document.getElementById('barcodeManualInput').value.trim();
+  if (!code) return;
+  stopBarcodeScanner();
+  closeModal('barcodeScanModal');
+  handleBarcodeResult(currentGroceryListId, null, code);
+}
+
+function handleBarcodeResult(listId, itemId, barcode) {
+  const list = db.groceryLists.find(l => l.id === listId);
+  if (!list) return;
+  // If called from a specific item row — save barcode to that item
+  if (itemId) {
+    const item = list.items.find(i => i.id === itemId);
+    if (item) { item.barcode = barcode; save(); renderGroceryShop(listId); toast('Barcode linked to: ' + item.name); return; }
+  }
+  // Try to match by barcode
+  const match = list.items.find(i => i.barcode === barcode);
+  if (match) {
+    renderGroceryShop(listId); // ensure rendered
+    setTimeout(() => {
+      const row = document.getElementById('grow-' + match.id);
+      if (row) { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+      const inp = row ? row.querySelector('.grocery-price-input') : null;
+      if (inp) inp.focus();
+    }, 100);
+    toast('Found: ' + match.name);
+  } else {
+    // Unknown barcode — open add item modal with barcode pre-filled
+    openAddGroceryItem(listId);
+    document.getElementById('giBarcode').value = barcode;
+    toast('New barcode — fill in item details');
+  }
+}
+
 // ========== ICON HELPER (inline SVG for dynamically rendered content) ==========
 function lc(name, size = 14) {
   const p = {
@@ -5580,6 +6052,9 @@ function lc(name, size = 14) {
     eye:      '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
     'eye-off':'<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>',
     copy:     '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+    plus:         '<path d="M5 12h14"/><path d="M12 5v14"/>',
+    'arrow-left': '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+    barcode:      '<path d="M3 5v14"/><path d="M8 5v14"/><path d="M13 5v14"/><path d="M18 5v14"/><path d="M21 5v14"/>',
   };
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p[name]||''}</svg>`;
 }
