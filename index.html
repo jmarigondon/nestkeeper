@@ -1318,6 +1318,25 @@
   </div>
 </div>
 
+<!-- Renovation Payment -->
+<div class="modal-overlay" id="addRenoPaymentModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Record Payment</div>
+      <button class="close-btn" onclick="closeModal('addRenoPaymentModal')">×</button>
+    </div>
+    <div class="form-row cols2">
+      <div><label>Amount (₱) *</label><input class="input" id="renoPayAmount" type="number" placeholder="0.00" min="0"></div>
+      <div><label>Date *</label><input class="input" id="renoPayDate" type="date"></div>
+    </div>
+    <div class="form-row"><div><label>Note</label><input class="input" id="renoPayNote" placeholder="e.g. Downpayment, 2nd tranche…"></div></div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('addRenoPaymentModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveRenoPayment()">Record & Save to Expenses</button>
+    </div>
+  </div>
+</div>
+
 <!-- Add Appointment -->
 <div class="modal-overlay" id="addAppointmentModal">
   <div class="modal">
@@ -1346,6 +1365,7 @@
       </div>
     </div>
     <div class="form-row"><div><label>Notes</label><input class="input" id="apptNotes" placeholder="Bring records, fasting required…"></div></div>
+    <div class="form-row"><div><label>Consultation Fee (₱)</label><input class="input" id="apptCost" type="number" placeholder="0.00" min="0"></div></div>
     <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
       <button class="btn btn-ghost" onclick="closeModal('addAppointmentModal')">Cancel</button>
       <button class="btn btn-primary" onclick="saveAppointment()">Save</button>
@@ -1368,7 +1388,10 @@
       <div><label>Date Given *</label><input class="input" id="vaxDate" type="date"></div>
       <div><label>Next Due Date</label><input class="input" id="vaxNextDue" type="date"></div>
     </div>
-    <div class="form-row"><div><label>Notes</label><input class="input" id="vaxNotes" placeholder="Clinic, dose number, batch…"></div></div>
+    <div class="form-row cols2">
+      <div><label>Notes</label><input class="input" id="vaxNotes" placeholder="Clinic, dose number, batch…"></div>
+      <div><label>Cost (₱)</label><input class="input" id="vaxCost" type="number" placeholder="0.00" min="0"></div>
+    </div>
     <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
       <button class="btn btn-ghost" onclick="closeModal('addVaccineModal')">Cancel</button>
       <button class="btn btn-primary" onclick="saveVaccine()">Save</button>
@@ -1482,8 +1505,11 @@
       <div><label>Time Start</label><input class="input" id="extraStart" type="time"></div>
       <div><label>Time End</label><input class="input" id="extraEnd" type="time"></div>
     </div>
-    <div class="form-row"><div><label>Venue</label><input class="input" id="extraVenue" placeholder="Location or address"></div></div>
-    <div class="form-row"><div><label>Notes</label><input class="input" id="extraNotes" placeholder="Coach name, fee, notes…"></div></div>
+    <div class="form-row cols2">
+      <div><label>Venue</label><input class="input" id="extraVenue" placeholder="Location or address"></div>
+      <div><label>Monthly Fee (₱)</label><input class="input" id="extraFee" type="number" placeholder="0.00" min="0"></div>
+    </div>
+    <div class="form-row"><div><label>Notes</label><input class="input" id="extraNotes" placeholder="Coach name, notes…"></div></div>
     <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
       <button class="btn btn-ghost" onclick="closeModal('addExtraModal')">Cancel</button>
       <button class="btn btn-primary" onclick="saveExtracurricular()">Save</button>
@@ -1509,11 +1535,14 @@
           <option value="Field Trip">Field Trip</option><option value="Holiday">Holiday / No School</option>
           <option value="Meeting">Parent Meeting</option><option value="Performance">Performance / Recital</option>
           <option value="Sports">Sports / Competition</option><option value="Deadline">Deadline / Submission</option>
-          <option value="Other">Other</option>
+          <option value="Fee">Fee / Payment</option><option value="Other">Other</option>
         </select>
       </div>
     </div>
-    <div class="form-row"><div><label>Description</label><input class="input" id="schoolEvDesc" placeholder="Details, reminders…"></div></div>
+    <div class="form-row cols2">
+      <div><label>Description</label><input class="input" id="schoolEvDesc" placeholder="Details, reminders…"></div>
+      <div><label>Cost (₱)</label><input class="input" id="schoolEvCost" type="number" placeholder="0.00" min="0"></div>
+    </div>
     <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:6px;">
       <button class="btn btn-ghost" onclick="closeModal('addSchoolEventModal')">Cancel</button>
       <button class="btn btn-primary" onclick="saveSchoolEvent()">Save</button>
@@ -4592,6 +4621,20 @@ function renderRenovations() {
         ${r.actual ? `<div class="reno-cost-item">Actual<div class="reno-cost-val" style="color:${overBudget?'var(--red)':'var(--green)'}">₱${fmt(r.actual)}${overBudget?` <span style="font-size:10px">⚠ +₱${fmt(r.actual-r.budget)} over</span>`:''}</div></div>` : ''}
         ${r.budget && r.actual ? `<div class="reno-cost-item">Remaining<div class="reno-cost-val" style="color:${overBudget?'var(--red)':'var(--text2)'}">₱${fmt(Math.abs(r.budget-r.actual))}${overBudget?' over':' left'}</div></div>` : ''}
       </div>` : ''}
+      ${(r.payments && r.payments.length) ? `<div style="margin-top:10px; border-top:1px solid rgba(255,255,255,0.07); padding-top:10px;">
+        <div style="font-size:10px; font-weight:700; color:var(--text3); letter-spacing:0.6px; margin-bottom:6px;">PAYMENTS RECORDED</div>
+        ${r.payments.map(p => `<div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; padding:3px 0;">
+          <span style="color:var(--text2);">${formatDate(p.date)}${p.note?' · <em>'+p.note+'</em>':''}</span>
+          <span style="color:var(--green); font-weight:600;">₱${fmt(p.amount)}</span>
+        </div>`).join('')}
+        <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:700; border-top:1px solid rgba(255,255,255,0.07); margin-top:6px; padding-top:6px;">
+          <span style="color:var(--text2);">Total Paid</span>
+          <span style="color:var(--green);">₱${fmt(r.payments.reduce((s,p)=>s+p.amount,0))}</span>
+        </div>
+      </div>` : ''}
+      <div style="margin-top:10px;">
+        <button class="btn btn-ghost btn-sm" onclick="openAddRenoPayment('${r.id}')">+ Record Payment</button>
+      </div>
     </div>`;
   }).join('');
 }
@@ -4608,6 +4651,7 @@ function advanceReno(id) {
 function saveRenovation() {
   const name = document.getElementById('renoName').value.trim();
   if (!name) { alert('Please enter a project name'); return; }
+  const existing = editingId ? db.renovations.find(r => r.id === editingId) : null;
   const reno = {
     id: editingId || uid(), name,
     area: document.getElementById('renoArea').value,
@@ -4617,7 +4661,8 @@ function saveRenovation() {
     startDate: document.getElementById('renoStart').value,
     endDate: document.getElementById('renoEnd').value,
     contractor: document.getElementById('renoContractor').value.trim(),
-    notes: document.getElementById('renoNotes').value.trim()
+    notes: document.getElementById('renoNotes').value.trim(),
+    payments: existing ? (existing.payments || []) : []
   };
   if (editingId) db.renovations = db.renovations.map(r => r.id === editingId ? reno : r);
   else db.renovations.push(reno);
@@ -4650,6 +4695,34 @@ function deleteRenovation(id) {
   if (!confirm('Delete this project?')) return;
   db.renovations = db.renovations.filter(r => r.id !== id);
   save(); renderRenovations(); toast('🗑 Deleted');
+}
+
+let editingRenoPaymentId = null;
+
+function openAddRenoPayment(renoId) {
+  editingRenoPaymentId = renoId;
+  document.getElementById('renoPayAmount').value = '';
+  document.getElementById('renoPayNote').value = '';
+  document.getElementById('renoPayDate').value = new Date().toISOString().split('T')[0];
+  openModal('addRenoPaymentModal');
+}
+
+function saveRenoPayment() {
+  const amount = parseFloat(document.getElementById('renoPayAmount').value) || 0;
+  const date = document.getElementById('renoPayDate').value;
+  if (!amount || !date) { alert('Please enter amount and date'); return; }
+  const reno = db.renovations.find(r => r.id === editingRenoPaymentId);
+  if (!reno) return;
+  if (!reno.payments) reno.payments = [];
+  const note = document.getElementById('renoPayNote').value.trim();
+  const expense = {
+    id: uid(), desc: reno.name, amount, date,
+    cat: '🏠 Home', notes: note || 'Renovation payment'
+  };
+  db.expenses.push(expense);
+  reno.payments.push({ id: uid(), amount, date, note, expenseId: expense.id });
+  save(); closeModal('addRenoPaymentModal'); renderRenovations();
+  toast(`₱${fmt(amount)} recorded as Home expense!`);
 }
 
 // ========== MEDICAL ==========
@@ -4722,6 +4795,10 @@ function renderAppointments() {
           ${a.reason ? `<div style="font-size:12px; color:var(--text2); margin-top:4px;">${a.reason}</div>` : ''}
           ${a.followUp ? `<div style="font-size:11px; color:var(--gold); margin-top:3px;">↪ Follow-up: ${formatDate(a.followUp)}</div>` : ''}
           ${a.notes ? `<div style="font-size:11px; color:var(--text3); margin-top:3px;">${a.notes}</div>` : ''}
+          ${a.cost ? `<div style="margin-top:5px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span style="font-size:12px; color:var(--gold); font-weight:600;">₱${fmt(a.cost)}</span>
+            ${a.expenseId ? `<span style="font-size:11px; color:var(--green); font-weight:600;">✓ Recorded in Expenses</span>` : `<button onclick="recordApptExpense('${a.id}')" style="font-size:11px; color:var(--teal); background:rgba(125,210,200,0.1); border:1px solid rgba(125,210,200,0.2); border-radius:6px; padding:2px 8px; cursor:pointer; font-family:'Inter',sans-serif;">+ Record as Expense</button>`}
+          </div>` : ''}
           ${a.status === 'upcoming' ? `<div style="margin-top:6px;">${a.gcalSynced ? `<button onclick="syncApptToGCal('${a.id}')" style="font-size:11px; color:var(--green); background:none; border:none; padding:0; cursor:pointer; font-family:'Inter',sans-serif;">✓ Added to Google Calendar</button>` : `<button onclick="syncApptToGCal('${a.id}')" style="font-size:11px; color:var(--teal); background:none; border:none; padding:0; cursor:pointer; font-family:'Inter',sans-serif; text-decoration:underline;">📆 Add to Google Calendar</button>`}</div>` : ''}
         </div>
         <div style="display:flex; gap:6px; align-items:center;">
@@ -4752,6 +4829,7 @@ function saveAppointment() {
   const doctor = document.getElementById('apptDoctor').value.trim();
   const date = document.getElementById('apptDate').value;
   if (!person || !doctor || !date) { alert('Please fill in Person, Doctor and Date'); return; }
+  const existing = editingId ? db.medical.appointments.find(a => a.id === editingId) : null;
   const appt = {
     id: editingId || uid(), person, doctor, date,
     time: document.getElementById('apptTime').value,
@@ -4759,7 +4837,9 @@ function saveAppointment() {
     reason: document.getElementById('apptReason').value.trim(),
     followUp: document.getElementById('apptFollowUp').value,
     status: document.getElementById('apptStatus').value,
-    notes: document.getElementById('apptNotes').value.trim()
+    notes: document.getElementById('apptNotes').value.trim(),
+    cost: parseFloat(document.getElementById('apptCost').value) || 0,
+    expenseId: existing ? existing.expenseId : null
   };
   if (editingId) db.medical.appointments = db.medical.appointments.map(a => a.id === editingId ? appt : a);
   else db.medical.appointments.push(appt);
@@ -4768,7 +4848,7 @@ function saveAppointment() {
 }
 
 function resetApptForm() {
-  ['apptPerson','apptDoctor','apptDate','apptTime','apptClinic','apptReason','apptFollowUp','apptNotes'].forEach(id => document.getElementById(id).value = '');
+  ['apptPerson','apptDoctor','apptDate','apptTime','apptClinic','apptReason','apptFollowUp','apptNotes','apptCost'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('apptStatus').value = 'upcoming';
 }
 
@@ -4785,6 +4865,7 @@ function editAppointment(id) {
   document.getElementById('apptFollowUp').value = a.followUp || '';
   document.getElementById('apptStatus').value = a.status || 'upcoming';
   document.getElementById('apptNotes').value = a.notes || '';
+  document.getElementById('apptCost').value = a.cost || '';
   openModal('addAppointmentModal');
 }
 
@@ -4792,6 +4873,19 @@ function deleteAppointment(id) {
   if (!confirm('Delete this appointment?')) return;
   db.medical.appointments = db.medical.appointments.filter(a => a.id !== id);
   save(); renderAppointments(); toast('🗑 Deleted');
+}
+
+function recordApptExpense(id) {
+  const a = db.medical.appointments.find(a => a.id === id);
+  if (!a || !a.cost) return;
+  if (a.expenseId) { toast('Already recorded in expenses!'); return; }
+  const expense = {
+    id: uid(), desc: `${a.doctor}${a.reason ? ' – ' + a.reason : ''}`,
+    amount: a.cost, date: a.date, cat: '💊 Health', notes: a.person
+  };
+  db.expenses.push(expense);
+  a.expenseId = expense.id;
+  save(); renderAppointments(); toast(`₱${fmt(a.cost)} recorded as Health expense!`);
 }
 
 function renderVaccineTracker() {
@@ -4831,6 +4925,10 @@ function renderVaccineTracker() {
           <div style="flex:1;">
             <div style="font-weight:600; font-size:13px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">${v.vaccine} ${dueTag}</div>
             <div style="font-size:11px; color:var(--text3); margin-top:2px;">Given: ${formatDate(v.dateGiven)}${v.notes?' · '+v.notes:''}</div>
+            ${v.cost ? `<div style="margin-top:4px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <span style="font-size:12px; color:var(--gold); font-weight:600;">₱${fmt(v.cost)}</span>
+              ${v.expenseId ? `<span style="font-size:11px; color:var(--green); font-weight:600;">✓ Recorded in Expenses</span>` : `<button onclick="recordVaxExpense('${v.id}')" style="font-size:11px; color:var(--teal); background:rgba(125,210,200,0.1); border:1px solid rgba(125,210,200,0.2); border-radius:6px; padding:2px 8px; cursor:pointer; font-family:'Inter',sans-serif;">+ Record as Expense</button>`}
+            </div>` : ''}
           </div>
           <button class="edit-btn" onclick="editVaccine('${v.id}')">${lc('pencil')}</button>
           <button class="del-btn" onclick="deleteVaccine('${v.id}')">${lc('trash-2')}</button>
@@ -4848,10 +4946,13 @@ function saveVaccine() {
   const vaccine = document.getElementById('vaxName').value.trim();
   const dateGiven = document.getElementById('vaxDate').value;
   if (!person || !vaccine || !dateGiven) { alert('Please fill in Person, Vaccine and Date Given'); return; }
+  const existing = editingId ? db.medical.vaccines.find(v => v.id === editingId) : null;
   const vax = {
     id: editingId || uid(), person, vaccine, dateGiven,
     nextDue: document.getElementById('vaxNextDue').value,
-    notes: document.getElementById('vaxNotes').value.trim()
+    notes: document.getElementById('vaxNotes').value.trim(),
+    cost: parseFloat(document.getElementById('vaxCost').value) || 0,
+    expenseId: existing ? existing.expenseId : null
   };
   if (editingId) db.medical.vaccines = db.medical.vaccines.map(v => v.id === editingId ? vax : v);
   else db.medical.vaccines.push(vax);
@@ -4860,7 +4961,7 @@ function saveVaccine() {
 }
 
 function resetVaxForm() {
-  ['vaxPerson','vaxName','vaxDate','vaxNextDue','vaxNotes'].forEach(id => document.getElementById(id).value = '');
+  ['vaxPerson','vaxName','vaxDate','vaxNextDue','vaxNotes','vaxCost'].forEach(id => document.getElementById(id).value = '');
 }
 
 function editVaccine(id) {
@@ -4872,6 +4973,7 @@ function editVaccine(id) {
   document.getElementById('vaxDate').value = v.dateGiven;
   document.getElementById('vaxNextDue').value = v.nextDue || '';
   document.getElementById('vaxNotes').value = v.notes || '';
+  document.getElementById('vaxCost').value = v.cost || '';
   openModal('addVaccineModal');
 }
 
@@ -4879,6 +4981,19 @@ function deleteVaccine(id) {
   if (!confirm('Delete this vaccine record?')) return;
   db.medical.vaccines = db.medical.vaccines.filter(v => v.id !== id);
   save(); renderVaccineTracker(); toast('🗑 Deleted');
+}
+
+function recordVaxExpense(id) {
+  const v = db.medical.vaccines.find(v => v.id === id);
+  if (!v || !v.cost) return;
+  if (v.expenseId) { toast('Already recorded in expenses!'); return; }
+  const expense = {
+    id: uid(), desc: `${v.vaccine} vaccine – ${v.person}`,
+    amount: v.cost, date: v.dateGiven, cat: '💊 Health', notes: ''
+  };
+  db.expenses.push(expense);
+  v.expenseId = expense.id;
+  save(); renderVaccineTracker(); toast(`₱${fmt(v.cost)} recorded as Health expense!`);
 }
 
 // ========== MEDICAL DOCUMENTS ==========
@@ -5110,6 +5225,10 @@ function renderSchoolEvents() {
           <span style="font-size:12px; color:var(--text3);">📅 ${formatDate(e.date)}</span>
         </div>
         ${e.desc ? `<div style="font-size:12px; color:var(--text2); margin-top:5px;">${e.desc}</div>` : ''}
+        ${e.cost ? `<div style="margin-top:5px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <span style="font-size:12px; color:var(--gold); font-weight:600;">₱${fmt(e.cost)}</span>
+          ${e.expenseId ? `<span style="font-size:11px; color:var(--green); font-weight:600;">✓ Recorded in Expenses</span>` : `<button onclick="recordSchoolEventExpense('${e.id}')" style="font-size:11px; color:var(--teal); background:rgba(125,210,200,0.1); border:1px solid rgba(125,210,200,0.2); border-radius:6px; padding:2px 8px; cursor:pointer; font-family:'Inter',sans-serif;">+ Record as Expense</button>`}
+        </div>` : ''}
         ${diff >= 0 ? `<div style="margin-top:6px;">${e.gcalSynced ? `<button onclick="syncSchoolEventToGCal('${e.id}')" style="font-size:11px; color:var(--green); background:none; border:none; padding:0; cursor:pointer; font-family:'Inter',sans-serif;">✓ Added to Google Calendar</button>` : `<button onclick="syncSchoolEventToGCal('${e.id}')" style="font-size:11px; color:var(--teal); background:none; border:none; padding:0; cursor:pointer; font-family:'Inter',sans-serif; text-decoration:underline;">📆 Add to Google Calendar</button>`}</div>` : ''}
       </div>
       <div style="display:flex; gap:6px;">
@@ -5129,16 +5248,19 @@ function saveSchoolEvent() {
   const title = document.getElementById('schoolEvTitle').value.trim();
   const date = document.getElementById('schoolEvDate').value;
   if (!title || !date) { alert('Please enter a title and date'); return; }
+  const existing = editingId ? db.school.events.find(e => e.id === editingId) : null;
   const ev = {
     id: editingId || uid(), title, date,
     type: document.getElementById('schoolEvType').value,
-    desc: document.getElementById('schoolEvDesc').value.trim()
+    desc: document.getElementById('schoolEvDesc').value.trim(),
+    cost: parseFloat(document.getElementById('schoolEvCost').value) || 0,
+    expenseId: existing ? existing.expenseId : null
   };
   if (editingId) db.school.events = db.school.events.map(e => e.id === editingId ? ev : e);
   else db.school.events.push(ev);
   editingId = null;
   save(); closeModal('addSchoolEventModal');
-  ['schoolEvTitle','schoolEvDate','schoolEvDesc'].forEach(id => document.getElementById(id).value = '');
+  ['schoolEvTitle','schoolEvDate','schoolEvDesc','schoolEvCost'].forEach(id => document.getElementById(id).value = '');
   renderSchoolEvents(); toast('✓ Event saved!');
 }
 
@@ -5150,6 +5272,7 @@ function editSchoolEvent(id) {
   document.getElementById('schoolEvDate').value = e.date;
   document.getElementById('schoolEvType').value = e.type;
   document.getElementById('schoolEvDesc').value = e.desc || '';
+  document.getElementById('schoolEvCost').value = e.cost || '';
   openModal('addSchoolEventModal');
 }
 
@@ -5157,6 +5280,19 @@ function deleteSchoolEvent(id) {
   if (!confirm('Delete this event?')) return;
   db.school.events = db.school.events.filter(e => e.id !== id);
   save(); renderSchoolEvents(); toast('🗑 Deleted');
+}
+
+function recordSchoolEventExpense(id) {
+  const e = db.school.events.find(e => e.id === id);
+  if (!e || !e.cost) return;
+  if (e.expenseId) { toast('Already recorded in expenses!'); return; }
+  const expense = {
+    id: uid(), desc: e.title, amount: e.cost, date: e.date,
+    cat: '📚 Education', notes: e.type
+  };
+  db.expenses.push(expense);
+  e.expenseId = expense.id;
+  save(); renderSchoolEvents(); toast(`₱${fmt(e.cost)} recorded as Education expense!`);
 }
 
 function renderSchoolSchedule() {
@@ -5247,6 +5383,10 @@ function renderExtracurriculars() {
             ${i.venue?`<span>📍 ${i.venue}</span>`:''}
             ${i.notes?`<span>${i.notes}</span>`:''}
           </div>
+          ${i.fee ? `<div style="margin-top:4px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span style="font-size:12px; color:var(--gold); font-weight:600;">₱${fmt(i.fee)}/mo</span>
+            <button onclick="recordExtraExpense('${i.id}')" style="font-size:11px; color:var(--teal); background:rgba(125,210,200,0.1); border:1px solid rgba(125,210,200,0.2); border-radius:6px; padding:2px 8px; cursor:pointer; font-family:'Inter',sans-serif;">+ Record Payment</button>
+          </div>` : ''}
         </div>
         <button class="edit-btn" onclick="editExtracurricular('${i.id}')">${lc('pencil')}</button>
         <button class="del-btn" onclick="deleteExtracurricular('${i.id}')">${lc('trash-2')}</button>
@@ -5262,13 +5402,14 @@ function saveExtracurricular() {
     timeStart: document.getElementById('extraStart').value,
     timeEnd: document.getElementById('extraEnd').value,
     venue: document.getElementById('extraVenue').value.trim(),
+    fee: parseFloat(document.getElementById('extraFee').value) || 0,
     notes: document.getElementById('extraNotes').value.trim()
   };
   if (editingId) db.school.extracurriculars = db.school.extracurriculars.map(i => i.id === editingId ? item : i);
   else db.school.extracurriculars.push(item);
   editingId = null;
   save(); closeModal('addExtraModal');
-  ['extraName','extraStart','extraEnd','extraVenue','extraNotes'].forEach(id => document.getElementById(id).value = '');
+  ['extraName','extraStart','extraEnd','extraVenue','extraFee','extraNotes'].forEach(id => document.getElementById(id).value = '');
   renderExtracurriculars(); toast('✓ Activity saved!');
 }
 
@@ -5281,6 +5422,7 @@ function editExtracurricular(id) {
   document.getElementById('extraStart').value = i.timeStart || '';
   document.getElementById('extraEnd').value = i.timeEnd || '';
   document.getElementById('extraVenue').value = i.venue || '';
+  document.getElementById('extraFee').value = i.fee || '';
   document.getElementById('extraNotes').value = i.notes || '';
   openModal('addExtraModal');
 }
@@ -5289,6 +5431,19 @@ function deleteExtracurricular(id) {
   if (!confirm('Delete this activity?')) return;
   db.school.extracurriculars = db.school.extracurriculars.filter(i => i.id !== id);
   save(); renderExtracurriculars(); toast('🗑 Deleted');
+}
+
+function recordExtraExpense(id) {
+  const i = db.school.extracurriculars.find(i => i.id === id);
+  if (!i || !i.fee) return;
+  const child = db.school.childName || 'School';
+  const expense = {
+    id: uid(), desc: `${i.name} – ${child}`,
+    amount: i.fee, date: new Date().toISOString().split('T')[0],
+    cat: '📚 Education', notes: i.day
+  };
+  db.expenses.push(expense);
+  save(); renderExtracurriculars(); toast(`₱${fmt(i.fee)} recorded as Education expense!`);
 }
 
 // ========== SUMMARY ==========
