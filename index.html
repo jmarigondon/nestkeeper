@@ -2098,6 +2098,7 @@ async function load() {
     if (!db.school.events) db.school.events = [];
     if (db.vaultSalt === undefined) db.vaultSalt = null;
     if (db.vaultVerify === undefined) db.vaultVerify = null;
+    migrateStripIcons();
   } catch(e) {}
 
   if (!SCRIPT_URL) { setSyncStatus('error', 'Not connected — click ⚙️ Setup'); return; }
@@ -2124,6 +2125,7 @@ async function load() {
     if (!db.school.events) db.school.events = [];
     if (db.vaultSalt === undefined) db.vaultSalt = null;
     if (db.vaultVerify === undefined) db.vaultVerify = null;
+    migrateStripIcons();
       localStorage.setItem('nestkeeper_v2', JSON.stringify(db));
       setSyncStatus('ok', 'Loaded from Google Sheets');
       setTimeout(() => setSyncStatus('idle', 'Connected'), 2500);
@@ -2340,7 +2342,6 @@ function renderBills() {
       const avg = calcBillAvg(b);
       return `
         <div class="bill-item" style="border-left: 3px solid ${b.color}40;">
-          <div class="bill-icon" style="color:${b.color}">${b.icon}</div>
           <div class="bill-info" style="flex:1">
             <div class="bill-name">${b.name}</div>
             <div class="bill-due" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
@@ -2375,7 +2376,6 @@ function renderBills() {
       const moEquiv = b.typical ? b.typical / 12 : null;
       return `
         <div class="bill-item" style="border-left: 3px solid ${b.color}; background: linear-gradient(135deg, rgba(245,199,126,0.04), var(--glass));">
-          <div class="bill-icon" style="color:${b.color}">${b.icon}</div>
           <div class="bill-info" style="flex:1">
             <div class="bill-name" style="display:flex; align-items:center; gap:7px;">
               ${b.name}<span class="bill-freq-badge annual">ANNUAL</span>
@@ -2636,7 +2636,6 @@ function renderBillsSummary() {
                 <tr>
                   <td class="bsm-name">
                     <div class="bsm-bill-name">
-                      <span style="font-size:18px">${b.icon}</span>
                       <div>
                         <div>${b.name}</div>
                         <div class="bsm-rate">${pct}% · avg ₱${fmt(b.typical || 0)}/mo</div>
@@ -2672,7 +2671,6 @@ function renderBillsSummary() {
           const amtPaid = p.amount || (isPaid ? b.typical : 0);
           return `
             <div style="display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
-              <div style="font-size:22px; width:36px; text-align:center;">${b.icon}</div>
               <div style="flex:1">
                 <div style="font-weight:600; font-size:13px; display:flex; align-items:center; gap:7px;">${b.name}<span class="bill-freq-badge annual">ANNUAL</span></div>
                 <div style="font-size:12px; color:var(--text3); margin-top:2px;">Due: ${dueLabel} &nbsp;·&nbsp; Est. ₱${fmt(b.typical || 0)}/yr</div>
@@ -3200,7 +3198,6 @@ function renderDocs() {
   const { slice, p, totalPages, total } = paginate(filtered, pages.docs);
   list.innerHTML = slice.map(doc => `
     <div class="doc-item">
-      <div class="doc-icon">${doc.icon}</div>
       <div class="doc-info">
         <div class="doc-name">${doc.title}</div>
         <div class="doc-meta">
@@ -3264,7 +3261,6 @@ function renderBooks() {
   const { slice, p, totalPages, total } = paginate(filtered, pages.books);
   grid.innerHTML = slice.map(book => `
     <div class="book-card" onclick="viewBook('${book.id}')">
-      <div class="book-emoji">${book.emoji}</div>
       <div class="book-title">${book.title}</div>
       <div class="book-author">${book.author || 'Unknown author'}</div>
       <span class="book-status ${statusMap[book.status]||'bs-want'}">${book.status}</span>
@@ -3401,7 +3397,6 @@ function renderSavings() {
     return `
       <div class="card" style="margin-bottom:16px; border-left:3px solid ${goal.color}40;">
         <div style="display:flex; align-items:flex-start; gap:14px; flex-wrap:wrap;">
-          <div style="font-size:32px; width:50px; height:50px; border-radius:14px; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; flex-shrink:0;">${goal.icon}</div>
           <div style="flex:1; min-width:200px;">
             <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:4px;">
               <div style="font-family:'Josefin Sans',sans-serif; font-size:17px; font-weight:700;">${goal.name}</div>
@@ -3522,7 +3517,6 @@ function renderBudgetPlan() {
     html += `<div style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;">
       ${db.budget.incomes.map(inc => `
         <div class="budget-income-item">
-          <div style="font-size:24px; width:42px; height:42px; border-radius:10px; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; flex-shrink:0;">${inc.icon || '💼'}</div>
           <div style="flex:1;">
             <div style="font-weight:600; font-size:14px;">${inc.label}</div>
             <div style="font-size:11px; color:var(--text3);">Monthly income source</div>
@@ -3557,7 +3551,7 @@ function renderBudgetPlan() {
       ${db.bills.length ? db.bills.map(b => {
         const mo = (b.frequency || 'monthly') === 'annual' ? (b.typical || 0) / 12 : (b.typical || 0);
         return `<div class="budget-alloc-row">
-          <span style="color:var(--text2); font-size:13px;">${b.icon} ${b.name}${b.frequency === 'annual' ? ' <span style="font-size:10px; opacity:.6">÷12</span>' : ''}</span>
+          <span style="color:var(--text2); font-size:13px;">${b.name}${b.frequency === 'annual' ? ' <span style="font-size:10px; opacity:.6">÷12</span>' : ''}</span>
           <span style="margin-left:auto; color:var(--text3); font-size:12px;">₱${fmt(mo)}/mo</span>
         </div>`;
       }).join('') : '<div style="padding:8px 0; font-size:12px; color:var(--text3);">No bills added yet.</div>'}
@@ -3611,8 +3605,7 @@ function renderBudgetPlan() {
       ${db.savings.length ? db.savings.map(goal => {
         const alloc = db.budget.savingsAllocations[goal.id] || 0;
         return `<div class="budget-alloc-row">
-          <span style="font-size:18px;">${goal.icon}</span>
-          <span style="flex:1; font-size:13px; color:var(--text2); margin-left:6px;">${goal.name}</span>
+          <span style="flex:1; font-size:13px; color:var(--text2);">${goal.name}</span>
           <div style="display:flex; align-items:center; gap:5px;">
             <span style="font-size:12px; color:var(--text3);">₱</span>
             <input class="input budget-cat-input" type="number" value="${alloc || ''}" placeholder="monthly" min="0"
@@ -3712,7 +3705,6 @@ function renderBudgetReview() {
         const statusClr = p.status === 'paid' ? 'var(--green)' : p.status === 'partial' ? 'var(--gold)' : 'var(--text3)';
         const statusTxt = p.status === 'paid' ? '✓ Paid' : p.status === 'partial' ? '⊘ Partial' : 'Unpaid';
         return `<div style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04);">
-          <span style="font-size:18px;">${b.icon}</span>
           <span style="flex:1; font-size:13px; font-weight:500;">${b.name}${isAnnual ? ' <span class="bill-freq-badge annual" style="font-size:9px; padding:1px 5px;">ANNUAL</span>' : ''}</span>
           <span style="font-size:12px; color:${statusClr}; font-weight:600; margin-right:8px;">${statusTxt}</span>
           <span style="font-weight:700; color:var(--teal); font-size:14px;">₱${fmt(amt)}${isAnnual ? '<span style="font-size:10px; color:var(--text3); font-weight:400">/mo eq.</span>' : ''}</span>
@@ -3950,7 +3942,7 @@ function renderGovAccounts() {
     return `
       <div class="gov-card" style="border-top: 3px solid ${c};">
         <div class="gov-card-header">
-          <div class="gov-card-icon" style="background:${c}22; color:${c};">${acc.icon}</div>
+          <div class="gov-card-icon" style="background:${c}22; color:${c}; font-size:15px; font-weight:700; font-family:'Josefin Sans',sans-serif;">${acc.name.charAt(0).toUpperCase()}</div>
           <div style="flex:1; min-width:0;">
             <div style="font-family:'Josefin Sans',sans-serif; font-weight:700; font-size:16px;">${acc.name}</div>
             <div style="font-size:11px; color:var(--text3); margin-top:2px;">${acc.cat}</div>
@@ -4146,6 +4138,18 @@ async function attemptVaultUnlock() {
   }
 }
 
+function migrateStripIcons() {
+  db.bills.forEach(b => { delete b.icon; });
+  db.docs.forEach(d => { delete d.icon; });
+  db.books.forEach(b => { delete b.emoji; });
+  db.savings.forEach(g => { delete g.icon; });
+  if (db.budget && db.budget.incomes) db.budget.incomes.forEach(i => { delete i.icon; });
+  db.passwords.forEach(p => { delete p.icon; });
+  db.govaccounts.forEach(a => { delete a.icon; });
+  db.events.forEach(e => { delete e.emoji; });
+  if (db.school && db.school.events) db.school.events.forEach(e => { delete e.emoji; });
+}
+
 async function migrateExistingToVault(key) {
   for (const pw of db.passwords) {
     if (pw.pass !== undefined && !pw.encPass) { pw.encPass = await encryptField(pw.pass, key); delete pw.pass; }
@@ -4322,7 +4326,7 @@ function renderPasswords() {
     return `
       <div class="pw-card">
         <div class="pw-card-header">
-          <div class="pw-icon">${pw.icon}</div>
+          <div class="pw-icon" style="font-size:15px; font-weight:700; font-family:'Josefin Sans',sans-serif;">${pw.name.charAt(0).toUpperCase()}</div>
           <div style="flex:1; min-width:0;">
             <div class="pw-name">${pw.name}</div>
             <div class="pw-cat">${pw.cat}</div>
@@ -5210,7 +5214,7 @@ function renderSummary() {
       const monthly = annualAmt / 12;
       const monthAmts = Array(12).fill(monthly);
       monthAmts.forEach((a, i) => billMonthTotals[i] += a);
-      return { name: b.name, icon: b.icon, color: b.color, monthAmts, avg: monthly, annual: annualAmt, isAnnual: true };
+      return { name: b.name, color: b.color, monthAmts, avg: monthly, annual: annualAmt, isAnnual: true };
     }
     const monthAmts = MONTHS.map((_, i) => {
       const p = b.payments[`${year}-${i}`] || {};
@@ -5218,7 +5222,7 @@ function renderSummary() {
     });
     monthAmts.forEach((a, i) => billMonthTotals[i] += a);
     const avg = monthAmts.reduce((s, v) => s + v, 0) / 12;
-    return { name: b.name, icon: b.icon, color: b.color, monthAmts, avg, annual: avg * 12, isAnnual: false };
+    return { name: b.name, color: b.color, monthAmts, avg, annual: avg * 12, isAnnual: false };
   });
 
   // ---- Expenses data ----
@@ -5275,7 +5279,6 @@ function renderSummary() {
     const maxBillAvg = Math.max(...billRows.map(b => b.avg), 1);
     billsEl.innerHTML = billRows.map(b => `
       <div style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
-        <div style="font-size:20px; width:32px; text-align:center;">${b.icon}</div>
         <div style="flex:1;">
           <div style="font-size:13px; font-weight:600; margin-bottom:5px; display:flex; align-items:center; gap:6px;">
             ${b.name}${b.isAnnual ? '<span class="bill-freq-badge annual">ANNUAL</span>' : ''}
